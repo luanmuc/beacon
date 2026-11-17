@@ -25,11 +25,11 @@ jobs:
           distribution: temurin
           java-version: "21"
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Accept licenses
-        run: yes | sdkmanager --licenses > /dev/null || true
+      - name: Detect Android SDK
+        run: |
+          echo "ANDROID_HOME=${ANDROID_HOME:-/usr/local/lib/android/sdk}" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}" >> "$GITHUB_ENV"
+          ls "${ANDROID_HOME:-/usr/local/lib/android/sdk}" || true
 
       - name: Generate self-use keystore
         run: |

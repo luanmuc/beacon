@@ -2,7 +2,6 @@ package com.fongmi.android.tv.api.config;
 
 import android.text.TextUtils;
 
-import com.fongmi.android.tv.api.Decoder;
 import com.fongmi.android.tv.api.LiveApi;
 import com.fongmi.android.tv.api.loader.BaseLoader;
 import com.fongmi.android.tv.api.parser.LiveParser;
@@ -20,7 +19,10 @@ import com.fongmi.android.tv.setting.LiveSetting;
 import com.fongmi.android.tv.utils.UrlUtil;
 import com.github.catvod.bean.Header;
 import com.github.catvod.bean.Proxy;
+import com.github.catvod.utils.Auth;
+import com.github.catvod.utils.Decoder;
 import com.github.catvod.utils.Json;
+import com.github.catvod.utils.UriUtil;
 import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
@@ -114,9 +116,10 @@ public class LiveConfig extends BaseConfig {
 
     @Override
     protected void load(Config config) throws Throwable {
-        String json = Decoder.getJson(UrlUtil.convert(config.getUrl()), TAG);
+        Decoder.Content content = Decoder.load(UrlUtil.convert(config.getUrl()), TAG, Auth.Context.NONE);
+        String json = content.text();
         if (Json.isObj(json)) checkJson(config, Json.parse(json).getAsJsonObject());
-        else parseText(config, json);
+        else parseText(config, content);
     }
 
     @Override
@@ -141,21 +144,18 @@ public class LiveConfig extends BaseConfig {
         load(new Callback());
     }
 
-    private void parseText(Config config, String text) {
-        Live live = new Live(UrlUtil.getName(config.getUrl()), config.getUrl()).sync();
+    private void parseText(Config config, Decoder.Content content) {
+        Live live = new Live(UriUtil.getName(config.getUrl()), config.getUrl()).sync();
+        live.setAuth(content.successful() ? Auth.capture(config.getUrl(), Map.of(), content.url(), content.authorization()) : null);
         lives = new ArrayList<>(List.of(live));
-        LiveParser.text(live, text);
+        LiveParser.text(live, content.text());
         setHome(config, live, false);
     }
 
     private void checkJson(Config config, JsonObject object) throws Throwable {
-        if (object.has("msg")) {
-            throw new Exception(object.get("msg").getAsString());
-        } else if (object.has("urls")) {
-            parseDepot(config, object);
-        } else {
-            parseConfig(config, object);
-        }
+        if (object.has("msg")) throw new Exception(object.get("msg").getAsString());
+        else if (object.has("urls")) parseDepot(config, object);
+        else parseConfig(config, object);
     }
 
     private void parseDepot(Config config, JsonObject object) throws Throwable {
@@ -173,7 +173,7 @@ public class LiveConfig extends BaseConfig {
     }
 
     public void parse(JsonObject object) {
-        parseConfig(getConfig(), object);
+        initLive(getConfig(), object);
     }
 
     private void initList(JsonObject object) {
@@ -270,10 +270,10 @@ public class LiveConfig extends BaseConfig {
 
     private void setHome(Config config, Live live, boolean save) {
         home = live;
-        home.setActivated(true);
+        home.setSelected(true);
         config.setHome(home.getName());
         if (save) config.save();
-        getLives().forEach(item -> item.setActivated(home));
+        getLives().forEach(item -> item.setSelected(home));
         if (!save && (home.isBoot() || LiveSetting.isBoot())) ConfigEvent.boot();
     }
 

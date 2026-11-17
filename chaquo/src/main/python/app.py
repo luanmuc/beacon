@@ -1,114 +1,168 @@
-import os
-import requests
-from importlib.machinery import SourceFileLoader
 import json
+import os
+from inspect import isawaitable, iscoroutine
+from urllib.parse import urlsplit
+from urllib.request import url2pathname
+
+from runtime.dialog import DialogAdapter
+from runtime.loader import Runtime, SourceNotFoundError, cleanup_failure, raise_failure
+from runtime.net import JsAdapter, LocalAdapter, NetAdapter
 
 
-def spider(cache, api):
-    name = os.path.basename(api)
-    path = cache + '/' + name
-    download(path, api)
-    name = name.split('.')[0]
-    return SourceFileLoader(name, path).load_module().Spider()
+def spider(cache, api, site_key="", net=None):
+    return Runtime(cache, api, site_key, lambda url: read_source(url, net, inline=url == api)).create()
 
 
-def download(path, api):
-    if api.startswith('http'):
-        writeFile(path, redirect(api).content)
-    else:
-        writeFile(path, str.encode(api))
+def read_source(api, net=None, inline=True):
+    parsed = urlsplit(api)
+    if parsed.scheme in ("http", "https"):
+        return read_remote(api, net)
+    if parsed.scheme == "file":
+        api = url2pathname(parsed.path)
+        if parsed.netloc:
+            api = f"//{parsed.netloc}{api}"
+    if not inline or parsed.scheme == "file" or os.path.isfile(api):
+        try:
+            with open(api, "rb") as stream:
+                return stream.read()
+        except FileNotFoundError as error:
+            raise SourceNotFoundError(error.errno, error.strerror, error.filename) from error
+    return api.encode()
 
 
-def writeFile(path, content):
-    with open(path, 'wb') as f:
-        f.write(content)
+def read_remote(api, net):
+    if net is None:
+        raise RuntimeError("Remote Python source requires a network owner")
+    response = NetAdapter(net).req(api, {"timeout": 10000, "callTimeout": 10000, "buffer": 3})
+    if response.get("error"):
+        raise RuntimeError(response["error"])
+    if response["code"] == 404:
+        raise SourceNotFoundError("HTTP 404")
+    if not 200 <= response["code"] < 300:
+        raise RuntimeError("HTTP " + str(response["code"]))
+    return response["content"]
 
 
-def redirect(url):
-    rsp = requests.get(url, allow_redirects=False, verify=False)
-    if 'Location' in rsp.headers:
-        return redirect(rsp.headers['Location'])
-    else:
-        return rsp
+def encode_json(content):
+    content = sync_result(content)
+    if not isinstance(content, (dict, list)):
+        raise TypeError("Spider data must be a dict or list")
+    return json.dumps(content, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
 
 
-def str2json(content):
-    return json.loads(content)
+def sync_result(value):
+    if isawaitable(value):
+        if iscoroutine(value):
+            value.close()
+        raise TypeError("Python spider methods must be synchronous")
+    return value
 
 
-def getDependence(ru):
-    result = ru.getDependence()
-    return result
-
-
-def getName(ru):
-    result = ru.getName()
-    return result
+def boolean_result(value):
+    value = sync_result(value)
+    if not isinstance(value, bool):
+        raise TypeError("Spider video checks must return bool")
+    return value
 
 
 def init(ru, extend):
-    ru.init(extend)
+    ru.runtime.prepare(ru)
+    sync_result(ru.init(extend))
+
+
+def bindNet(ru, net, user_agent=None, local=None, streams=None, js=None):
+    ru.net = NetAdapter(net, user_agent, streams)
+    ru.local = LocalAdapter(local)
+    ru.js = JsAdapter(js)
+    ru.dialog = DialogAdapter()
+    ru.runtime.bind_helpers(ru)
 
 
 def homeContent(ru, filter):
-    result = ru.homeContent(filter)
-    formatJo = json.dumps(result, ensure_ascii=False)
-    return formatJo
+    return encode_json(ru.homeContent(filter))
 
 
 def homeVideoContent(ru):
-    result = ru.homeVideoContent()
-    formatJo = json.dumps(result, ensure_ascii=False)
-    return formatJo
+    return encode_json(ru.homeVideoContent())
 
 
 def categoryContent(ru, tid, pg, filter, extend):
-    result = ru.categoryContent(tid, pg, filter, str2json(extend))
-    formatJo = json.dumps(result, ensure_ascii=False)
-    return formatJo
+    return encode_json(ru.categoryContent(tid, pg, filter, json.loads(extend)))
 
 
 def detailContent(ru, array):
-    result = ru.detailContent(str2json(array))
-    formatJo = json.dumps(result, ensure_ascii=False)
-    return formatJo
+    return encode_json(ru.detailContent(json.loads(array)))
 
 
 def searchContent(ru, key, quick, pg="1"):
-    result = ru.searchContent(key, quick, pg)
-    formatJo = json.dumps(result, ensure_ascii=False)
-    return formatJo
+    return encode_json(ru.searchContent(key, quick, pg))
 
 
 def playerContent(ru, flag, id, vipFlags):
-    result = ru.playerContent(flag, id, str2json(vipFlags))
-    formatJo = json.dumps(result, ensure_ascii=False)
-    return formatJo
+    return encode_json(ru.playerContent(flag, id, json.loads(vipFlags)))
+
+
+def isVideoFormat(ru, url):
+    return boolean_result(ru.isVideoFormat(url))
+
+
+def manualVideoCheck(ru):
+    return boolean_result(ru.manualVideoCheck())
 
 
 def liveContent(ru, url):
-    result = ru.liveContent(url)
-    return result
+    value = ru.liveContent(url)
+    return value if isinstance(value, str) else encode_json(value)
 
 
-def localProxy(ru, param):
-    result = ru.localProxy(str2json(param))
-    return result
+def proxy(ru, params):
+    value = sync_result(ru.proxy(json.loads(params)))
+    if isinstance(value, (list, tuple)) and len(value) > 2 and isinstance(value[2], (bytes, bytearray)):
+        from java import jarray, jbyte
+
+        value = list(value)
+        value[2] = jarray(jbyte)(value[2])
+    return value
 
 
 def action(ru, action):
-    result = ru.action(action)
-    formatJo = json.dumps(result, ensure_ascii=False)
-    return formatJo
+    return encode_json(ru.action(action))
+
+
+def danmaku(ru, id, emitter):
+    stop = sync_result(ru.danmaku(id, lambda item: emitter.emit(encode_json(item))))
+    if not callable(stop):
+        raise TypeError("danmaku must return a stop function")
+    return lambda: sync_result(stop())
 
 
 def destroy(ru):
-    ru.destroy()
+    failure = None
+    try:
+        close_dialog(ru)
+    except BaseException as error:
+        failure = error
+    try:
+        sync_result(ru.destroy())
+    except BaseException as error:
+        failure = cleanup_failure(failure, error)
+    release(ru, failure)
 
 
-def run():
-    pass
+def release(ru, failure=None):
+    try:
+        close_dialog(ru)
+    except BaseException as error:
+        failure = cleanup_failure(failure, error)
+    try:
+        ru.runtime.close()
+    except BaseException as error:
+        failure = cleanup_failure(failure, error)
+    if failure is not None:
+        raise_failure(failure)
 
 
-if __name__ == '__main__':
-    run()
+def close_dialog(ru):
+    dialog = getattr(ru, "dialog", None)
+    if dialog is not None:
+        dialog.close()

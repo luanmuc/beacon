@@ -6,12 +6,11 @@
     android:orientation="vertical">
 
     <androidx.appcompat.widget.LinearLayoutCompat
+        style="@style/PlaybackDialogFirstRow"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingHorizontal="24dp"
-        android:paddingVertical="4dp">
+        android:paddingBottom="4dp"
+        android:orientation="horizontal">
 
         <com.google.android.material.textview.MaterialTextView
             android:layout_width="0dp"
@@ -31,15 +30,14 @@
 
     <com.google.android.material.slider.Slider
         android:id="@+id/timeOffsetSlider"
+        android:contentDescription="@string/danmaku_time_offset"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="12dp"
         android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:nextFocusUp="@id/tabTiming"
         android:stepSize="1000"
-        android:valueFrom="-60000"
-        android:valueTo="60000"
+        android:valueFrom="-300000"
+        android:valueTo="300000"
         app:tickVisible="false" />
 
     <androidx.appcompat.widget.LinearLayoutCompat
@@ -48,7 +46,8 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="24dp"
-        android:paddingTop="4dp">
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp">
 
         <com.google.android.material.textview.MaterialTextView
             android:layout_width="0dp"
@@ -68,11 +67,11 @@
 
     <com.google.android.material.slider.Slider
         android:id="@+id/durationSlider"
+        android:contentDescription="@string/danmaku_duration"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="12dp"
         android:focusable="true"
-        android:focusableInTouchMode="true"
         android:stepSize="500"
         android:valueFrom="3000"
         android:valueTo="15000"
@@ -84,7 +83,8 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="24dp"
-        android:paddingTop="4dp">
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp">
 
         <com.google.android.material.textview.MaterialTextView
             android:layout_width="0dp"
@@ -104,11 +104,11 @@
 
     <com.google.android.material.slider.Slider
         android:id="@+id/fixedDurationSlider"
+        android:contentDescription="@string/danmaku_fixed_duration"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="12dp"
         android:focusable="true"
-        android:focusableInTouchMode="true"
         android:stepSize="500"
         android:valueFrom="2000"
         android:valueTo="10000"

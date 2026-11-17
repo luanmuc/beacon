@@ -1,10 +1,43 @@
 package com.fongmi.android.tv.setting;
 
+import android.graphics.Typeface;
+import android.text.TextUtils;
+
+import androidx.annotation.Nullable;
+
 import androidx.media3.ui.danmaku.DanmakuConfig;
 
+import com.fongmi.android.tv.api.config.VodConfig;
+import com.fongmi.android.tv.player.mpv.MpvConfigFile;
+import com.fongmi.android.tv.player.subtitle.ExternalFont;
 import com.github.catvod.utils.Prefers;
 
 public class DanmakuSetting {
+
+    private static final float MIN_TEXT_SCALE = 0.5f;
+    private static final float MAX_TEXT_SCALE = 3.0f;
+    private static final float MIN_TRANSPARENCY = 0.0f;
+    private static final float MAX_TRANSPARENCY = 0.9f;
+    private static final float MIN_STROKE_WIDTH_MULTIPLIER = 0.05f;
+    private static final float MAX_STROKE_WIDTH_MULTIPLIER = 0.3f;
+    private static final float MIN_PROJECTION_OFFSET = 0.02f;
+    private static final float MAX_PROJECTION_OFFSET = 0.15f;
+    private static final long MIN_DURATION_MS = 3000L;
+    private static final long MAX_DURATION_MS = 15000L;
+    private static final long MIN_FIXED_DURATION_MS = 2000L;
+    private static final long MAX_FIXED_DURATION_MS = 10000L;
+    private static final int MIN_MAX_ON_SCREEN = 10;
+    private static final int MAX_MAX_ON_SCREEN = 500;
+    private static final float MIN_SCROLL_AREA_RATIO = 0.1f;
+    private static final float MAX_SCROLL_AREA_RATIO = 1.0f;
+    private static final float MIN_SCROLL_GAP_RATIO = 0.0f;
+    private static final float MAX_SCROLL_GAP_RATIO = 5.0f;
+    private static final float MIN_LINE_SPACING = 1.0f;
+    private static final float MAX_LINE_SPACING = 2.0f;
+    private static final int MIN_MAX_SCROLL_LINES = 0;
+    private static final int MAX_MAX_SCROLL_LINES = 20;
+    private static final int MIN_MAX_FIXED_LINES = 0;
+    private static final int MAX_MAX_FIXED_LINES = 10;
 
     public static boolean isLoad() {
         return Prefers.getBoolean("danmaku_load");
@@ -12,10 +45,35 @@ public class DanmakuSetting {
 
     public static void putLoad(boolean danmakuLoad) {
         Prefers.put("danmaku_load", danmakuLoad);
+        if (danmakuLoad) putShow(true);
+    }
+
+    public static boolean isAuto() {
+        return Prefers.getBoolean("danmaku_auto");
+    }
+
+    public static void putAuto(boolean auto) {
+        Prefers.put("danmaku_auto", auto);
+    }
+
+    public static boolean isSpiderFirst() {
+        return Prefers.getBoolean("danmaku_spider_first");
+    }
+
+    public static void putSpiderFirst(boolean spiderFirst) {
+        Prefers.put("danmaku_spider_first", spiderFirst);
+    }
+
+    public static String getApiUrl() {
+        return Prefers.getString("danmaku_api_url", "");
+    }
+
+    public static void putApiUrl(String url) {
+        Prefers.put("danmaku_api_url", url);
     }
 
     public static boolean isShow() {
-        return Prefers.getBoolean("danmaku_show");
+        return Prefers.getBoolean("danmaku_show", true);
     }
 
     public static void putShow(boolean danmakuShow) {
@@ -23,19 +81,19 @@ public class DanmakuSetting {
     }
 
     public static float getTextScale() {
-        return Prefers.getFloat("danmaku_text_scale", 1f);
+        return Math.clamp(Prefers.getFloat("danmaku_text_scale", 1f), MIN_TEXT_SCALE, MAX_TEXT_SCALE);
     }
 
     public static void putTextScale(float value) {
-        Prefers.put("danmaku_text_scale", value);
+        Prefers.put("danmaku_text_scale", Math.clamp(value, MIN_TEXT_SCALE, MAX_TEXT_SCALE));
     }
 
     public static float getTransparency() {
-        return Prefers.getFloat("danmaku_transparency", 0f);
+        return Math.clamp(Prefers.getFloat("danmaku_transparency", 0f), MIN_TRANSPARENCY, MAX_TRANSPARENCY);
     }
 
     public static void putTransparency(float value) {
-        Prefers.put("danmaku_transparency", value);
+        Prefers.put("danmaku_transparency", Math.clamp(value, MIN_TRANSPARENCY, MAX_TRANSPARENCY));
     }
 
     public static boolean isTextBold() {
@@ -44,6 +102,20 @@ public class DanmakuSetting {
 
     public static void putTextBold(boolean value) {
         Prefers.put("danmaku_text_bold", value);
+    }
+
+    @Nullable
+    public static ExternalFont.Item getFont() {
+        return ExternalFont.find(Prefers.getString("danmaku_font", ""), MpvConfigFile.getSubtitleFontsDirectory());
+    }
+
+    public static void putFont(@Nullable ExternalFont.Item font) {
+        Prefers.put("danmaku_font", font == null ? "" : font.storageKey());
+    }
+
+    @Nullable
+    private static Typeface getTypeface() {
+        return ExternalFont.getTypeface(getFont());
     }
 
     public static int getStyleMode() {
@@ -63,115 +135,115 @@ public class DanmakuSetting {
     }
 
     public static float getShadowTransparency() {
-        return Prefers.getFloat("danmaku_shadow_transparency", 0.1f);
+        return Math.clamp(Prefers.getFloat("danmaku_shadow_transparency", 0.1f), MIN_TRANSPARENCY, MAX_TRANSPARENCY);
     }
 
     public static void putShadowTransparency(float value) {
-        Prefers.put("danmaku_shadow_transparency", value);
+        Prefers.put("danmaku_shadow_transparency", Math.clamp(value, MIN_TRANSPARENCY, MAX_TRANSPARENCY));
     }
 
     public static float getStrokeWidthMultiplier() {
-        return Prefers.getFloat("danmaku_stroke_width_multiplier", 0.12f);
+        return Math.clamp(Prefers.getFloat("danmaku_stroke_width_multiplier", 0.12f), MIN_STROKE_WIDTH_MULTIPLIER, MAX_STROKE_WIDTH_MULTIPLIER);
     }
 
     public static void putStrokeWidthMultiplier(float value) {
-        Prefers.put("danmaku_stroke_width_multiplier", value);
+        Prefers.put("danmaku_stroke_width_multiplier", Math.clamp(value, MIN_STROKE_WIDTH_MULTIPLIER, MAX_STROKE_WIDTH_MULTIPLIER));
     }
 
     public static float getProjectionOffsetX() {
-        return Prefers.getFloat("danmaku_projection_offset_x", 0.08f);
+        return Math.clamp(Prefers.getFloat("danmaku_projection_offset_x", 0.08f), MIN_PROJECTION_OFFSET, MAX_PROJECTION_OFFSET);
     }
 
     public static void putProjectionOffsetX(float value) {
-        Prefers.put("danmaku_projection_offset_x", value);
+        Prefers.put("danmaku_projection_offset_x", Math.clamp(value, MIN_PROJECTION_OFFSET, MAX_PROJECTION_OFFSET));
     }
 
     public static float getProjectionOffsetY() {
-        return Prefers.getFloat("danmaku_projection_offset_y", 0.08f);
+        return Math.clamp(Prefers.getFloat("danmaku_projection_offset_y", 0.08f), MIN_PROJECTION_OFFSET, MAX_PROJECTION_OFFSET);
     }
 
     public static void putProjectionOffsetY(float value) {
-        Prefers.put("danmaku_projection_offset_y", value);
+        Prefers.put("danmaku_projection_offset_y", Math.clamp(value, MIN_PROJECTION_OFFSET, MAX_PROJECTION_OFFSET));
     }
 
     public static float getProjectionTransparency() {
-        return Prefers.getFloat("danmaku_projection_transparency", 0.2f);
+        return Math.clamp(Prefers.getFloat("danmaku_projection_transparency", 0.2f), MIN_TRANSPARENCY, MAX_TRANSPARENCY);
     }
 
     public static void putProjectionTransparency(float value) {
-        Prefers.put("danmaku_projection_transparency", value);
+        Prefers.put("danmaku_projection_transparency", Math.clamp(value, MIN_TRANSPARENCY, MAX_TRANSPARENCY));
     }
 
     public static long getDurationMs() {
-        return Prefers.getLong("danmaku_duration", 8000L);
+        return Math.clamp(Prefers.getLong("danmaku_duration", 8000L), MIN_DURATION_MS, MAX_DURATION_MS);
     }
 
     public static void putDurationMs(long value) {
-        Prefers.put("danmaku_duration", value);
+        Prefers.put("danmaku_duration", Math.clamp(value, MIN_DURATION_MS, MAX_DURATION_MS));
     }
 
     public static long getFixedDurationMs() {
-        return Prefers.getLong("danmaku_fixed_duration", 5000L);
+        return Math.clamp(Prefers.getLong("danmaku_fixed_duration", 5000L), MIN_FIXED_DURATION_MS, MAX_FIXED_DURATION_MS);
     }
 
     public static void putFixedDurationMs(long value) {
-        Prefers.put("danmaku_fixed_duration", value);
-    }
-
-    public static long getTimeOffsetMs() {
-        return Prefers.getLong("danmaku_time_offset", 0L);
-    }
-
-    public static void putTimeOffsetMs(long value) {
-        Prefers.put("danmaku_time_offset", value);
+        Prefers.put("danmaku_fixed_duration", Math.clamp(value, MIN_FIXED_DURATION_MS, MAX_FIXED_DURATION_MS));
     }
 
     public static int getMaxOnScreen() {
-        return Prefers.getInt("danmaku_max_on_screen", 150);
+        return Math.clamp(Prefers.getInt("danmaku_max_on_screen", 150), MIN_MAX_ON_SCREEN, MAX_MAX_ON_SCREEN);
     }
 
     public static void putMaxOnScreen(int value) {
-        Prefers.put("danmaku_max_on_screen", value);
+        Prefers.put("danmaku_max_on_screen", Math.clamp(value, MIN_MAX_ON_SCREEN, MAX_MAX_ON_SCREEN));
     }
 
     public static float getScrollAreaRatio() {
-        return Prefers.getFloat("danmaku_scroll_area_ratio", 0.75f);
+        return Math.clamp(Prefers.getFloat("danmaku_scroll_area_ratio", 0.5f), MIN_SCROLL_AREA_RATIO, MAX_SCROLL_AREA_RATIO);
     }
 
     public static void putScrollAreaRatio(float value) {
-        Prefers.put("danmaku_scroll_area_ratio", value);
+        Prefers.put("danmaku_scroll_area_ratio", Math.clamp(value, MIN_SCROLL_AREA_RATIO, MAX_SCROLL_AREA_RATIO));
     }
 
     public static int getMaxScrollLines() {
-        return Prefers.getInt("danmaku_max_scroll_lines", 0);
+        return Math.clamp(Prefers.getInt("danmaku_max_scroll_lines", 0), MIN_MAX_SCROLL_LINES, MAX_MAX_SCROLL_LINES);
     }
 
     public static void putMaxScrollLines(int value) {
-        Prefers.put("danmaku_max_scroll_lines", value);
+        Prefers.put("danmaku_max_scroll_lines", Math.clamp(value, MIN_MAX_SCROLL_LINES, MAX_MAX_SCROLL_LINES));
     }
 
     public static int getMaxTopLines() {
-        return Prefers.getInt("danmaku_max_top_lines", 0);
+        return Math.clamp(Prefers.getInt("danmaku_max_top_lines", 0), MIN_MAX_FIXED_LINES, MAX_MAX_FIXED_LINES);
     }
 
     public static void putMaxTopLines(int value) {
-        Prefers.put("danmaku_max_top_lines", value);
+        Prefers.put("danmaku_max_top_lines", Math.clamp(value, MIN_MAX_FIXED_LINES, MAX_MAX_FIXED_LINES));
     }
 
     public static int getMaxBottomLines() {
-        return Prefers.getInt("danmaku_max_bottom_lines", 0);
+        return Math.clamp(Prefers.getInt("danmaku_max_bottom_lines", 0), MIN_MAX_FIXED_LINES, MAX_MAX_FIXED_LINES);
     }
 
     public static void putMaxBottomLines(int value) {
-        Prefers.put("danmaku_max_bottom_lines", value);
+        Prefers.put("danmaku_max_bottom_lines", Math.clamp(value, MIN_MAX_FIXED_LINES, MAX_MAX_FIXED_LINES));
     }
 
     public static float getLineSpacing() {
-        return Prefers.getFloat("danmaku_line_spacing", 1.4f);
+        return Math.clamp(Prefers.getFloat("danmaku_line_spacing", 1.4f), MIN_LINE_SPACING, MAX_LINE_SPACING);
     }
 
     public static void putLineSpacing(float value) {
-        Prefers.put("danmaku_line_spacing", value);
+        Prefers.put("danmaku_line_spacing", Math.clamp(value, MIN_LINE_SPACING, MAX_LINE_SPACING));
+    }
+
+    public static float getScrollGapRatio() {
+        return Math.clamp(Prefers.getFloat("danmaku_scroll_gap_ratio", 0f), MIN_SCROLL_GAP_RATIO, MAX_SCROLL_GAP_RATIO);
+    }
+
+    public static void putScrollGapRatio(float value) {
+        Prefers.put("danmaku_scroll_gap_ratio", Math.clamp(value, MIN_SCROLL_GAP_RATIO, MAX_SCROLL_GAP_RATIO));
     }
 
     public static boolean isShowScroll() {
@@ -230,11 +302,18 @@ public class DanmakuSetting {
         Prefers.put("danmaku_show_special", value);
     }
 
-    public static void reset() {
+    public static String getEffectiveApiUrl() {
+        String userUrl = getApiUrl();
+        if (!TextUtils.isEmpty(userUrl)) return userUrl;
+        return VodConfig.get().getConfig().getDanmaku();
+    }
+
+    public static void resetAppearance() {
         DanmakuConfig config = DanmakuConfig.DEFAULT;
         putTextScale(config.textScale);
         putTransparency(config.transparency);
         putTextBold(config.textBold);
+        putFont(null);
         putStyleMode(config.styleMode);
         putShadowTransparency(config.shadowTransparency);
         putStrokeWidthMultiplier(config.strokeWidthMultiplier);
@@ -242,15 +321,27 @@ public class DanmakuSetting {
         putProjectionOffsetY(config.projectionOffsetYMultiplier);
         putProjectionTransparency(config.projectionTransparency);
         putColorMode(config.colorMode);
+    }
+
+    public static void resetTiming() {
+        DanmakuConfig config = DanmakuConfig.DEFAULT;
         putDurationMs(config.durationMs);
         putFixedDurationMs(config.fixedDurationMs);
-        putTimeOffsetMs(config.timeOffsetMs);
+    }
+
+    public static void resetDensity() {
+        DanmakuConfig config = DanmakuConfig.DEFAULT;
         putMaxOnScreen(config.maxOnScreen);
         putScrollAreaRatio(config.scrollAreaRatio);
+        putScrollGapRatio(config.scrollGapRatio);
+        putLineSpacing(config.lineSpacing);
         putMaxScrollLines(config.maxScrollLines);
         putMaxTopLines(config.maxTopLines);
         putMaxBottomLines(config.maxBottomLines);
-        putLineSpacing(config.lineSpacing);
+    }
+
+    public static void resetDisplay() {
+        DanmakuConfig config = DanmakuConfig.DEFAULT;
         putShowScroll(config.showScroll);
         putShowTop(config.showTop);
         putShowBottom(config.showBottom);
@@ -265,6 +356,7 @@ public class DanmakuSetting {
                 .setTextScale(getTextScale())
                 .setTransparency(getTransparency())
                 .setTextBold(isTextBold())
+                .setTypeface(getTypeface())
                 .setStyleMode(getStyleMode())
                 .setShadowTransparency(getShadowTransparency())
                 .setStrokeWidthMultiplier(getStrokeWidthMultiplier())
@@ -274,13 +366,13 @@ public class DanmakuSetting {
                 .setColorMode(getColorMode())
                 .setDurationMs(getDurationMs())
                 .setFixedDurationMs(getFixedDurationMs())
-                .setTimeOffsetMs(getTimeOffsetMs())
                 .setMaxOnScreen(getMaxOnScreen())
                 .setScrollAreaRatio(getScrollAreaRatio())
+                .setScrollGapRatio(getScrollGapRatio())
+                .setLineSpacing(getLineSpacing())
                 .setMaxScrollLines(getMaxScrollLines())
                 .setMaxTopLines(getMaxTopLines())
                 .setMaxBottomLines(getMaxBottomLines())
-                .setLineSpacing(getLineSpacing())
                 .setShowScroll(isShowScroll())
                 .setShowTop(isShowTop())
                 .setShowBottom(isShowBottom())

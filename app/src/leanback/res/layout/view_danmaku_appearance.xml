@@ -6,29 +6,56 @@
     android:orientation="vertical">
 
     <androidx.appcompat.widget.LinearLayoutCompat
+        style="@style/PlaybackDialogFirstRow"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingHorizontal="24dp"
-        android:paddingVertical="4dp">
+        android:orientation="horizontal">
 
         <com.google.android.material.textview.MaterialTextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:labelFor="@id/textBoldSwitch"
             android:text="@string/danmaku_text_bold"
             android:textAppearance="?attr/textAppearanceBodyLarge" />
 
-        <com.google.android.material.materialswitch.MaterialSwitch
-            android:id="@+id/textBoldSwitch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:focusable="true"
-            android:focusableInTouchMode="true"
-            android:nextFocusUp="@id/tabAppearance" />
+        <FrameLayout style="@style/PlaybackDialogSwitchContainer">
+
+            <com.google.android.material.materialswitch.MaterialSwitch
+                android:id="@+id/textBoldSwitch"
+                style="@style/PlaybackDialogSwitch" />
+
+        </FrameLayout>
 
     </androidx.appcompat.widget.LinearLayoutCompat>
+
+    <com.google.android.material.textview.MaterialTextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp"
+        android:text="@string/playback_font"
+        android:textAppearance="?attr/textAppearanceBodyLarge" />
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fillViewport="false"
+        android:focusable="false"
+        android:scrollbars="none">
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/fontGroup"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="24dp"
+            app:chipSpacingVertical="0dp"
+            app:selectionRequired="true"
+            app:singleLine="true"
+            app:singleSelection="true" />
+
+    </HorizontalScrollView>
 
     <androidx.appcompat.widget.LinearLayoutCompat
         android:layout_width="match_parent"
@@ -36,7 +63,8 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="24dp"
-        android:paddingTop="4dp">
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp">
 
         <com.google.android.material.textview.MaterialTextView
             android:layout_width="0dp"
@@ -56,11 +84,11 @@
 
     <com.google.android.material.slider.Slider
         android:id="@+id/textSizeSlider"
+        android:contentDescription="@string/danmaku_text_size"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="12dp"
         android:focusable="true"
-        android:focusableInTouchMode="true"
         android:stepSize="0.1"
         android:valueFrom="0.5"
         android:valueTo="3.0"
@@ -72,7 +100,8 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="24dp"
-        android:paddingTop="4dp">
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp">
 
         <com.google.android.material.textview.MaterialTextView
             android:layout_width="0dp"
@@ -92,11 +121,11 @@
 
     <com.google.android.material.slider.Slider
         android:id="@+id/alphaSlider"
+        android:contentDescription="@string/danmaku_transparency"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="12dp"
         android:focusable="true"
-        android:focusableInTouchMode="true"
         android:stepSize="0.05"
         android:valueFrom="0"
         android:valueTo="0.9"
@@ -106,7 +135,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingHorizontal="24dp"
-        android:paddingTop="4dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp"
         android:text="@string/danmaku_style_mode"
         android:textAppearance="?attr/textAppearanceBodyLarge" />
 
@@ -115,6 +145,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingHorizontal="24dp"
+        app:chipSpacingVertical="0dp"
         app:selectionRequired="true"
         app:singleSelection="true">
 
@@ -123,7 +154,6 @@
             style="@style/Widget.Material3.Chip.Filter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:focusable="true"
             android:text="@string/danmaku_style_none" />
 
         <com.google.android.material.chip.Chip
@@ -131,7 +161,6 @@
             style="@style/Widget.Material3.Chip.Filter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:focusable="true"
             android:text="@string/danmaku_style_shadow" />
 
         <com.google.android.material.chip.Chip
@@ -139,7 +168,6 @@
             style="@style/Widget.Material3.Chip.Filter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:focusable="true"
             android:text="@string/danmaku_style_stroke" />
 
         <com.google.android.material.chip.Chip
@@ -147,7 +175,6 @@
             style="@style/Widget.Material3.Chip.Filter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:focusable="true"
             android:text="@string/danmaku_style_projection" />
 
     </com.google.android.material.chip.ChipGroup>
@@ -159,7 +186,8 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="24dp"
-        android:paddingTop="4dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp"
         android:visibility="gone">
 
         <com.google.android.material.textview.MaterialTextView
@@ -180,11 +208,11 @@
 
     <com.google.android.material.slider.Slider
         android:id="@+id/shadowAlphaSlider"
+        android:contentDescription="@string/danmaku_shadow_transparency"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="12dp"
         android:focusable="true"
-        android:focusableInTouchMode="true"
         android:stepSize="0.05"
         android:valueFrom="0"
         android:valueTo="0.9"
@@ -198,7 +226,8 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="24dp"
-        android:paddingTop="4dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp"
         android:visibility="gone">
 
         <com.google.android.material.textview.MaterialTextView
@@ -219,11 +248,11 @@
 
     <com.google.android.material.slider.Slider
         android:id="@+id/strokeWidthSlider"
+        android:contentDescription="@string/danmaku_stroke_width"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="12dp"
         android:focusable="true"
-        android:focusableInTouchMode="true"
         android:stepSize="0.01"
         android:valueFrom="0.05"
         android:valueTo="0.3"
@@ -237,7 +266,8 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="24dp"
-        android:paddingTop="4dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp"
         android:visibility="gone">
 
         <com.google.android.material.textview.MaterialTextView
@@ -258,11 +288,11 @@
 
     <com.google.android.material.slider.Slider
         android:id="@+id/projectionOffsetXSlider"
+        android:contentDescription="@string/danmaku_projection_offset_x"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="12dp"
         android:focusable="true"
-        android:focusableInTouchMode="true"
         android:stepSize="0.01"
         android:valueFrom="0.02"
         android:valueTo="0.15"
@@ -276,7 +306,8 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="24dp"
-        android:paddingTop="4dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp"
         android:visibility="gone">
 
         <com.google.android.material.textview.MaterialTextView
@@ -297,11 +328,11 @@
 
     <com.google.android.material.slider.Slider
         android:id="@+id/projectionOffsetYSlider"
+        android:contentDescription="@string/danmaku_projection_offset_y"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="12dp"
         android:focusable="true"
-        android:focusableInTouchMode="true"
         android:stepSize="0.01"
         android:valueFrom="0.02"
         android:valueTo="0.15"
@@ -315,7 +346,8 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="24dp"
-        android:paddingTop="4dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp"
         android:visibility="gone">
 
         <com.google.android.material.textview.MaterialTextView
@@ -336,11 +368,11 @@
 
     <com.google.android.material.slider.Slider
         android:id="@+id/projectionAlphaSlider"
+        android:contentDescription="@string/danmaku_projection_transparency"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="12dp"
         android:focusable="true"
-        android:focusableInTouchMode="true"
         android:stepSize="0.05"
         android:valueFrom="0"
         android:valueTo="0.9"
@@ -351,7 +383,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingHorizontal="24dp"
-        android:paddingTop="4dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp"
         android:text="@string/danmaku_color_mode"
         android:textAppearance="?attr/textAppearanceBodyLarge" />
 
@@ -360,6 +393,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingHorizontal="24dp"
+        app:chipSpacingVertical="0dp"
         app:selectionRequired="true"
         app:singleSelection="true">
 
@@ -368,7 +402,6 @@
             style="@style/Widget.Material3.Chip.Filter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:focusable="true"
             android:text="@string/danmaku_color_default" />
 
         <com.google.android.material.chip.Chip
@@ -376,7 +409,6 @@
             style="@style/Widget.Material3.Chip.Filter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:focusable="true"
             android:text="@string/danmaku_color_colorful" />
 
         <com.google.android.material.chip.Chip
@@ -384,7 +416,6 @@
             style="@style/Widget.Material3.Chip.Filter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:focusable="true"
             android:text="@string/danmaku_color_gradient" />
 
     </com.google.android.material.chip.ChipGroup>

@@ -1,17 +1,24 @@
 package com.fongmi.android.tv.event;
 
-import com.fongmi.android.tv.bean.Vod;
+import com.fongmi.android.tv.bean.Result;
 
 import org.greenrobot.eventbus.EventBus;
 
 public class RefreshEvent {
 
     private final Type type;
-    private String path;
-    private Vod vod;
+    private final String path;
 
     public static void home() {
         EventBus.getDefault().post(new RefreshEvent(Type.HOME));
+    }
+
+    public static void homeContent(String siteKey) {
+        EventBus.getDefault().post(new HomeContent(siteKey));
+    }
+
+    public static void homeContentLoaded(String siteKey, Result result) {
+        EventBus.getDefault().post(new HomeContentLoaded(siteKey, result));
     }
 
     public static void category() {
@@ -28,6 +35,10 @@ public class RefreshEvent {
 
     public static void size() {
         EventBus.getDefault().post(new RefreshEvent(Type.SIZE));
+    }
+
+    public static void theme() {
+        EventBus.getDefault().post(new RefreshEvent(Type.THEME));
     }
 
     public static void live() {
@@ -50,22 +61,13 @@ public class RefreshEvent {
         EventBus.getDefault().post(new RefreshEvent(Type.DANMAKU, path));
     }
 
-    public static void vod(Vod vod) {
-        EventBus.getDefault().post(new RefreshEvent(Type.VOD, vod));
-    }
-
     private RefreshEvent(Type type) {
-        this.type = type;
+        this(type, null);
     }
 
-    public RefreshEvent(Type type, String path) {
+    private RefreshEvent(Type type, String path) {
         this.type = type;
         this.path = path;
-    }
-
-    private RefreshEvent(Type type, Vod vod) {
-        this.type = type;
-        this.vod = vod;
     }
 
     public Type getType() {
@@ -76,11 +78,16 @@ public class RefreshEvent {
         return path;
     }
 
-    public Vod getVod() {
-        return vod;
+    public record HomeContent(String siteKey) {
+
+        public boolean matchesSite(String key) {
+            return siteKey == null || siteKey.isEmpty() || siteKey.equals(key);
+        }
     }
 
+    public record HomeContentLoaded(String siteKey, Result result) {}
+
     public enum Type {
-        HOME, CATEGORY, HISTORY, KEEP, SIZE, LIVE, DETAIL, PLAYER, SUBTITLE, DANMAKU, VOD
+        HOME, CATEGORY, HISTORY, KEEP, SIZE, THEME, LIVE, DETAIL, PLAYER, SUBTITLE, DANMAKU
     }
 }

@@ -14,14 +14,41 @@
         android:orientation="horizontal">
 
         <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/episodes"
+            style="@style/Control"
+            android:text="@string/detail_episode" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/parse"
+            style="@style/Control"
+            android:text="@string/parse"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/player"
             style="@style/Control"
             android:text="@string/play_exo" />
 
         <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/decode"
+            android:id="@+id/decoder"
             style="@style/Control"
-            android:text="@string/play_decode" />
+            android:text="@string/decoder_action" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/reset"
+            style="@style/Control"
+            android:text="@string/play_reset" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/replay"
+            style="@style/Control"
+            android:text="@string/play_replay" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/repeat"
+            style="@style/Control"
+            android:text="@string/play_repeat" />
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/speed"
@@ -33,16 +60,6 @@
             android:id="@+id/scale"
             style="@style/Control"
             android:text="@string/play_scale" />
-
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/reset"
-            style="@style/Control"
-            android:text="@string/play_reset" />
-
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/repeat"
-            style="@style/Control"
-            android:text="@string/play_repeat" />
 
         <View
             android:layout_width="0dp"
@@ -68,6 +85,34 @@
             android:text="@string/play_track_video" />
 
         <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/danmaku"
+            style="@style/Control"
+            android:text="@string/danmaku"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/edition"
+            style="@style/Control"
+            android:text="@string/play_edition"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/chapter"
+            style="@style/Control"
+            android:text="@string/play_chapter"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/disc_menu"
+            style="@style/Control"
+            android:text="@string/play_disc_menu"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/opening"
             style="@style/Control"
             android:text="@string/play_op" />
@@ -77,24 +122,9 @@
             style="@style/Control"
             android:text="@string/play_ed" />
 
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/danmaku"
-            style="@style/Control"
-            android:text="@string/danmaku"
-            android:visibility="gone"
-            tools:visibility="visible" />
-
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/title"
-            style="@style/Control"
-            android:text="@string/play_title"
-            android:visibility="gone"
-            tools:visibility="visible" />
-
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/episodes"
-            style="@style/Control"
-            android:text="@string/detail_episode" />
+        <com.fongmi.android.tv.ui.custom.PlaybackButtonsView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
 
     </androidx.appcompat.widget.LinearLayoutCompat>
 </HorizontalScrollView>

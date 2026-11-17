@@ -9,7 +9,6 @@ import com.fongmi.android.tv.bean.Config;
 import com.fongmi.android.tv.bean.Device;
 import com.fongmi.android.tv.bean.History;
 import com.fongmi.android.tv.bean.Keep;
-import com.fongmi.android.tv.bean.Vod;
 import com.fongmi.android.tv.event.CastEvent;
 import com.fongmi.android.tv.event.RefreshEvent;
 import com.fongmi.android.tv.event.ServerEvent;
@@ -20,9 +19,11 @@ import com.fongmi.android.tv.server.impl.Process;
 import com.fongmi.android.tv.service.PlaybackService;
 import com.fongmi.android.tv.utils.FileUtil;
 import com.fongmi.android.tv.utils.Notify;
+import com.fongmi.android.tv.utils.SubtitleArchive;
 import com.github.catvod.net.OkHttp;
 import com.github.catvod.utils.Path;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -42,6 +43,8 @@ public class Action implements Process {
     public Response doResponse(IHTTPSession session, String url, Map<String, String> files) {
         Map<String, String> params = session.getParms();
         String param = params.get("do");
+        if ("sync".equals(param)) return onSync(params);
+        if ("refresh".equals(param)) return onRefresh(params);
         if (!TextUtils.isEmpty(param)) doJob(param, params);
         return Nano.ok();
     }
@@ -51,10 +54,8 @@ public class Action implements Process {
             case "file" -> onFile(params);
             case "push" -> onPush(params);
             case "cast" -> onCast(params);
-            case "sync" -> onSync(params);
             case "search" -> onSearch(params);
             case "setting" -> onSetting(params);
-            case "refresh" -> onRefresh(params);
             case "control" -> onControl(params);
             case "danmaku" -> onDanmaku(params);
         }
@@ -64,7 +65,7 @@ public class Action implements Process {
         String path = params.get("path");
         if (TextUtils.isEmpty(path)) return;
         if (path.endsWith(".apk")) FileUtil.openFile(Path.local(path));
-        else if (path.endsWith(".srt") || path.endsWith(".ssa") || path.endsWith(".ass")) RefreshEvent.subtitle(path);
+        else if (SubtitleArchive.isSubtitle(path)) RefreshEvent.subtitle(path);
         else ServerEvent.setting(path);
     }
 
@@ -87,20 +88,23 @@ public class Action implements Process {
         ServerEvent.setting(text, name);
     }
 
-    private void onRefresh(Map<String, String> params) {
+    private Response onRefresh(Map<String, String> params) {
         String type = params.get("type");
         String path = params.get("path");
-        String json = params.get("json");
-        if (TextUtils.isEmpty(type)) return;
+        if (TextUtils.isEmpty(type)) return Nano.ok();
         switch (type) {
+            case "home" -> {
+                RefreshEvent.homeContent(params.get("siteKey"));
+                return Nano.ok("home");
+            }
             case "live" -> RefreshEvent.live();
             case "detail" -> RefreshEvent.detail();
             case "player" -> RefreshEvent.player();
             case "category" -> RefreshEvent.category();
             case "danmaku" -> RefreshEvent.danmaku(path);
             case "subtitle" -> RefreshEvent.subtitle(path);
-            case "vod" -> RefreshEvent.vod(Vod.objectFrom(json));
         }
+        return Nano.ok();
     }
 
     private void onControl(Map<String, String> params) {
@@ -132,51 +136,53 @@ public class Action implements Process {
         CastEvent.post(Config.find(config), device, history);
     }
 
-    private void onSync(Map<String, String> params) {
-        String type = params.get("type");
-        boolean force = Objects.equals(params.get("force"), "true");
-        String mode = Objects.requireNonNullElse(params.get("mode"), "0");
-        if (params.get("device") != null && (mode.equals("0") || mode.equals("2"))) {
-            Device device = Device.objectFrom(params.get("device"));
-            if ("history".equals(type)) sendHistory(device, params);
-            else if ("keep".equals(type)) sendKeep(device);
-        }
-        if (mode.equals("0") || mode.equals("1")) {
-            if ("history".equals(type)) syncHistory(params, force);
-            else if ("keep".equals(type)) syncKeep(params, force);
+    private Response onSync(Map<String, String> params) {
+        try {
+            String type = params.get("type");
+            boolean force = Objects.equals(params.get("force"), "true");
+            String mode = Objects.requireNonNullElse(params.get("mode"), "0");
+            if (params.get("device") != null && (mode.equals("0") || mode.equals("2"))) sendSync(params, type, force);
+            if (mode.equals("0") || mode.equals("1")) receiveSync(params, type, force);
+            return Nano.ok();
+        } catch (Exception e) {
+            App.post(() -> Notify.show(e.getMessage()));
+            return Nano.error(e.getMessage());
         }
     }
 
-    private void post(Device device, String type, FormBody.Builder body) {
-        try {
-            OkHttp.newCall(OkHttp.client(Constant.TIMEOUT_SYNC), device.getIp().concat("/action?do=sync&mode=0&type=" + type), body.build()).execute();
-        } catch (Exception e) {
-            App.post(() -> Notify.show(e.getMessage()));
+    private void sendSync(Map<String, String> params, String type, boolean force) throws IOException {
+        Device device = Device.objectFrom(params.get("device"));
+        if ("history".equals(type)) sendHistory(device, params, force);
+        else if ("keep".equals(type)) sendKeep(device, force);
+    }
+
+    private void receiveSync(Map<String, String> params, String type, boolean force) {
+        if ("history".equals(type)) syncHistory(params, force);
+        else if ("keep".equals(type)) syncKeep(params, force);
+    }
+
+    private void post(Device device, String type, FormBody.Builder body, boolean force) throws IOException {
+        String url = device.getIp() + "/action?do=sync&mode=0&type=" + type + (force ? "&force=true" : "");
+        try (okhttp3.Response response = OkHttp.newCall(OkHttp.client(Constant.TIMEOUT_SYNC), url, body.build()).execute()) {
+            if (!response.isSuccessful()) throw new IOException("HTTP " + response.code());
+            if (response.body() == null || !response.body().string().equals("OK")) throw new IOException("Invalid sync response");
         }
     }
 
-    private void sendHistory(Device device, Map<String, String> params) {
-        try {
-            Config config = Config.find(Config.objectFrom(params.get("config")));
-            if (config.getUrl() == null) config = Config.vod();
-            FormBody.Builder body = new FormBody.Builder();
-            body.add("config", config.toString());
-            body.add("targets", App.gson().toJson(History.get(config.getId())));
-            post(device, "history", body);
-        } catch (Exception e) {
-            App.post(() -> Notify.show(e.getMessage()));
-        }
+    private void sendHistory(Device device, Map<String, String> params, boolean force) throws IOException {
+        Config config = Config.find(Config.objectFrom(params.get("config")));
+        if (config.getUrl() == null) config = Config.vod();
+        FormBody.Builder body = new FormBody.Builder();
+        body.add("config", config.toString());
+        body.add("targets", App.gson().toJson(History.get(config.getId())));
+        post(device, "history", body, force);
     }
 
-    private void sendKeep(Device device) {
-        try {
-            FormBody.Builder body = new FormBody.Builder();
-            body.add("targets", App.gson().toJson(Keep.getVod()));
-            body.add("configs", App.gson().toJson(Config.findUrls()));
-            post(device, "keep", body);
-        } catch (Exception e) {
-            App.post(() -> Notify.show(e.getMessage()));
-        }
+    private void sendKeep(Device device, boolean force) throws IOException {
+        FormBody.Builder body = new FormBody.Builder();
+        body.add("targets", App.gson().toJson(Keep.getVod()));
+        body.add("configs", App.gson().toJson(Config.findUrls()));
+        post(device, "keep", body, force);
     }
 
     public void syncHistory(Map<String, String> params, boolean force) {

@@ -115,7 +115,7 @@ public class CollectActivity extends BaseActivity {
     }
 
     private void saveKeyword() {
-        List<String> items = Setting.getKeyword().isEmpty() ? new ArrayList<>() : App.gson().fromJson(Setting.getKeyword(), new TypeToken<List<String>>() {}.getType());
+        List<String> items = Setting.getKeyword().isEmpty() ? new ArrayList<>() : App.gson().fromJson(Setting.getKeyword(), TypeToken.getParameterized(List.class, String.class).getType());
         items.remove(getKeyword());
         items.add(0, getKeyword());
         if (items.size() > 9) items.remove(9);
@@ -139,9 +139,9 @@ public class CollectActivity extends BaseActivity {
     }
 
     private void onChildSelected(@Nullable RecyclerView.ViewHolder child) {
-        if (mOldView != null) mOldView.setActivated(false);
+        if (mOldView != null) mOldView.setSelected(false);
         if ((mOldView = child != null ? child.itemView : null) == null) return;
-        mOldView.setActivated(true);
+        mOldView.setSelected(true);
         App.post(mRunnable, 100);
     }
 

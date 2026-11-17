@@ -2,120 +2,176 @@ package com.fongmi.quickjs.crawler;
 
 import android.content.Context;
 
-import com.fongmi.quickjs.bean.Res;
-import com.fongmi.quickjs.method.Console;
+import com.fongmi.quickjs.Console;
+import com.fongmi.quickjs.QuickJS;
+import com.fongmi.quickjs.QuickJSContext;
+import com.fongmi.quickjs.QuickJSLoader;
+import com.fongmi.quickjs.host.Host;
 import com.fongmi.quickjs.method.Global;
-import com.fongmi.quickjs.method.Local;
-import com.fongmi.quickjs.utils.Async;
-import com.fongmi.quickjs.utils.JSUtil;
+import com.fongmi.quickjs.method.Invocation;
 import com.fongmi.quickjs.utils.Module;
-import com.github.catvod.utils.Asset;
+import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.utils.Json;
-import com.github.catvod.utils.UriUtil;
-import com.github.catvod.utils.Util;
-import com.whl.quickjs.wrapper.JSArray;
-import com.whl.quickjs.wrapper.JSObject;
-import com.whl.quickjs.wrapper.QuickJSContext;
+import com.github.catvod.utils.RuntimeModule;
 
 import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
 
 import java.io.ByteArrayInputStream;
-import java.util.Arrays;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.StringJoiner;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 import dalvik.system.DexClassLoader;
 
 public class Spider extends com.github.catvod.crawler.Spider {
 
-    private final ExecutorService executor;
+    private static final long DESTROY_TIMEOUT = 5000;
     private final DexClassLoader dex;
     private final String api;
+    private final Host host;
+    private final Module module;
 
-    private QuickJSContext ctx;
-    private JSObject jsObject;
-    private boolean cat;
+    private QuickJS ctx;
+    private volatile Global global;
+    private volatile boolean closed;
+    private volatile boolean destroyed;
 
     public Spider(String api, DexClassLoader dex) {
-        this.executor = Executors.newSingleThreadExecutor();
-        this.api = api;
-        this.dex = dex;
+        this(api, dex, Host.NONE);
     }
 
-    private <T> Future<T> submit(Callable<T> callable) {
-        return executor.submit(callable);
+    public Spider(String api, DexClassLoader dex, Host host) {
+        this(api, dex, host, new Module());
+    }
+
+    public Spider(String api, DexClassLoader dex, Host host, Module module) {
+        this.api = api;
+        this.dex = dex;
+        this.host = host;
+        this.module = module;
+    }
+
+    private void await(CompletableFuture<Object> future) throws Exception {
+        if (closed) future.cancel(false);
+        try {
+            future.get();
+        } catch (InterruptedException error) {
+            future.cancel(false);
+            Thread.currentThread().interrupt();
+            throw error;
+        }
     }
 
     private Object call(String func, Object... args) throws Exception {
-        return submit(() -> Async.run(jsObject, func, args)).get().get();
+        try (Invocation current = new Invocation()) {
+            return call(current, func, args);
+        }
+    }
+
+    private Object call(Invocation current, String func, Object... args) throws Exception {
+        current.timeout("destroy".equals(func) || "stopDanmaku".equals(func) ? DESTROY_TIMEOUT : host.getCallTimeout());
+        CompletableFuture<Object> result = global.call(func, future -> beginCall(current, func), global::endCall, args);
+        current.bind(result);
+        try {
+            return "destroy".equals(func) ? result.join() : result.get();
+        } catch (InterruptedException error) {
+            result.cancel(false);
+            current.cancel();
+            Thread.currentThread().interrupt();
+            throw error;
+        } finally {
+            logMetrics(current, func);
+        }
+    }
+
+    private void beginCall(Invocation current, String func) {
+        if (closed && !"destroy".equals(func)) throw new IllegalStateException("Spider closed");
+        global.beginCall(current);
+    }
+
+    private void logMetrics(Invocation current, String func) {
+        Invocation.Metrics metrics = current.metrics();
+        SpiderDebug.log("quickjs", "%s total=%.2fms queue=%.2fms owner=%.2fms net=%.2fms html=%.2fms netOps=%d pending=%d streams=%d", func, metrics.elapsedNanos() / 1e6, metrics.queuedNanos() / 1e6, metrics.ownerNanos() / 1e6, metrics.networkNanos() / 1e6, metrics.htmlNanos() / 1e6, metrics.networkOperations(), metrics.pending(), metrics.streams());
     }
 
     @Override
     public void init(Context context, String extend) throws Exception {
-        initializeJS();
-        call("init", submit(() -> getExt(extend)).get());
+        try {
+            initializeJS();
+            call("init", extend);
+        } catch (Exception | Error error) {
+            closeContext(closeResources(error));
+            throw error;
+        }
     }
 
     @Override
     public String homeContent(boolean filter) throws Exception {
-        return (String) call("home", filter);
+        return (String) call("homeContent", filter);
     }
 
     @Override
     public String homeVideoContent() throws Exception {
-        return (String) call("homeVod");
+        return (String) call("homeVideoContent");
     }
 
     @Override
     public String categoryContent(String tid, String pg, boolean filter, HashMap<String, String> extend) throws Exception {
-        JSObject obj = submit(() -> JSUtil.toObject(ctx, extend)).get();
-        return (String) call("category", tid, pg, filter, obj);
+        return (String) call("categoryContent", tid, pg, filter, new QuickJS.Json(new JSONObject(extend).toString()));
     }
 
     @Override
     public String detailContent(List<String> ids) throws Exception {
-        return (String) call("detail", ids.get(0));
+        return (String) call("detailContent", (Object) ids.toArray());
     }
 
     @Override
     public String searchContent(String key, boolean quick) throws Exception {
-        return (String) call("search", key, quick);
+        return searchContent(key, quick, "1");
     }
 
     @Override
     public String searchContent(String key, boolean quick, String pg) throws Exception {
-        return (String) call("search", key, quick, pg);
+        return (String) call("searchContent", key, quick, pg);
     }
 
     @Override
     public String playerContent(String flag, String id, List<String> vipFlags) throws Exception {
-        JSArray array = submit(() -> JSUtil.toArray(ctx, vipFlags)).get();
-        return (String) call("play", flag, id, array);
+        return (String) call("playerContent", flag, id, vipFlags.toArray());
     }
 
     @Override
     public String liveContent(String url) throws Exception {
-        return (String) call("live", url);
+        return (String) call("liveContent", url);
     }
 
     @Override
     public boolean manualVideoCheck() throws Exception {
-        return (Boolean) call("sniffer");
+        return (Boolean) call("manualVideoCheck");
     }
 
     @Override
     public boolean isVideoFormat(String url) throws Exception {
-        return (Boolean) call("isVideo", url);
+        return (Boolean) call("isVideoFormat", url);
     }
 
     @Override
     public Object[] proxy(Map<String, String> params) throws Exception {
-        return "catvod".equals(params.get("from")) ? proxy2(params) : proxy1(params);
+        try (Invocation current = new Invocation(true)) {
+            Object[] array = (Object[]) call(current, "proxy", new QuickJS.Json(new JSONObject(params).toString()));
+            return proxyResponse(current, array);
+        }
     }
 
     @Override
@@ -124,121 +180,210 @@ public class Spider extends com.github.catvod.crawler.Spider {
     }
 
     @Override
-    public void destroy() {
+    public AutoCloseable danmaku(String id, Consumer<JSONObject> emit) throws Exception {
+        int token = global.addDanmaku(emit);
         try {
-            call("destroy");
-        } catch (Throwable e) {
-            e.printStackTrace();
+            call("startDanmaku", id, token);
+        } catch (Exception | Error error) {
+            global.removeDanmaku(token);
+            throw error;
         }
-        try {
-            releaseJS();
-        } catch (Throwable e) {
-            e.printStackTrace();
-        } finally {
-            executor.shutdownNow();
-        }
+        AtomicBoolean closed = new AtomicBoolean();
+        return () -> {
+            if (!closed.compareAndSet(false, true)) return;
+            global.removeDanmaku(token);
+            if (!this.closed) call("stopDanmaku", token);
+        };
     }
 
-    private void releaseJS() throws Exception {
-        submit(() -> {
-            jsObject.release();
-            ctx.destroy();
-            return null;
-        }).get();
+    @Override
+    public synchronized void close() {
+        throwFailure(closeResources(null));
+    }
+
+    private synchronized Throwable closeResources(Throwable failure) {
+        if (closed) return failure;
+        closed = true;
+        failure = cancelRequests(failure);
+        failure = cancelPending(failure);
+        return closeHost(failure);
+    }
+
+    private Throwable closeHost(Throwable failure) {
+        try {
+            super.close();
+        } catch (RuntimeException | Error error) {
+            if (failure == null) failure = error;
+            else if (failure != error) failure.addSuppressed(error);
+        }
+        return failure;
+    }
+
+    @Override
+    public synchronized void destroy() {
+        if (destroyed) return;
+        destroyed = true;
+        Throwable failure = closeResources(null);
+        failure = destroyScript(failure);
+        failure = closeContext(failure);
+        throwFailure(failure);
+    }
+
+    private void throwFailure(Throwable failure) {
+        if (failure instanceof RuntimeException error) throw error;
+        if (failure instanceof Error error) throw error;
+        if (failure != null) throw new IllegalStateException("Cannot destroy JavaScript spider", failure);
+    }
+
+    private Throwable cancelRequests(Throwable failure) {
+        try {
+            if (global != null) global.cancelRequests();
+        } catch (RuntimeException | Error error) {
+            if (failure == null) failure = error;
+            else if (failure != error) failure.addSuppressed(error);
+        }
+        return failure;
+    }
+
+    private Throwable cancelPending(Throwable failure) {
+        try {
+            if (ctx != null) ctx.cancelPending();
+        } catch (RuntimeException | Error error) {
+            if (failure == null) failure = error;
+            else if (failure != error) failure.addSuppressed(error);
+        }
+        return failure;
+    }
+
+    private Throwable destroyScript(Throwable failure) {
+        try {
+            if (global != null) call("destroy");
+        } catch (Exception | Error error) {
+            if (failure == null) failure = error;
+            else if (failure != error) failure.addSuppressed(error);
+        }
+        return failure;
+    }
+
+    private Throwable closeContext(Throwable failure) {
+        try {
+            if (ctx != null) ctx.close();
+        } catch (RuntimeException | Error error) {
+            if (failure == null) failure = error;
+            else if (failure != error) failure.addSuppressed(error);
+        }
+        return failure;
     }
 
     private void initializeJS() throws Exception {
-        submit(() -> {
-            createCtx();
+        ctx = new QuickJS(QuickJSLoader::init);
+        ctx.submit(this::bindGlobals).get();
+        ctx.setModuleLoader(module).get();
+        ctx.submit(() -> {
             createFun();
-            createObj();
             return null;
         }).get();
+        createObj();
     }
 
-    private void createCtx() {
-        ctx = QuickJSContext.create();
-        ctx.setConsole(new Console());
-        ctx.evaluate(Asset.read("js/lib/http.js"));
-        ctx.getGlobalObject().setProperty("local", Local.class);
-        ctx.setModuleLoader(new QuickJSContext.BytecodeModuleLoader() {
-            @Override
-            public String moduleNormalizeName(String baseModuleName, String moduleName) {
-                return UriUtil.resolve(baseModuleName, moduleName);
-            }
-
-            @Override
-            public byte[] getModuleBytecode(String moduleName) {
-                return ctx.compileModule(Module.get().fetch(moduleName), moduleName);
-            }
-        });
+    private Object bindGlobals() {
+        ctx.setUnhandledRejectionListener(SpiderDebug::log).join();
+        Console.install(ctx).join();
+        global = Global.create(ctx, host, siteKey, api);
+        return null;
     }
 
     private void createFun() {
+        if (dex == null) return;
         try {
-            Global.create(ctx, executor);
             Class<?> clz = dex.loadClass("com.github.catvod.js.Function");
-            clz.getDeclaredConstructor(QuickJSContext.class).newInstance(ctx);
-        } catch (Throwable ignored) {
+            clz.getDeclaredConstructor(QuickJSContext.class).newInstance(new QuickJSContext(ctx));
+        } catch (ClassNotFoundException ignored) {
+        } catch (ReflectiveOperationException error) {
+            throw new IllegalStateException("Cannot initialize JavaScript JAR functions", error);
         }
     }
 
-    private void createObj() {
-        String spider = "__JS_SPIDER__";
-        String global = "globalThis." + spider;
-        String content = Module.get().fetch(api);
-        cat = content.contains("__jsEvalReturn");
-        ctx.evaluateModule(content.replace(spider, global), api);
-        ctx.evaluateModule(String.format(Asset.read("js/lib/spider.js"), api));
-        jsObject = (JSObject) ctx.getProperty(ctx.getGlobalObject(), spider);
+    private void createObj() throws Exception {
+        String content = module.load(api);
+        evaluateModule(content, api);
+        evaluateModule(String.format(RuntimeModule.QUICKJS.readAsset("js/lib/spider.js"), JSONObject.quote(api)), api + "#spider");
     }
 
-    private Object getExt(String ext) {
-        if (!cat) return Json.isObj(ext) ? ctx.parse(ext) : ext;
-        JSObject obj = ctx.createNewJSObject();
-        obj.setProperty("stype", 3);
-        obj.setProperty("skey", siteKey);
-        if (!Json.isObj(ext)) obj.setProperty("ext", ext);
-        else obj.setProperty("ext", (JSObject) ctx.parse(ext));
-        return obj;
-    }
-
-    private Object[] proxy1(Map<String, String> params) throws Exception {
-        JSObject obj = submit(() -> JSUtil.toObject(ctx, params)).get();
-        JSArray proxy = (JSArray) call("proxy", obj);
-        String json = submit(proxy::stringify).get();
-        JSONArray array = new JSONArray(json);
-        Map<String, String> headers = array.length() > 3 ? Json.toMap(array.optString(3)) : null;
-        boolean base64 = array.length() > 4 && array.optInt(4) == 1;
-        Object[] result = new Object[4];
-        result[0] = array.optInt(0);
-        result[1] = array.optString(1);
-        result[2] = getStream(array.opt(2), base64);
-        result[3] = headers;
-        return result;
-    }
-
-    private Object[] proxy2(Map<String, String> params) throws Exception {
-        String url = params.get("url");
-        String header = params.get("header");
-        JSArray array = submit(() -> JSUtil.toArray(ctx, Arrays.asList(url.split("/")))).get();
-        Object object = submit(() -> ctx.parse(header)).get();
-        String proxy = (String) call("proxy", array, object);
-        Res res = Res.objectFrom(proxy);
-        Object[] result = new Object[3];
-        result[0] = res.getCode();
-        result[1] = res.getContentType();
-        result[2] = res.getStream();
-        return result;
-    }
-
-    private ByteArrayInputStream getStream(Object o, boolean base64) {
-        if (o instanceof byte[]) {
-            return new ByteArrayInputStream((byte[]) o);
-        } else {
-            String content = o.toString();
-            if (base64 && content.contains("base64,")) content = content.split("base64,")[1];
-            return new ByteArrayInputStream(base64 ? Util.decode(content) : content.getBytes());
+    private void evaluateModule(String source, String name) throws Exception {
+        try (Invocation current = new Invocation()) {
+            current.timeout(host.getCallTimeout());
+            CompletableFuture<Object> result = ctx.evaluateModule(source, name, future -> global.beginCall(current), global::endCall);
+            current.bind(result);
+            await(result);
         }
+    }
+
+    private Object[] proxyResponse(Invocation current, Object[] array) throws Exception {
+        if (array == null || array.length < 3) throw new IllegalArgumentException("Proxy response requires status, MIME and body");
+        int code = proxyCode(array[0]);
+        if (!(array[1] instanceof String mime)) throw new IllegalArgumentException("Proxy response MIME requires a string");
+        Map<String, String> headers = proxyHeaders(array.length > 3 ? array[3] : null);
+        InputStream body = proxyBody(current, array[2]);
+        return new Object[]{code, mime, body, headers};
+    }
+
+    private int proxyCode(Object value) {
+        if (!(value instanceof Number number)) throw new IllegalArgumentException("Proxy response status requires an integer from 100 to 599");
+        int code = number.intValue();
+        if (number.doubleValue() != code || code < 100 || code > 599) throw new IllegalArgumentException("Proxy response status requires an integer from 100 to 599");
+        return code;
+    }
+
+    private Map<String, String> proxyHeaders(Object header) throws JSONException {
+        if (header == null) return null;
+        if (!(header instanceof QuickJS.Json(String text))) throw new IllegalArgumentException("Proxy response headers require an object");
+        JSONObject object = new JSONObject(text);
+        Map<String, String> headers = new LinkedHashMap<>();
+        for (Iterator<String> keys = object.keys(); keys.hasNext(); ) {
+            String key = keys.next();
+            headers.put(key, headerValue(object.get(key)));
+        }
+        return headers;
+    }
+
+    private String headerValue(Object value) throws JSONException {
+        if (value instanceof String text) return text;
+        if (!(value instanceof JSONArray values)) throw new IllegalArgumentException("Invalid proxy response header");
+        StringJoiner joined = new StringJoiner(", ");
+        for (int i = 0; i < values.length(); i++) {
+            if (!(values.get(i) instanceof String text)) throw new IllegalArgumentException("Invalid proxy response header");
+            joined.add(text);
+        }
+        return joined.toString();
+    }
+
+    private InputStream proxyBody(Invocation current, Object value) throws JSONException {
+        if (value instanceof QuickJS.Json(String text)) value = new JSONTokener(text).nextValue();
+        if (value instanceof JSONObject stream && stream.has("$tvStream")) return current.takeStream(stream.getString("$tvStream"));
+        if (value instanceof byte[] bytes) return new ByteArrayInputStream(bytes);
+        if (value instanceof String text) return new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8));
+        if (value instanceof Object[] array) return new ByteArrayInputStream(proxyBytes(array));
+        if (value instanceof JSONArray array) return new ByteArrayInputStream(proxyBytes(array));
+        throw new IllegalArgumentException("Proxy response body requires text or bytes");
+    }
+
+    private byte[] proxyBytes(Object[] array) {
+        byte[] bytes = new byte[array.length];
+        for (int i = 0; i < bytes.length; i++) bytes[i] = proxyByte(array[i]);
+        return bytes;
+    }
+
+    private byte[] proxyBytes(JSONArray array) {
+        byte[] bytes = new byte[array.length()];
+        for (int i = 0; i < bytes.length; i++) bytes[i] = proxyByte(array.opt(i));
+        return bytes;
+    }
+
+    private byte proxyByte(Object value) {
+        if (!(value instanceof Number number)) throw new IllegalArgumentException("Proxy bytes must be integers from 0 to 255");
+        int byteValue = number.intValue();
+        if (number.doubleValue() != byteValue || byteValue < 0 || byteValue > 255) throw new IllegalArgumentException("Proxy bytes must be integers from 0 to 255");
+        return (byte) byteValue;
     }
 }

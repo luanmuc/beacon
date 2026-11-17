@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -14,11 +15,13 @@
         android:layout_weight="1"
         android:ellipsize="marquee"
         android:singleLine="true"
-        android:textColor="@color/control"
+        android:textColor="@color/selector_control"
         android:textSize="14sp"
+        app:backgroundTint="@color/selector_button"
+        app:strokeColor="@color/selector_stroke"
         tools:text="泥巴" />
 
-    <androidx.appcompat.widget.AppCompatImageView
+    <com.fongmi.android.tv.ui.custom.DialogActionView
         android:id="@+id/pass"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -26,7 +29,7 @@
         android:background="?attr/selectableItemBackgroundBorderless"
         android:src="@drawable/ic_live_pass" />
 
-    <androidx.appcompat.widget.AppCompatImageView
+    <com.fongmi.android.tv.ui.custom.DialogActionView
         android:id="@+id/boot"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

@@ -3,7 +3,10 @@ package com.fongmi.android.tv.ui.dialog;
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 
+import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 
@@ -11,53 +14,58 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.media3.common.MediaMetadata;
 import androidx.viewbinding.ViewBinding;
 
-import com.fongmi.android.tv.App;
 import com.fongmi.android.tv.R;
-import com.fongmi.android.tv.api.config.VodConfig;
+import com.fongmi.android.tv.api.DanmakuApi;
 import com.fongmi.android.tv.bean.Danmaku;
 import com.fongmi.android.tv.databinding.DialogDanmakuSearchBinding;
+import com.fongmi.android.tv.impl.DanmakuListener;
 import com.fongmi.android.tv.player.PlayerManager;
+import com.fongmi.android.tv.setting.DanmakuSetting;
 import com.fongmi.android.tv.ui.adapter.DanmakuAdapter;
 import com.fongmi.android.tv.ui.custom.SpaceItemDecoration;
 import com.fongmi.android.tv.utils.KeyUtil;
 import com.fongmi.android.tv.utils.Notify;
 import com.fongmi.android.tv.utils.ResUtil;
 import com.fongmi.android.tv.utils.Util;
-import com.github.catvod.net.OkHttp;
-import com.github.catvod.utils.Trans;
 
-import java.io.IOException;
 import java.util.List;
 
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.Response;
+public final class DanmakuSearchDialog extends BaseBottomSheetDialog implements DanmakuAdapter.OnClickListener, DanmakuListener {
 
-public final class DanmakuSearchDialog extends BaseBottomSheetDialog implements DanmakuAdapter.OnClickListener, Callback {
-
-    private final String TAG = DanmakuSearchDialog.class.getSimpleName();
     private final DanmakuAdapter adapter;
     private DialogDanmakuSearchBinding binding;
     private PlayerManager player;
-
-    public static DanmakuSearchDialog create() {
-        return new DanmakuSearchDialog();
-    }
+    private boolean keywordInitialized;
 
     public DanmakuSearchDialog() {
         this.adapter = new DanmakuAdapter(this);
     }
 
-    public DanmakuSearchDialog player(PlayerManager player) {
-        this.player = player;
-        return this;
+    public static DanmakuSearchDialog create() {
+        return new DanmakuSearchDialog();
     }
 
     public void show(FragmentActivity activity) {
-        for (Fragment f : activity.getSupportFragmentManager().getFragments()) if (f instanceof DanmakuSearchDialog) return;
-        show(activity.getSupportFragmentManager(), null);
+        FragmentManager manager = activity.getSupportFragmentManager();
+        if (manager.isStateSaved()) return;
+        for (Fragment fragment : manager.getFragments()) if (fragment instanceof DanmakuSearchDialog) return;
+        show(manager, null);
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        keywordInitialized = savedInstanceState != null && savedInstanceState.getBoolean("keywordInitialized");
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean("keywordInitialized", keywordInitialized);
     }
 
     @Override
@@ -71,14 +79,27 @@ public final class DanmakuSearchDialog extends BaseBottomSheetDialog implements 
         binding.recycler.setItemAnimator(null);
         binding.recycler.setHasFixedSize(false);
         binding.recycler.addItemDecoration(new SpaceItemDecoration(1, 16));
-        setKeyword(player.getMetadata().title);
+        PlaybackDialog.observe(this, this::bindPlayer);
+    }
+
+    private void bindPlayer(PlayerManager player) {
+        if (this.player != null && player == null) {
+            DanmakuApi.cancel();
+            showResults(adapter.getItemCount() == 0);
+        }
+        this.player = player;
+        if (player == null || keywordInitialized) return;
+        binding.keyword.setText(getTitle());
+        binding.keyword.setSelection(binding.keyword.length());
+        keywordInitialized = true;
         Util.showKeyboard(binding.keyword);
     }
 
     @Override
     protected void initEvent() {
+        binding.setting.setOnClickListener(this::onSetting);
         binding.keyword.setOnEditorActionListener((textView, actionId, event) -> {
-            if (actionId == EditorInfo.IME_ACTION_SEARCH && !binding.keyword.getText().toString().trim().isEmpty()) search();
+            if (actionId == EditorInfo.IME_ACTION_SEARCH && !getKeyword().isEmpty()) search();
             return true;
         });
         binding.keyword.setOnKeyListener((view, keyCode, event) -> {
@@ -89,13 +110,27 @@ public final class DanmakuSearchDialog extends BaseBottomSheetDialog implements 
 
     @Override
     public void onItemClick(Danmaku item) {
-        player.setDanmaku(item.isSelected() ? Danmaku.empty() : item);
+        if (!PlaybackDialog.isCurrentPlayer(this, player)) return;
+        player.setDanmaku(item);
         dismiss();
     }
 
-    private void setKeyword(CharSequence text) {
-        binding.keyword.setText(text);
-        binding.keyword.setSelection(text.length());
+    private CharSequence getTitle() {
+        MediaMetadata metadata = player.getMetadata();
+        return metadata == null || TextUtils.isEmpty(metadata.title) ? "" : metadata.title;
+    }
+
+    private String getEpisode() {
+        MediaMetadata metadata = player.getMetadata();
+        return metadata == null || TextUtils.isEmpty(metadata.artist) ? "" : metadata.artist.toString().trim();
+    }
+
+    private String getKeyword() {
+        return binding.keyword.getText().toString().trim();
+    }
+
+    private void onSetting(View view) {
+        DanmakuApiDialog.show(this);
     }
 
     private void showProgress() {
@@ -103,52 +138,42 @@ public final class DanmakuSearchDialog extends BaseBottomSheetDialog implements 
         binding.progress.setVisibility(VISIBLE);
     }
 
-    private void hideProgress(boolean empty) {
+    private void showResults(boolean empty) {
         binding.progress.setVisibility(GONE);
         binding.recycler.setVisibility(empty ? GONE : VISIBLE);
+        if (!empty) binding.recycler.requestFocus();
     }
 
     private void search() {
+        if (!PlaybackDialog.isCurrentPlayer(this, player)) return;
         showProgress();
         adapter.clear();
-        OkHttp.cancel(TAG);
         Util.hideKeyboard(binding.keyword);
-        String name = binding.keyword.getText().toString().trim();
-        String episode = player.getMetadata().artist.toString().trim();
-        String url = VodConfig.get().getConfig().getDanmaku().replace("{name}", Trans.t2s(name)).replace("{episode}", Trans.t2s(episode));
-        OkHttp.newCall(url, TAG).enqueue(this);
+        DanmakuApi.search(getKeyword(), getEpisode(), this::onSuccess, this::onError);
+    }
+
+    @Override
+    public void setDanmakuApi(String url) {
+        DanmakuSetting.putApiUrl(url);
+        if (!getKeyword().isEmpty() && !TextUtils.isEmpty(DanmakuSetting.getEffectiveApiUrl())) search();
     }
 
     private void onSuccess(List<Danmaku> items) {
         adapter.addAll(items);
-        hideProgress(items.isEmpty());
-        binding.recycler.requestFocus();
+        showResults(items.isEmpty());
+        if (items.isEmpty()) Notify.show(R.string.error_empty);
     }
 
     private void onError(Exception e) {
-        hideProgress(true);
-        Notify.show(e.getMessage());
-    }
-
-    @Override
-    public void onResponse(@NonNull Call call, @NonNull Response response) {
-        try {
-            List<Danmaku> items = Danmaku.arrayFrom(response.body().string());
-            if (items.isEmpty()) throw new Exception(ResUtil.getString(R.string.error_empty));
-            else App.post(() -> onSuccess(items));
-        } catch (Exception e) {
-            App.post(() -> onError(e));
-        }
-    }
-
-    @Override
-    public void onFailure(@NonNull Call call, @NonNull IOException e) {
-        App.post(() -> onError(e));
+        showResults(true);
+        Notify.show(TextUtils.isEmpty(e.getMessage()) ? ResUtil.getString(R.string.error_empty) : e.getMessage());
     }
 
     @Override
     public void onDestroyView() {
+        binding = null;
+        player = null;
+        DanmakuApi.cancel();
         super.onDestroyView();
-        OkHttp.cancel(TAG);
     }
 }

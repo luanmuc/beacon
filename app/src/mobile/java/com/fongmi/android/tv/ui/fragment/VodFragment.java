@@ -1,20 +1,15 @@
 package com.fongmi.android.tv.ui.fragment;
 
-import android.app.Activity;
-import android.content.Intent;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentStatePagerAdapter;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewpager.widget.ViewPager;
@@ -32,14 +27,14 @@ import com.fongmi.android.tv.event.ConfigEvent;
 import com.fongmi.android.tv.event.RefreshEvent;
 import com.fongmi.android.tv.event.StateEvent;
 import com.fongmi.android.tv.impl.Callback;
-import com.fongmi.android.tv.impl.ConfigCallback;
-import com.fongmi.android.tv.impl.FilterCallback;
-import com.fongmi.android.tv.impl.SiteCallback;
+import com.fongmi.android.tv.impl.ConfigListener;
+import com.fongmi.android.tv.impl.FilterListener;
+import com.fongmi.android.tv.impl.SiteListener;
 import com.fongmi.android.tv.model.SiteViewModel;
 import com.fongmi.android.tv.ui.activity.HistoryActivity;
 import com.fongmi.android.tv.ui.activity.KeepActivity;
 import com.fongmi.android.tv.ui.activity.SearchActivity;
-import com.fongmi.android.tv.ui.activity.VideoActivity;
+import com.fongmi.android.tv.ui.adapter.CategoryPagerAdapter;
 import com.fongmi.android.tv.ui.adapter.TypeAdapter;
 import com.fongmi.android.tv.ui.base.BaseFragment;
 import com.fongmi.android.tv.ui.dialog.FilterDialog;
@@ -47,7 +42,6 @@ import com.fongmi.android.tv.ui.dialog.HistoryDialog;
 import com.fongmi.android.tv.ui.dialog.LinkDialog;
 import com.fongmi.android.tv.ui.dialog.ReceiveDialog;
 import com.fongmi.android.tv.ui.dialog.SiteDialog;
-import com.fongmi.android.tv.utils.FileChooser;
 import com.fongmi.android.tv.utils.ImgUtil;
 import com.fongmi.android.tv.utils.Notify;
 import com.fongmi.android.tv.utils.ResUtil;
@@ -60,7 +54,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-public class VodFragment extends BaseFragment implements ConfigCallback, SiteCallback, FilterCallback, TypeAdapter.OnClickListener {
+public class VodFragment extends BaseFragment implements ConfigListener, SiteListener, FilterListener, TypeAdapter.OnClickListener {
 
     private FragmentVodBinding mBinding;
     private SiteViewModel mViewModel;
@@ -118,7 +112,7 @@ public class VodFragment extends BaseFragment implements ConfigCallback, SiteCal
             @Override
             public void onPageSelected(int position) {
                 mBinding.type.smoothScrollToPosition(position);
-                mAdapter.setActivated(position);
+                mAdapter.setSelected(position);
                 setFabVisible(position);
             }
         });
@@ -128,6 +122,10 @@ public class VodFragment extends BaseFragment implements ConfigCallback, SiteCal
         mBinding.type.setHasFixedSize(true);
         mBinding.type.setItemAnimator(null);
         mBinding.type.setAdapter(mAdapter = new TypeAdapter(this));
+        setPager();
+    }
+
+    private void setPager() {
         mBinding.pager.setAdapter(new PageAdapter(getChildFragmentManager()));
     }
 
@@ -137,9 +135,7 @@ public class VodFragment extends BaseFragment implements ConfigCallback, SiteCal
     }
 
     private void setAdapter(Result result) {
-        mAdapter.addAll(mResult = result);
-        mBinding.pager.getAdapter().notifyDataSetChanged();
-        setFabVisible(0);
+        setCategories(result);
         hideProgress();
         showContent();
     }
@@ -174,20 +170,20 @@ public class VodFragment extends BaseFragment implements ConfigCallback, SiteCal
     }
 
     private boolean onLink(View view) {
-        LinkDialog.create(this).launcher(launcher).show();
+        LinkDialog.show(this);
         return true;
     }
 
     private void onLogo(View view) {
-        HistoryDialog.create(this).readOnly().type(0).show();
+        HistoryDialog.create().vod().readOnly().show(this);
     }
 
     private void onSite(View view) {
-        SiteDialog.create(this).change().show();
+        SiteDialog.create().change().show(this);
     }
 
     private void onFilter(View view) {
-        if (mAdapter.getItemCount() > 0) FilterDialog.create().filter(mAdapter.get(mBinding.pager.getCurrentItem()).getFilters()).show(this);
+        if (mAdapter.getItemCount() > 0) FilterDialog.create().filter(getFragment().getFilters()).show(this);
     }
 
     private boolean onMenuItemClick(MenuItem item) {
@@ -217,10 +213,20 @@ public class VodFragment extends BaseFragment implements ConfigCallback, SiteCal
 
     private void homeContent() {
         showProgress();
-        setFabVisible(0);
-        mAdapter.clear();
+        setCategories(Result.empty());
         mViewModel.homeContent();
-        mBinding.pager.setAdapter(new PageAdapter(getChildFragmentManager()));
+    }
+
+    private void setCategories(Result result) {
+        clearPages();
+        mAdapter.setItems(mResult = result);
+        setPager();
+        setFabVisible(0);
+    }
+
+    private void clearPages() {
+        for (Fragment fragment : getChildFragmentManager().getFragments()) if (fragment instanceof FilterDialog dialog) dialog.dismissAllowingStateLoss();
+        ((PageAdapter) mBinding.pager.getAdapter()).clearPages(mBinding.pager);
     }
 
     public Result getResult() {
@@ -245,9 +251,15 @@ public class VodFragment extends BaseFragment implements ConfigCallback, SiteCal
                 homeContent();
                 break;
             case CATEGORY:
-                getFragment().onRefresh();
+                if (mAdapter.getItemCount() > 0) getFragment().onRefresh();
                 break;
         }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onHomeContent(RefreshEvent.HomeContent event) {
+        Site site = getHome();
+        if (event.matchesSite(site.getKey())) mViewModel.refreshHomeContent(site);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -294,8 +306,9 @@ public class VodFragment extends BaseFragment implements ConfigCallback, SiteCal
 
     @Override
     public void onItemClick(int position, Class item) {
+        if (position < 0 || position >= mAdapter.getItemCount() || mAdapter.get(position) != item) return;
         mBinding.pager.setCurrentItem(position);
-        mAdapter.setActivated(position);
+        mAdapter.setSelected(position);
     }
 
     @Override
@@ -317,12 +330,7 @@ public class VodFragment extends BaseFragment implements ConfigCallback, SiteCal
         EventBus.getDefault().unregister(this);
     }
 
-    private final ActivityResultLauncher<Intent> launcher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-        if (result.getResultCode() != Activity.RESULT_OK || result.getData() == null || result.getData().getData() == null) return;
-        VideoActivity.file(requireActivity(), FileChooser.getPathFromUri(result.getData().getData()));
-    });
-
-    class PageAdapter extends FragmentStatePagerAdapter {
+    class PageAdapter extends CategoryPagerAdapter {
 
         public PageAdapter(@NonNull FragmentManager fm) {
             super(fm);
@@ -338,10 +346,6 @@ public class VodFragment extends BaseFragment implements ConfigCallback, SiteCal
         @Override
         public int getCount() {
             return mAdapter.getItemCount();
-        }
-
-        @Override
-        public void destroyItem(@NonNull ViewGroup container, int position, @NonNull Object object) {
         }
     }
 }

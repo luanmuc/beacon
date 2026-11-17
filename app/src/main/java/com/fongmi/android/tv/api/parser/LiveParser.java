@@ -2,20 +2,26 @@ package com.fongmi.android.tv.api.parser;
 
 import androidx.media3.common.MimeTypes;
 
+import com.fongmi.android.tv.api.loader.BaseLoader;
 import com.fongmi.android.tv.bean.Catchup;
 import com.fongmi.android.tv.bean.Channel;
 import com.fongmi.android.tv.bean.ClearKey;
 import com.fongmi.android.tv.bean.Drm;
 import com.fongmi.android.tv.bean.Group;
 import com.fongmi.android.tv.bean.Live;
+import com.fongmi.android.tv.exception.ExtractException;
 import com.fongmi.android.tv.utils.UrlUtil;
 import com.github.catvod.net.OkHttp;
+import com.github.catvod.utils.Auth;
 import com.github.catvod.utils.Json;
+import com.google.common.net.HttpHeaders;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import okhttp3.Response;
 
 public class LiveParser {
 
@@ -53,8 +59,18 @@ public class LiveParser {
     }
 
     private static String getText(Live live) throws Exception {
+        live.setAuth(null);
         if (!live.getApi().isEmpty()) return live.spider().liveContent(live.getUrl());
-        return OkHttp.string(UrlUtil.convert(live.getUrl()), live.getHeaders());
+        BaseLoader.get().requireProxy(live.getUrl());
+        String url = UrlUtil.convert(live.getUrl());
+        if (!url.startsWith("http")) return "";
+        Map<String, String> headers = live.getHeaders();
+        try (Response response = OkHttp.newCall(url, headers, Auth.Context.NONE).execute()) {
+            String text = response.body().string();
+            if (live.getUrl().startsWith("proxy://") && !response.isSuccessful()) throw new ExtractException(text);
+            if (response.isSuccessful()) live.setAuth(Auth.capture(live.getUrl(), headers, response.request().url().toString(), response.request().header(HttpHeaders.AUTHORIZATION)));
+            return text;
+        }
     }
 
     public static void text(Live live, String text) {
@@ -177,6 +193,7 @@ public class LiveParser {
             else if (line.startsWith("referer")) referer(line);
             else if (line.startsWith("#EXTHTTP:")) header(line);
             else if (line.startsWith("forceKey")) forceKey(line);
+            else if (line.startsWith("#EXTVLCOPT:http-cookie")) cookie(line);
             else if (line.startsWith("#EXTVLCOPT:http-origin")) origin(line);
             else if (line.startsWith("#EXTVLCOPT:http-user-agent")) ua(line);
             else if (line.startsWith("#EXTVLCOPT:http-referrer")) referrer(line);
@@ -255,6 +272,14 @@ public class LiveParser {
             } catch (Exception e) {
                 e.printStackTrace();
                 format = null;
+            }
+        }
+
+        private void cookie(String line) {
+            try {
+                header.put("Cookie", line.split("(?i)cookie=")[1].trim().replace("\"", ""));
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
 

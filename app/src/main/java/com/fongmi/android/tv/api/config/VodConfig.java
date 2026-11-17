@@ -3,8 +3,8 @@ package com.fongmi.android.tv.api.config;
 import android.text.TextUtils;
 
 import com.fongmi.android.tv.App;
-import com.fongmi.android.tv.api.Decoder;
 import com.fongmi.android.tv.api.loader.BaseLoader;
+import com.fongmi.android.tv.api.node.NodeRuntime;
 import com.fongmi.android.tv.bean.Config;
 import com.fongmi.android.tv.bean.Depot;
 import com.fongmi.android.tv.bean.Parse;
@@ -17,6 +17,8 @@ import com.fongmi.android.tv.utils.UrlUtil;
 import com.github.catvod.bean.Doh;
 import com.github.catvod.bean.Header;
 import com.github.catvod.bean.Proxy;
+import com.github.catvod.runtime.NodeRuntimeApi;
+import com.github.catvod.utils.Decoder;
 import com.github.catvod.utils.Json;
 import com.google.gson.JsonObject;
 
@@ -79,6 +81,14 @@ public class VodConfig extends BaseConfig {
     }
 
     public VodConfig clear() {
+        return clear(false);
+    }
+
+    public void destroy() {
+        clear(true);
+    }
+
+    private VodConfig clear(boolean exiting) {
         ads = null;
         doh = null;
         home = null;
@@ -88,7 +98,8 @@ public class VodConfig extends BaseConfig {
         flags = null;
         rules = null;
         parses = null;
-        BaseLoader.get().clear();
+        if (exiting) BaseLoader.get().destroy();
+        else BaseLoader.get().clear();
         RuleConfig.get().invalidate();
         return this;
     }
@@ -104,6 +115,11 @@ public class VodConfig extends BaseConfig {
     }
 
     @Override
+    protected void cancelLoad() {
+        NodeRuntime.get().cancelLoad();
+    }
+
+    @Override
     protected void postEvent() {
         super.postEvent();
         ConfigEvent.vod();
@@ -111,8 +127,19 @@ public class VodConfig extends BaseConfig {
 
     @Override
     protected void load(Config config) throws Throwable {
-        String json = Decoder.getJson(UrlUtil.convert(config.getUrl()), TAG);
-        checkJson(config, Json.parse(json).getAsJsonObject());
+        boolean node = NodeRuntime.isConfig(config.getUrl());
+        NodeRuntime runtime = NodeRuntime.get();
+        if (!node) runtime.clear();
+        NodeRuntimeApi.LoadedConfig loaded = null;
+        try {
+            if (node) loaded = runtime.loadConfig(config.getUrl());
+            String json = node ? loaded.json() : Decoder.getJson(UrlUtil.convert(config.getUrl()), TAG);
+            runtime.prune(loaded, Config.getAll(VOD).stream().map(Config::getUrl).toList(), config.getUrl());
+            checkJson(config, Json.parse(json).getAsJsonObject(), loaded);
+        } catch (Throwable e) {
+            if (node) runtime.fail(loaded);
+            throw e;
+        }
     }
 
     @Override
@@ -120,21 +147,22 @@ public class VodConfig extends BaseConfig {
         return !getSites().isEmpty();
     }
 
-    private void checkJson(Config config, JsonObject object) throws Throwable {
-        if (object.has("msg")) {
-            throw new Exception(object.get("msg").getAsString());
-        } else if (object.has("urls")) {
-            parseDepot(config, object);
-        } else {
-            parseConfig(config, object);
+    private void checkJson(Config config, JsonObject object, NodeRuntimeApi.LoadedConfig loaded) throws Throwable {
+        if (object.has("msg")) throw new Exception(object.get("msg").getAsString());
+        if (object.has("urls")) {
+            List<Depot> items = Depot.arrayFrom(object.getAsJsonArray("urls").toString());
+            if (items.isEmpty()) throw new Exception("Depot urls is empty");
+            if (loaded != null) NodeRuntime.get().accept(loaded);
+            parseDepot(config, items);
+            return;
         }
+        parseConfig(config, object);
+        if (loaded != null) NodeRuntime.get().accept(loaded);
     }
 
-    private void parseDepot(Config config, JsonObject object) throws Throwable {
-        List<Depot> items = Depot.arrayFrom(object.getAsJsonArray("urls").toString());
+    private void parseDepot(Config config, List<Depot> items) throws Throwable {
         List<Config> configs = new ArrayList<>();
         for (Depot item : items) configs.add(Config.find(item, VOD));
-        if (configs.isEmpty()) throw new Exception("Depot urls is empty");
         load(this.config = configs.get(0));
         Config.delete(config.getUrl());
     }
@@ -146,6 +174,7 @@ public class VodConfig extends BaseConfig {
         initSite(config, object);
         initParse(config, object);
         config.setLogo(Json.safeString(object, "logo"));
+        config.setAssrt(Json.safeString(object, "assrt"));
         config.setNotice(Json.safeString(object, "notice"));
         config.setDanmaku(Json.safeString(object, "danmaku"));
     }
@@ -285,18 +314,18 @@ public class VodConfig extends BaseConfig {
 
     private void setParse(Config config, Parse parse, boolean save) {
         this.parse = parse;
-        this.parse.setActivated(true);
+        this.parse.setSelected(true);
         config.setParse(parse.getName());
-        getParses().forEach(item -> item.setActivated(parse));
+        getParses().forEach(item -> item.setSelected(parse));
         if (save) config.save();
     }
 
     private void setHome(Config config, Site site, boolean save) {
         home = site;
-        home.setActivated(true);
+        home.setSelected(true);
         config.setHome(home.getKey());
         if (save) config.save();
-        getSites().forEach(item -> item.setActivated(home));
+        getSites().forEach(item -> item.setSelected(home));
     }
 
     private static class Loader {

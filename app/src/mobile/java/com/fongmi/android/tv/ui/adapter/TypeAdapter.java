@@ -37,22 +37,21 @@ public class TypeAdapter extends RecyclerView.Adapter<TypeAdapter.ViewHolder> {
         return type;
     }
 
-    public void clear() {
+    public void setItems(Result result) {
         mItems.clear();
-        notifyDataSetChanged();
-    }
-
-    public void addAll(Result result) {
         mItems.addAll(result.getTypes());
         if (!result.getList().isEmpty()) mItems.add(0, home());
-        if (!mItems.isEmpty()) mItems.get(0).setActivated(true);
+        selectItem(0);
         notifyDataSetChanged();
     }
 
-    public void setActivated(int position) {
-        for (Class item : mItems) item.setActivated(false);
-        mItems.get(position).setActivated(true);
+    public void setSelected(int position) {
+        selectItem(position);
         notifyItemRangeChanged(0, mItems.size());
+    }
+
+    private void selectItem(int position) {
+        for (int i = 0; i < mItems.size(); i++) mItems.get(i).setSelected(i == position);
     }
 
     public Class get(int position) {
@@ -74,7 +73,7 @@ public class TypeAdapter extends RecyclerView.Adapter<TypeAdapter.ViewHolder> {
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Class item = mItems.get(position);
         holder.binding.text.setText(item.getTypeName());
-        holder.binding.text.setActivated(item.isActivated());
+        holder.binding.text.setSelected(item.isSelected());
         holder.binding.text.setOnClickListener(v -> listener.onItemClick(position, item));
     }
 

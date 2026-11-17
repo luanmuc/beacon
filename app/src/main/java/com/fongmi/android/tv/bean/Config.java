@@ -48,9 +48,12 @@ public class Config {
     @Ignore
     @SerializedName("danmaku")
     private String danmaku;
+    @Ignore
+    @SerializedName("assrt")
+    private String assrt;
 
     public static List<Config> arrayFrom(String str) {
-        Type listType = new TypeToken<List<Config>>() {}.getType();
+        Type listType = TypeToken.getParameterized(List.class, Config.class).getType();
         List<Config> items = App.gson().fromJson(str, listType);
         return items == null ? Collections.emptyList() : items;
     }
@@ -93,7 +96,9 @@ public class Config {
     }
 
     public static Config live() {
-        Config item = AppDatabase.get().getConfigDao().findOne(1);
+        String url = Prefers.getString("config_1");
+        Config item = TextUtils.isEmpty(url) ? null : AppDatabase.get().getConfigDao().find(url, 1);
+        if (item == null) item = AppDatabase.get().getConfigDao().findOne(1);
         return item == null ? create(1) : item;
     }
 
@@ -216,6 +221,14 @@ public class Config {
 
     public void setDanmaku(String danmaku) {
         this.danmaku = danmaku;
+    }
+
+    public String getAssrt() {
+        return assrt;
+    }
+
+    public void setAssrt(String assrt) {
+        this.assrt = assrt;
     }
 
     public Config type(int type) {

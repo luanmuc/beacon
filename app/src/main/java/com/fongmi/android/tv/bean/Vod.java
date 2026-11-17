@@ -14,6 +14,7 @@ import com.fongmi.android.tv.impl.Diffable;
 import com.fongmi.android.tv.utils.Sniffer;
 import com.fongmi.android.tv.utils.Util;
 import com.github.catvod.utils.Trans;
+import com.github.catvod.utils.UriUtil;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
 
@@ -66,6 +67,8 @@ public class Vod implements Parcelable, Diffable<Vod> {
     private String vodPlayFrom;
     @SerializedName("vod_play_url")
     private String vodPlayUrl;
+    @SerializedName("vod_play_id")
+    private String vodPlayId;
     @SerializedName("vod_tag")
     private String vodTag;
     @SerializedName("action")
@@ -101,6 +104,7 @@ public class Vod implements Parcelable, Diffable<Vod> {
         this.vodContent = in.readString();
         this.vodPlayFrom = in.readString();
         this.vodPlayUrl = in.readString();
+        this.vodPlayId = in.readString();
         this.vodTag = in.readString();
         this.action = in.readString();
         this.land = (Integer) in.readValue(Integer.class.getClassLoader());
@@ -118,7 +122,7 @@ public class Vod implements Parcelable, Diffable<Vod> {
     }
 
     public static List<Vod> arrayFrom(String str) {
-        Type listType = new TypeToken<List<Vod>>() {}.getType();
+        Type listType = TypeToken.getParameterized(List.class, Vod.class).getType();
         List<Vod> items = App.gson().fromJson(str, listType);
         return items == null ? Collections.emptyList() : items;
     }
@@ -133,6 +137,13 @@ public class Vod implements Parcelable, Diffable<Vod> {
 
     public String getName() {
         return TextUtils.isEmpty(vodName) ? "" : Html.fromHtml(vodName, Html.FROM_HTML_MODE_LEGACY).toString().trim();
+    }
+
+    public String getName(String fallback) {
+        String name = getName();
+        if (TextUtils.isEmpty(fallback)) return name;
+        String scheme = UriUtil.scheme(name);
+        return name.isEmpty() || (scheme.equals("http") || scheme.equals("https")) && !UriUtil.host(name).isEmpty() ? fallback : name;
     }
 
     public void setName(String vodName) {
@@ -197,6 +208,14 @@ public class Vod implements Parcelable, Diffable<Vod> {
 
     public void setPlayUrl(String vodPlayUrl) {
         this.vodPlayUrl = vodPlayUrl;
+    }
+
+    public String getPlayId() {
+        return TextUtils.isEmpty(vodPlayId) ? "" : vodPlayId;
+    }
+
+    public void setPlayId(String vodPlayId) {
+        this.vodPlayId = vodPlayId;
     }
 
     public String getTag() {
@@ -280,7 +299,8 @@ public class Vod implements Parcelable, Diffable<Vod> {
     }
 
     public void checkName(String name) {
-        if (getName().isEmpty()) setName(name);
+        String title = getName(name);
+        if (!title.equals(getName())) setName(title);
     }
 
     public Style getStyle(Style style) {
@@ -344,6 +364,7 @@ public class Vod implements Parcelable, Diffable<Vod> {
         dest.writeString(this.vodContent);
         dest.writeString(this.vodPlayFrom);
         dest.writeString(this.vodPlayUrl);
+        dest.writeString(this.vodPlayId);
         dest.writeString(this.vodTag);
         dest.writeString(this.action);
         dest.writeValue(this.land);
@@ -362,7 +383,7 @@ public class Vod implements Parcelable, Diffable<Vod> {
 
     @Override
     public boolean isSameContent(Vod other) {
-        return getName().equals(other.getName()) && getPic().equals(other.getPic()) && getRemarks().equals(other.getRemarks()) && Objects.equals(getSite(), other.getSite());
+        return getName().equals(other.getName()) && getPic().equals(other.getPic()) && getRemarks().equals(other.getRemarks()) && getPlayId().equals(other.getPlayId()) && Objects.equals(getSite(), other.getSite());
     }
 
     public static final Creator<Vod> CREATOR = new Creator<>() {

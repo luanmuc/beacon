@@ -6,12 +6,11 @@
     android:orientation="vertical">
 
     <androidx.appcompat.widget.LinearLayoutCompat
+        style="@style/PlaybackDialogFirstRow"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingHorizontal="24dp"
-        android:paddingVertical="4dp">
+        android:paddingBottom="4dp"
+        android:orientation="horizontal">
 
         <com.google.android.material.textview.MaterialTextView
             android:layout_width="0dp"
@@ -31,12 +30,11 @@
 
     <com.google.android.material.slider.Slider
         android:id="@+id/maxOnScreenSlider"
+        android:contentDescription="@string/danmaku_max_on_screen"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="12dp"
         android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:nextFocusUp="@id/tabDensity"
         android:stepSize="10"
         android:valueFrom="10"
         android:valueTo="500"
@@ -48,7 +46,8 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="24dp"
-        android:paddingTop="4dp">
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp">
 
         <com.google.android.material.textview.MaterialTextView
             android:layout_width="0dp"
@@ -68,11 +67,11 @@
 
     <com.google.android.material.slider.Slider
         android:id="@+id/scrollAreaSlider"
+        android:contentDescription="@string/danmaku_scroll_area_ratio"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="12dp"
         android:focusable="true"
-        android:focusableInTouchMode="true"
         android:stepSize="0.05"
         android:valueFrom="0.1"
         android:valueTo="1.0"
@@ -84,7 +83,45 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="24dp"
-        android:paddingTop="4dp">
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp">
+
+        <com.google.android.material.textview.MaterialTextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/danmaku_scroll_gap_ratio"
+            android:textAppearance="?attr/textAppearanceBodyLarge" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/scrollGapValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorPrimary" />
+
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
+    <com.google.android.material.slider.Slider
+        android:id="@+id/scrollGapSlider"
+        android:contentDescription="@string/danmaku_scroll_gap_ratio"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="12dp"
+        android:focusable="true"
+        android:stepSize="0.1"
+        android:valueFrom="0"
+        android:valueTo="5.0"
+        app:tickVisible="false" />
+
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp">
 
         <com.google.android.material.textview.MaterialTextView
             android:layout_width="0dp"
@@ -104,11 +141,11 @@
 
     <com.google.android.material.slider.Slider
         android:id="@+id/lineSpacingSlider"
+        android:contentDescription="@string/danmaku_line_spacing"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="12dp"
         android:focusable="true"
-        android:focusableInTouchMode="true"
         android:stepSize="0.1"
         android:valueFrom="1.0"
         android:valueTo="2.0"
@@ -121,7 +158,8 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="24dp"
-        android:paddingTop="4dp">
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp">
 
         <com.google.android.material.textview.MaterialTextView
             android:layout_width="0dp"
@@ -141,11 +179,11 @@
 
     <com.google.android.material.slider.Slider
         android:id="@+id/maxScrollLinesSlider"
+        android:contentDescription="@string/danmaku_max_scroll_lines"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="12dp"
         android:focusable="true"
-        android:focusableInTouchMode="true"
         android:stepSize="1"
         android:valueFrom="0"
         android:valueTo="20"
@@ -158,7 +196,8 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="24dp"
-        android:paddingTop="4dp">
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp">
 
         <com.google.android.material.textview.MaterialTextView
             android:layout_width="0dp"
@@ -178,11 +217,11 @@
 
     <com.google.android.material.slider.Slider
         android:id="@+id/maxTopLinesSlider"
+        android:contentDescription="@string/danmaku_max_top_lines"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="12dp"
         android:focusable="true"
-        android:focusableInTouchMode="true"
         android:stepSize="1"
         android:valueFrom="0"
         android:valueTo="10"
@@ -195,7 +234,8 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="24dp"
-        android:paddingTop="4dp">
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp">
 
         <com.google.android.material.textview.MaterialTextView
             android:layout_width="0dp"
@@ -215,11 +255,11 @@
 
     <com.google.android.material.slider.Slider
         android:id="@+id/maxBottomLinesSlider"
+        android:contentDescription="@string/danmaku_max_bottom_lines"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="12dp"
         android:focusable="true"
-        android:focusableInTouchMode="true"
         android:stepSize="1"
         android:valueFrom="0"
         android:valueTo="10"

@@ -9,14 +9,17 @@
     <androidx.appcompat.widget.LinearLayoutCompat
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
         android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="16dp">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/keyword"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:background="@drawable/shape_danmaku_search_keyword"
             android:hint="@string/search_keyword"
             android:imeOptions="actionSearch"
@@ -24,6 +27,16 @@
             android:maxLength="255"
             android:singleLine="true"
             android:textSize="14sp" />
+
+        <com.fongmi.android.tv.ui.custom.DialogActionView
+            android:id="@+id/setting"
+            android:contentDescription="@string/dialog_action_search_settings"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:focusable="true"
+            android:src="@drawable/ic_action_setting" />
 
     </androidx.appcompat.widget.LinearLayoutCompat>
 
@@ -35,7 +48,7 @@
         android:layout_marginBottom="16dp"
         android:indeterminate="true"
         android:visibility="gone"
-        app:indicatorColor="@color/accent"
+        app:indicatorColor="?attr/colorPrimary"
         app:indicatorSize="32dp"
         app:trackThickness="2dp"
         tools:visibility="visible" />
@@ -44,11 +57,13 @@
         android:id="@+id/recycler"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:nestedScrollingEnabled="false"
         android:clipChildren="false"
         android:clipToPadding="false"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="16dp"
+        android:overScrollMode="never"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="24dp"
         android:visibility="gone"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:maxHeight="204dp"

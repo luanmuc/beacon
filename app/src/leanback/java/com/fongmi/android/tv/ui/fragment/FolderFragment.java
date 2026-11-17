@@ -68,7 +68,7 @@ public class FolderFragment extends BaseFragment {
     }
 
     public void openFolder(String typeId, HashMap<String, String> extend) {
-        TypeFragment next = TypeFragment.newInstance(getKey(), typeId, mType.getStyle(), extend, mType.isFolder());
+        TypeFragment next = TypeFragment.newInstance(getKey(), typeId, mType.getStyle(), new HashMap<>(extend), mType.isFolder());
         FragmentTransaction ft = getChildFragmentManager().beginTransaction();
         Optional.ofNullable(getParent()).ifPresent(VodActivity::closeFilter);
         Optional.ofNullable(getChild()).ifPresent(ft::hide);
@@ -83,6 +83,10 @@ public class FolderFragment extends BaseFragment {
 
     public void onRefresh() {
         Optional.ofNullable(getChild()).ifPresent(TypeFragment::onRefresh);
+    }
+
+    public boolean moveToTop() {
+        return Optional.ofNullable(getChild()).map(TypeFragment::moveToTop).orElse(false);
     }
 
     public boolean canBack() {

@@ -29,7 +29,8 @@ public class DLNACastManager extends DefaultRegistryListener implements ServiceC
     private static final UDAServiceType AVT_TYPE = new UDAServiceType("AVTransport", 1);
 
     private AndroidUpnpService upnpService;
-    private DeviceListener deviceListener;
+    private volatile DeviceListener deviceListener;
+    private boolean bound;
 
     public static DLNACastManager get() {
         return Loader.INSTANCE;
@@ -41,24 +42,19 @@ public class DLNACastManager extends DefaultRegistryListener implements ServiceC
     }
 
     @Override
-    public void remoteDeviceUpdated(Registry registry, RemoteDevice device) {
-    }
-
-    @Override
     public void remoteDeviceRemoved(Registry registry, RemoteDevice device) {
         if (device.getType().implementsVersion(RENDERER_TYPE)) notifyRemoved(Device.get(device));
     }
 
     @Override
     public void onServiceConnected(ComponentName name, IBinder binder) {
-        upnpService = (AndroidUpnpService) binder;
-        upnpService.getRegistry().addListener(this);
-        search();
+        if (!bound) return;
+        attach((AndroidUpnpService) binder);
     }
 
     @Override
     public void onServiceDisconnected(ComponentName name) {
-        upnpService = null;
+        detach();
     }
 
     public void setDeviceListener(DeviceListener listener) {
@@ -66,15 +62,22 @@ public class DLNACastManager extends DefaultRegistryListener implements ServiceC
     }
 
     private void notifyAdded(Device bean) {
-        if (deviceListener != null) App.post(() -> deviceListener.onDeviceAdded(bean));
+        DeviceListener listener = deviceListener;
+        if (listener != null) App.post(() -> {
+            if (deviceListener == listener) listener.onDeviceAdded(bean);
+        });
     }
 
     private void notifyRemoved(Device bean) {
-        if (deviceListener != null) App.post(() -> deviceListener.onDeviceRemoved(bean));
+        DeviceListener listener = deviceListener;
+        if (listener != null) App.post(() -> {
+            if (deviceListener == listener) listener.onDeviceRemoved(bean);
+        });
     }
 
     public void init(Context context) {
-        context.bindService(new Intent(context, DLNACastService.class), this, Context.BIND_AUTO_CREATE);
+        if (bound) search();
+        else bind(context.getApplicationContext());
     }
 
     public void search() {
@@ -100,10 +103,32 @@ public class DLNACastManager extends DefaultRegistryListener implements ServiceC
         return upnpService != null ? upnpService.getControlPoint() : null;
     }
 
-    public void release(Context context) {
-        if (upnpService == null) return;
-        upnpService.getRegistry().removeListener(this);
+    public void release(Context context, DeviceListener listener) {
+        if (deviceListener != listener) return;
+        deviceListener = null;
+        detach();
+        unbind(context.getApplicationContext());
+    }
+
+    private void bind(Context context) {
+        bound = context.bindService(new Intent(context, DLNACastService.class), this, Context.BIND_AUTO_CREATE);
+    }
+
+    private void unbind(Context context) {
+        if (!bound) return;
         context.unbindService(this);
+        bound = false;
+    }
+
+    private void attach(AndroidUpnpService service) {
+        detach();
+        upnpService = service;
+        upnpService.getRegistry().addListener(this);
+        search();
+    }
+
+    private void detach() {
+        if (upnpService != null) upnpService.getRegistry().removeListener(this);
         upnpService = null;
     }
 

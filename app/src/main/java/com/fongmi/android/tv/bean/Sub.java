@@ -1,5 +1,6 @@
 package com.fongmi.android.tv.bean;
 
+import android.net.Uri;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
@@ -7,9 +8,9 @@ import androidx.annotation.Nullable;
 import androidx.media3.common.C;
 
 import com.fongmi.android.tv.App;
-import com.fongmi.android.tv.player.PlayerHelper;
-import com.fongmi.android.tv.utils.UrlUtil;
+import com.fongmi.android.tv.player.track.TrackUtil;
 import com.github.catvod.utils.Trans;
+import com.github.catvod.utils.UriUtil;
 import com.google.gson.annotations.SerializedName;
 
 public class Sub {
@@ -25,12 +26,25 @@ public class Sub {
     @SerializedName("flag")
     private int flag;
 
-    public static Sub from(String path) {
+    public static Sub from(String url) {
+        return from(UriUtil.path(url), url);
+    }
+
+    public static Sub from(String name, String url) {
         Sub sub = new Sub();
-        sub.url = path;
-        sub.name = UrlUtil.path(path);
+        sub.url = url;
+        sub.name = name;
         sub.flag = C.SELECTION_FLAG_FORCED;
-        sub.format = PlayerHelper.getSubtitleMimeType(sub.name);
+        sub.format = TrackUtil.getSubtitleMimeType(sub.name);
+        return sub;
+    }
+
+    public static Sub from(String name, String url, String lang, String format) {
+        Sub sub = new Sub();
+        sub.name = name;
+        sub.url = url;
+        sub.lang = lang;
+        sub.format = format;
         return sub;
     }
 
@@ -52,6 +66,26 @@ public class Sub {
 
     public int getFlag() {
         return flag == 0 ? C.SELECTION_FLAG_DEFAULT : flag;
+    }
+
+    public void setFlag(int flag) {
+        this.flag = flag;
+    }
+
+    public int getRawFlag() {
+        return flag;
+    }
+
+    public boolean isForced() {
+        return (flag & C.SELECTION_FLAG_FORCED) != 0;
+    }
+
+    public boolean isEmpty() {
+        return url == null || url.isEmpty();
+    }
+
+    public Uri getUri() {
+        return isEmpty() ? null : UriUtil.uri(getUrl());
     }
 
     public void trans() {

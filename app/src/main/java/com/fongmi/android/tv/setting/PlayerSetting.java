@@ -1,51 +1,131 @@
 package com.fongmi.android.tv.setting;
 
-import android.content.Intent;
-import android.provider.Settings;
+import static androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FILL;
+import static androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT;
+import static androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM;
 
-import com.fongmi.android.tv.App;
 import com.github.catvod.utils.Prefers;
+import com.github.catvod.utils.RuntimeModule;
 
 public class PlayerSetting {
 
+    public static final int ENGINE_EXO = 0;
+    public static final int ENGINE_MPV = 1;
+    public static final int RENDER_SURFACE = 0;
+    public static final int RENDER_TEXTURE = 1;
+    public static final int MIN_SCALE = 0;
+    public static final int MAX_SCALE = 2;
+    private static final int MIN_SIZE = 0;
+    private static final int MAX_SIZE = 3;
+    private static final int MIN_BUFFER = 1;
+    private static final int MAX_BUFFER = 10;
+    private static final int MIN_BACKGROUND = 0;
+    private static final int MAX_BACKGROUND = 2;
+
+    public static int getEngine() {
+        return Math.clamp(Prefers.getInt("player_engine", ENGINE_EXO), ENGINE_EXO, getEngineCount() - 1);
+    }
+
+    public static int getEngineCount() {
+        return RuntimeModule.MPV.isInstalled() ? ENGINE_MPV + 1 : ENGINE_EXO + 1;
+    }
+
+    public static void putEngine(int engine) {
+        Prefers.put("player_engine", Math.clamp(engine, ENGINE_EXO, ENGINE_MPV));
+        if (isExo() && DecodeSetting.isTunnel()) putRender(RENDER_SURFACE);
+    }
+
+    public static boolean isExo() {
+        return getEngine() == ENGINE_EXO;
+    }
+
+    public static boolean isMpv() {
+        return getEngine() == ENGINE_MPV;
+    }
+
+    public static boolean isDebug() {
+        return Prefers.getBoolean("player_debug");
+    }
+
+    public static void putDebug(boolean debug) {
+        Prefers.put("player_debug", debug);
+    }
+
+    public static boolean isLibass() {
+        return Prefers.getBoolean("player_libass", true);
+    }
+
+    public static void putLibass(boolean libass) {
+        Prefers.put("player_libass", libass);
+    }
+
+    public static boolean isMpvGpuNext() {
+        return Prefers.getBoolean("mpv_gpu_next");
+    }
+
+    public static void putMpvGpuNext(boolean gpuNext) {
+        Prefers.put("mpv_gpu_next", gpuNext);
+    }
+
+    public static boolean isMpvVulkan() {
+        return Prefers.getBoolean("mpv_vulkan");
+    }
+
+    public static void putMpvVulkan(boolean vulkan) {
+        Prefers.put("mpv_vulkan", vulkan);
+    }
+
+    public static int getMotion() {
+        return Math.clamp(Prefers.getInt("player_motion"), 0, 2);
+    }
+
+    public static void putMotion(int motion) {
+        Prefers.put("player_motion", Math.clamp(motion, 0, 2));
+    }
+
+    public static int getMotionFps() {
+        return switch (getMotion()) {
+            case 1 -> 60;
+            case 2 -> 120;
+            default -> 0;
+        };
+    }
+
     public static int getRender() {
-        return Prefers.getInt("render", 0);
+        return Math.clamp(Prefers.getInt("render", RENDER_SURFACE), RENDER_SURFACE, RENDER_TEXTURE);
     }
 
     public static void putRender(int render) {
-        Prefers.put("render", render);
+        Prefers.put("render", Math.clamp(render, RENDER_SURFACE, RENDER_TEXTURE));
+        if (isExo() && DecodeSetting.isTunnel() && getRender() == RENDER_TEXTURE) DecodeSetting.putTunnel(false);
     }
 
     public static int getSize() {
-        return Prefers.getInt("size", 2);
+        return Math.clamp(Prefers.getInt("size", 2), MIN_SIZE, MAX_SIZE);
     }
 
     public static void putSize(int size) {
-        Prefers.put("size", size);
+        Prefers.put("size", Math.clamp(size, MIN_SIZE, MAX_SIZE));
     }
 
     public static int getScale() {
-        return Prefers.getInt("scale");
+        return Math.clamp(Prefers.getInt("scale"), MIN_SCALE, MAX_SCALE);
     }
 
     public static void putScale(int scale) {
-        Prefers.put("scale", scale);
+        Prefers.put("scale", Math.clamp(scale, MIN_SCALE, MAX_SCALE));
     }
 
-    public static int getBuffer() {
-        return Math.min(Math.max(Prefers.getInt("buffer"), 1), 10);
-    }
-
-    public static void putBuffer(int buffer) {
-        Prefers.put("buffer", buffer);
+    public static int getScaleMode(int index) {
+        return index == 1 ? RESIZE_MODE_FILL : index == 2 ? RESIZE_MODE_ZOOM : RESIZE_MODE_FIT;
     }
 
     public static int getBackground() {
-        return Prefers.getInt("background", 2);
+        return Math.clamp(Prefers.getInt("background", 2), MIN_BACKGROUND, MAX_BACKGROUND);
     }
 
     public static void putBackground(int background) {
-        Prefers.put("background", background);
+        Prefers.put("background", Math.clamp(background, MIN_BACKGROUND, MAX_BACKGROUND));
     }
 
     public static boolean isBackgroundOff() {
@@ -60,71 +140,11 @@ public class PlayerSetting {
         return getBackground() == 2;
     }
 
-    public static float getSpeed() {
-        return Math.min(Math.max(Prefers.getFloat("speed", 3), 2), 5);
+    public static int getBuffer() {
+        return Math.clamp(Prefers.getInt("buffer"), MIN_BUFFER, MAX_BUFFER);
     }
 
-    public static void putSpeed(float speed) {
-        Prefers.put("speed", speed);
-    }
-
-    public static boolean isCaption() {
-        return Prefers.getBoolean("caption");
-    }
-
-    public static void putCaption(boolean caption) {
-        Prefers.put("caption", caption);
-    }
-
-    public static boolean hasCaption() {
-        return new Intent(Settings.ACTION_CAPTIONING_SETTINGS).resolveActivity(App.get().getPackageManager()) != null;
-    }
-
-    public static boolean isTunnel() {
-        return Prefers.getBoolean("tunnel");
-    }
-
-    public static void putTunnel(boolean tunnel) {
-        Prefers.put("tunnel", tunnel);
-    }
-
-    public static boolean isAudioPrefer() {
-        return Prefers.getBoolean("audio_prefer");
-    }
-
-    public static void putAudioPrefer(boolean audioPrefer) {
-        Prefers.put("audio_prefer", audioPrefer);
-    }
-
-    public static boolean isVideoPrefer() {
-        return Prefers.getBoolean("video_prefer");
-    }
-
-    public static void putVideoPrefer(boolean videoPrefer) {
-        Prefers.put("video_prefer", videoPrefer);
-    }
-
-    public static boolean isPreferAAC() {
-        return Prefers.getBoolean("prefer_aac");
-    }
-
-    public static void putPreferAAC(boolean preferAAC) {
-        Prefers.put("prefer_aac", preferAAC);
-    }
-
-    public static float getSubtitleTextSize() {
-        return Prefers.getFloat("subtitle_text_size");
-    }
-
-    public static void putSubtitleTextSize(float value) {
-        Prefers.put("subtitle_text_size", value);
-    }
-
-    public static float getSubtitlePosition() {
-        return Prefers.getFloat("subtitle_position");
-    }
-
-    public static void putSubtitlePosition(float value) {
-        Prefers.put("subtitle_position", value);
+    public static void putBuffer(int buffer) {
+        Prefers.put("buffer", Math.clamp(buffer, MIN_BUFFER, MAX_BUFFER));
     }
 }

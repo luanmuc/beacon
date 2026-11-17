@@ -1,9 +1,12 @@
 package com.fongmi.android.tv.utils;
 
+import static com.github.catvod.utils.Util.substring;
+
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import android.os.IBinder;
 import android.provider.Settings;
@@ -36,6 +39,14 @@ public class Util {
     public static void toggleFullscreen(Activity activity, boolean fullscreen) {
         if (fullscreen) hideSystemUI(activity);
         else showSystemUI(activity);
+    }
+
+    public static void moveToBackground(Activity activity) {
+        try {
+            activity.moveTaskToBack(true);
+        } catch (NullPointerException ignored) {
+            activity.startActivity(new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        }
     }
 
     public static void hideSystemUI(Activity activity) {
@@ -152,21 +163,12 @@ public class Util {
         return model.startsWith(manufacturer) ? model : manufacturer + " " + model;
     }
 
-    public static String substring(String text) {
-        return substring(text, 1);
-    }
-
-    public static String substring(String text, int num) {
-        if (text != null && text.length() > num) return text.substring(0, text.length() - num);
-        return text;
-    }
-
     public static boolean isLeanback() {
-        return "leanback".equals(BuildConfig.FLAVOR_mode);
+        return "leanback".equals(BuildConfig.FLAVOR);
     }
 
     public static boolean isMobile() {
-        return "mobile".equals(BuildConfig.FLAVOR_mode);
+        return "mobile".equals(BuildConfig.FLAVOR);
     }
 
     public static boolean isFullscreen(Activity activity) {

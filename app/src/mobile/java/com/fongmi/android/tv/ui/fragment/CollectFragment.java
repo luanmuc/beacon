@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
@@ -25,6 +26,7 @@ import com.fongmi.android.tv.databinding.FragmentCollectBinding;
 import com.fongmi.android.tv.model.SiteViewModel;
 import com.fongmi.android.tv.ui.activity.FolderActivity;
 import com.fongmi.android.tv.ui.activity.VideoActivity;
+import com.fongmi.android.tv.ui.activity.WebActivity;
 import com.fongmi.android.tv.ui.adapter.CollectAdapter;
 import com.fongmi.android.tv.ui.adapter.SearchAdapter;
 import com.fongmi.android.tv.ui.base.BaseFragment;
@@ -81,12 +83,14 @@ public class CollectFragment extends BaseFragment implements MenuProvider, Colle
 
     @Override
     protected void initEvent() {
-        mBinding.toolbar.setOnClickListener(v -> {
-            Bundle result = new Bundle();
-            result.putBoolean("edit", true);
-            getParentFragmentManager().setFragmentResult("result", result);
-            getParentFragmentManager().popBackStack();
-        });
+        mBinding.toolbar.setOnClickListener(this::onEdit);
+    }
+
+    private void onEdit(View view) {
+        Bundle result = new Bundle();
+        result.putBoolean("edit", true);
+        getParentFragmentManager().setFragmentResult("result", result);
+        getParentFragmentManager().popBackStack();
     }
 
     private void setRecyclerView() {
@@ -103,6 +107,7 @@ public class CollectFragment extends BaseFragment implements MenuProvider, Colle
         mViewModel = new ViewModelProvider(this).get(SiteViewModel.class).init();
         mViewModel.getSearch().observe(this, this::setCollect);
         mViewModel.getResult().observe(this, this::setSearch);
+        mViewModel.getAction().observe(getViewLifecycleOwner(), result -> WebActivity.handleAction(requireActivity(), result));
     }
 
     private void setSites() {
@@ -116,7 +121,7 @@ public class CollectFragment extends BaseFragment implements MenuProvider, Colle
         for (Site site : mSites) width = Math.max(width, ResUtil.getTextWidth(site.getName(), 14));
         int contentWidth = width + space;
         int minWidth = ResUtil.dp2px(120);
-        int finalWidth = Math.max(minWidth, Math.min(contentWidth, maxWidth));
+        int finalWidth = Math.clamp(contentWidth, minWidth, Math.max(minWidth, maxWidth));
         ViewGroup.LayoutParams params = mBinding.collect.getLayoutParams();
         params.width = finalWidth;
         mBinding.collect.setLayoutParams(params);
@@ -151,23 +156,24 @@ public class CollectFragment extends BaseFragment implements MenuProvider, Colle
     @Override
     public void onItemClick(int position, Collect item) {
         mSearchAdapter.setItems(item.getList(), () -> mBinding.recycler.scrollToPosition(0));
-        mCollectAdapter.setActivated(position);
+        mCollectAdapter.setSelected(position);
         mScroller.setPage(item.getPage());
     }
 
     @Override
     public void onItemClick(Vod item) {
-        if (item.isFolder()) FolderActivity.start(requireActivity(), item.getSiteKey(), Result.folder(item));
-        else VideoActivity.collect(requireActivity(), item.getSiteKey(), item.getId(), item.getName(), item.getPic());
+        if (item.isAction()) mViewModel.action(item.getSiteKey(), item.getAction());
+        else if (item.isFolder()) FolderActivity.start(requireActivity(), item.getSiteKey(), Result.folder(item));
+        else VideoActivity.collect(requireActivity(), item.getSiteKey(), item);
     }
 
     @Override
-    public void onLoadMore(String page) {
+    public boolean onLoadMore(String page) {
         Collect activated = mCollectAdapter.getActivated();
-        if ("all".equals(activated.getSite().getKey())) return;
+        if ("all".equals(activated.getSite().getKey())) return false;
         mViewModel.searchContent(activated.getSite(), getKeyword(), false, page);
         activated.setPage(Integer.parseInt(page));
-        mScroller.setLoading(true);
+        return true;
     }
 
     @Override

@@ -1,14 +1,15 @@
 package com.fongmi.android.tv.bean;
 
+import android.net.Uri;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.fongmi.android.tv.App;
-import com.fongmi.android.tv.utils.UrlUtil;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
+import com.github.catvod.utils.UriUtil;
 
 import java.lang.reflect.Type;
 import java.util.Collections;
@@ -21,39 +22,31 @@ public class Danmaku {
     @SerializedName("url")
     private String url;
 
-    private boolean selected;
+    private transient boolean selected;
 
     public static List<Danmaku> arrayFrom(String str) {
-        Type listType = new TypeToken<List<Danmaku>>() {}.getType();
+        Type listType = TypeToken.getParameterized(List.class, Danmaku.class).getType();
         List<Danmaku> items = App.gson().fromJson(str, listType);
         return items == null ? Collections.emptyList() : items;
     }
 
-    public static Danmaku from(String path) {
-        Danmaku danmaku = new Danmaku();
-        danmaku.setName(path);
-        danmaku.setUrl(path);
-        return danmaku;
+    public static Danmaku from(String url) {
+        return from(url, url);
     }
 
-    public static Danmaku empty() {
-        return new Danmaku();
+    public static Danmaku from(String name, String url) {
+        Danmaku danmaku = new Danmaku();
+        danmaku.name = name;
+        danmaku.url = url;
+        return danmaku;
     }
 
     public String getName() {
         return TextUtils.isEmpty(name) ? getUrl() : name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public String getUrl() {
         return TextUtils.isEmpty(url) ? "" : url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
     }
 
     public boolean isSelected() {
@@ -68,8 +61,8 @@ public class Danmaku {
         return getUrl().isEmpty();
     }
 
-    public String getRealUrl() {
-        return UrlUtil.convert(getUrl().startsWith("/") ? "file:/" + getUrl() : getUrl());
+    public Uri getUri() {
+        return isEmpty() ? null : UriUtil.uri(getUrl());
     }
 
     @Override
@@ -77,6 +70,11 @@ public class Danmaku {
         if (this == obj) return true;
         if (!(obj instanceof Danmaku it)) return false;
         return getUrl().equals(it.getUrl());
+    }
+
+    @Override
+    public int hashCode() {
+        return getUrl().hashCode();
     }
 
     @NonNull

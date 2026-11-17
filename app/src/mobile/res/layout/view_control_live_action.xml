@@ -24,14 +24,19 @@
             tools:text="首頁" />
 
         <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/player"
+            android:id="@+id/line"
             style="@style/Control"
-            android:text="@string/play_exo" />
+            tools:text="來源 1" />
 
         <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/decode"
+            android:id="@+id/player"
             style="@style/Control"
-            android:text="@string/play_decode" />
+            android:text="@string/player_engine" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/decoder"
+            style="@style/Control"
+            android:text="@string/decoder_action" />
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/speed"
@@ -45,11 +50,6 @@
             android:id="@+id/scale"
             style="@style/Control"
             android:text="@string/play_scale" />
-
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/line"
-            style="@style/Control"
-            tools:text="來源 1" />
 
         <View
             android:layout_width="0dp"
@@ -75,6 +75,10 @@
             style="@style/Control"
             android:tag="2"
             android:text="@string/play_track_video" />
+
+        <com.fongmi.android.tv.ui.custom.PlaybackButtonsView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/invert"

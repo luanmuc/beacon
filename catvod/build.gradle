@@ -10,6 +10,7 @@ android {
     defaultConfig {
         minSdk libs.versions.minSdk.get().toInteger()
         targetSdk libs.versions.targetSdk.get().toInteger()
+        consumerProguardFiles 'consumer-rules.pro'
     }
 
     compileOptions {
@@ -32,5 +33,12 @@ dependencies {
     api libs.smbj
     api libs.startup
     api libs.zxing.core
+    testImplementation libs.okhttp.mockwebserver
+    testImplementation libs.okhttp.tls
     coreLibraryDesugaring libs.desugar
+    testImplementation libs.junit
+    testImplementation libs.jsoup
+    testImplementation 'org.robolectric:robolectric:4.16'
 }
+
+if (file('test.gradle').isFile()) apply from: 'test.gradle'

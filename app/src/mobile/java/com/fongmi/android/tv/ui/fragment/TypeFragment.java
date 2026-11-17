@@ -13,8 +13,8 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.viewbinding.ViewBinding;
 
 import com.fongmi.android.tv.Product;
-import com.fongmi.android.tv.R;
 import com.fongmi.android.tv.api.config.VodConfig;
+import com.fongmi.android.tv.bean.Filter;
 import com.fongmi.android.tv.bean.Result;
 import com.fongmi.android.tv.bean.Site;
 import com.fongmi.android.tv.bean.Style;
@@ -27,10 +27,10 @@ import com.fongmi.android.tv.ui.activity.VideoActivity;
 import com.fongmi.android.tv.ui.adapter.VodAdapter;
 import com.fongmi.android.tv.ui.base.BaseFragment;
 import com.fongmi.android.tv.ui.custom.CustomScroller;
-import com.fongmi.android.tv.utils.Notify;
 import com.fongmi.android.tv.utils.ResUtil;
 
 import java.util.HashMap;
+import java.util.List;
 
 public class TypeFragment extends BaseFragment implements CustomScroller.Callback, VodAdapter.OnClickListener, SwipeRefreshLayout.OnRefreshListener {
 
@@ -96,7 +96,6 @@ public class TypeFragment extends BaseFragment implements CustomScroller.Callbac
 
     @Override
     protected void initView() {
-        mBinding.swipeLayout.setColorSchemeResources(R.color.accent);
         mBinding.progressLayout.showProgress();
         mScroller = new CustomScroller(this);
         mExtends = getExtend();
@@ -125,7 +124,6 @@ public class TypeFragment extends BaseFragment implements CustomScroller.Callbac
     private void setViewModel() {
         mViewModel = new ViewModelProvider(this).get(SiteViewModel.class);
         mViewModel.getResult().observe(getViewLifecycleOwner(), this::setAdapter);
-        mViewModel.getAction().observe(getViewLifecycleOwner(), result -> Notify.show(result.getMsg()));
     }
 
     private void getHome() {
@@ -162,8 +160,8 @@ public class TypeFragment extends BaseFragment implements CustomScroller.Callbac
 
     private void checkMore() {
         mBinding.recycler.post(() -> {
-            if (mScroller.isDisable() || mBinding.recycler.canScrollVertically(1) || mBinding.recycler.getScrollState() != 0 || isHome()) return;
-            getVideo(getTypeId(), String.valueOf(mScroller.addPage()));
+            if (isHome()) return;
+            mScroller.checkMore(mBinding.recycler);
         });
     }
 
@@ -172,9 +170,20 @@ public class TypeFragment extends BaseFragment implements CustomScroller.Callbac
     }
 
     public void setFilter(String key, Value value) {
-        if (value.isActivated()) mExtends.put(key, value.getV());
+        if (value.isSelected()) mExtends.put(key, value.getV());
         else mExtends.remove(key);
         onRefresh();
+    }
+
+    public List<Filter> getFilters() {
+        return getParent().getType().getFilters().stream().map(this::copyFilter).toList();
+    }
+
+    private Filter copyFilter(Filter filter) {
+        Filter copy = filter.copy();
+        Value selected = mExtends.containsKey(copy.getKey()) ? Value.create(mExtends.get(copy.getKey())) : null;
+        copy.getValue().forEach(value -> value.setSelected(value.equals(selected)));
+        return copy;
     }
 
     @Override
@@ -184,21 +193,21 @@ public class TypeFragment extends BaseFragment implements CustomScroller.Callbac
     }
 
     @Override
-    public void onLoadMore(String page) {
-        if (isHome()) return;
-        mScroller.setLoading(true);
+    public boolean onLoadMore(String page) {
+        if (isHome()) return false;
         getVideo(getTypeId(), page);
+        return true;
     }
 
     @Override
     public void onItemClick(Vod item) {
         if (item.isAction()) {
-            mViewModel.action(getKey(), item.getAction());
+            new ViewModelProvider(requireActivity()).get(SiteViewModel.class).action(getKey(), item.getAction());
         } else if (item.isFolder()) {
             getParent().openFolder(item.getId(), mExtends);
         } else {
             if (getSite().isIndex()) SearchActivity.start(requireActivity(), item.getName());
-            else VideoActivity.start(requireActivity(), getKey(), item.getId(), item.getName(), item.getPic(), isFolder() ? item.getName() : null);
+            else VideoActivity.start(requireActivity(), getKey(), item, isFolder() ? item.getName() : null);
         }
     }
 

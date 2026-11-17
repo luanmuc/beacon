@@ -35,7 +35,7 @@ public class Flag implements Parcelable, Diffable<Flag> {
     @SerializedName("episodes")
     private List<Episode> episodes;
 
-    private boolean activated;
+    private boolean selected;
     private int position;
 
     public Flag() {
@@ -54,7 +54,7 @@ public class Flag implements Parcelable, Diffable<Flag> {
         this.show = in.readString();
         this.urls = in.readString();
         this.episodes = in.createTypedArrayList(Episode.CREATOR);
-        this.activated = in.readByte() != 0;
+        this.selected = in.readByte() != 0;
         this.position = in.readInt();
     }
 
@@ -98,18 +98,18 @@ public class Flag implements Parcelable, Diffable<Flag> {
         }
     }
 
-    public boolean isActivated() {
-        return activated;
+    public boolean isSelected() {
+        return selected;
     }
 
-    public void setActivated(Flag item) {
-        this.activated = item.equals(this);
-        if (activated) item.episodes = episodes;
+    public void setSelected(Flag item) {
+        this.selected = item.equals(this);
+        if (selected) item.episodes = episodes;
     }
 
-    private void setActivated(Episode episode) {
+    private void setSelected(Episode episode) {
         setPosition(getEpisodes().indexOf(episode));
-        for (int i = 0; i < getEpisodes().size(); i++) getEpisodes().get(i).setActivated(i == getPosition());
+        for (int i = 0; i < getEpisodes().size(); i++) getEpisodes().get(i).setSelected(i == getPosition());
     }
 
     public int getPosition() {
@@ -120,27 +120,39 @@ public class Flag implements Parcelable, Diffable<Flag> {
         this.position = position;
     }
 
-    public void toggle(boolean activated, Episode episode) {
-        if (activated) setActivated(episode);
-        else getEpisodes().forEach(Episode::deactivated);
+    public void toggle(boolean selected, Episode episode) {
+        if (selected) setSelected(episode);
+        else getEpisodes().forEach(Episode::deselect);
     }
 
     public Episode find(String remarks, boolean strict) {
         if (getEpisodes().isEmpty()) return null;
         if (getEpisodes().size() == 1) return getEpisodes().get(0);
-        int number = Util.getNumber(remarks);
+        Episode episode = findByName(remarks);
+        if (episode != null) return episode;
+        return isPositionValid() ? getEpisodes().get(getPosition()) : strict ? null : getEpisodes().get(0);
+    }
+
+    public Episode findByName(String name) {
+        int number = Util.getNumber(name);
         return getEpisodes().stream()
-                .map(episode -> new Episode.Rule(episode, episode.getScore(remarks, number)))
+                .map(episode -> new Episode.Rule(episode, episode.getScore(name, number)))
                 .filter(Episode.Rule::find).max(Comparator.comparingInt(Episode.Rule::score)).map(Episode.Rule::episode)
-                .orElseGet(() -> getPosition() != -1 ? getEpisodes().get(getPosition()) : strict ? null : getEpisodes().get(0));
+                .orElse(null);
+    }
+
+    private boolean isPositionValid() {
+        return getPosition() >= 0 && getPosition() < getEpisodes().size();
     }
 
     public void mergeEpisodes(List<Episode> items, boolean rev) {
+        Episode current = isPositionValid() ? getEpisodes().get(getPosition()) : null;
         for (Episode item : items) {
             if (getEpisodes().contains(item)) continue;
             if (rev) getEpisodes().add(0, item);
             else getEpisodes().add(item);
         }
+        if (rev && current != null) setPosition(getEpisodes().indexOf(current));
     }
 
     public Flag trans() {
@@ -178,7 +190,7 @@ public class Flag implements Parcelable, Diffable<Flag> {
         dest.writeString(this.show);
         dest.writeString(this.urls);
         dest.writeTypedList(this.episodes);
-        dest.writeByte(this.activated ? (byte) 1 : (byte) 0);
+        dest.writeByte(this.selected ? (byte) 1 : (byte) 0);
         dest.writeInt(this.position);
     }
 

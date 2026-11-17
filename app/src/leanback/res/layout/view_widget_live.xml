@@ -26,15 +26,21 @@
             tools:text="民視" />
 
         <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/size"
+            android:id="@+id/subtitle"
             style="@style/Shadow"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/title"
             android:layout_alignStart="@+id/title"
-            android:textColor="@color/white"
+            android:layout_marginEnd="16dp"
+            android:layout_toStartOf="@+id/clock"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:textColor="@color/white_80"
             android:textSize="16sp"
-            tools:text="1920 x 1080" />
+            android:visibility="gone"
+            tools:text="20:00 ~ 21:00  新聞"
+            tools:visibility="visible" />
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/clock"
@@ -78,6 +84,21 @@
     </androidx.appcompat.widget.LinearLayoutCompat>
 
     <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="40dp"
+        android:background="@drawable/shape_widget_message"
+        android:fontFeatureSettings="tnum"
+        android:gravity="center"
+        android:textColor="@color/white"
+        android:textSize="16sp"
+        android:visibility="gone"
+        tools:text="Speed 3.0x"
+        tools:visibility="visible" />
+
+    <com.google.android.material.textview.MaterialTextView
         android:id="@+id/digital"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -103,7 +124,7 @@
         tools:visibility="visible">
 
         <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/action"
+            android:id="@+id/statusIcon"
             android:layout_width="56dp"
             android:layout_height="56dp"
             android:src="@drawable/ic_widget_play" />

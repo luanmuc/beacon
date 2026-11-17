@@ -84,7 +84,7 @@ jobs:
       - name: Collect aars
         run: |
           mkdir -p aars
-          find media -name "*.aar" -path "*/build/*" -exec cp {} aars/ \;
+          find media -name "*.aar" -exec cp {} aars/ \;
           ls -lh aars | head -30
 
       - uses: actions/upload-artifact@v4

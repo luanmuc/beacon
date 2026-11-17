@@ -13,23 +13,100 @@ on:
       - ".github/workflows/build-apk.yml"
 
 jobs:
-  build:
+  media:
+    name: build media3 aars
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout media3 fork
+        uses: actions/checkout@v4
+        with:
+          repository: FongMi/media
+          ref: release-1.11.0-fongmi
+          path: media
+          fetch-depth: 1
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Android SDK env
+        run: |
+          echo "ANDROID_HOME=${ANDROID_HOME:-/usr/local/lib/android/sdk}" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}" >> "$GITHUB_ENV"
+
+      - name: Cache Gradle (media3)
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: media3-${{ runner.os }}-${{ hashFiles('media/gradle/libs.versions.toml', 'media/gradle/wrapper/gradle-wrapper.properties') }}
+
+      - name: Build aars (parallel + build cache)
+        working-directory: media
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon --build-cache --parallel --max-workers=4 \
+            -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=1g" \
+            :lib-common:assembleRelease \
+            :lib-container:assembleRelease \
+            :lib-database:assembleRelease \
+            :lib-datasource:assembleRelease \
+            :lib-datasource-okhttp:assembleRelease \
+            :lib-datasource-rtmp:assembleRelease \
+            :lib-decoder:assembleRelease \
+            :lib-decoder-ffmpeg:assembleRelease \
+            :lib-effect:assembleRelease \
+            :lib-extractor:assembleRelease \
+            :lib-exoplayer:assembleRelease \
+            :lib-exoplayer-dash:assembleRelease \
+            :lib-exoplayer-hls:assembleRelease \
+            :lib-exoplayer-rtsp:assembleRelease \
+            :lib-exoplayer-smoothstreaming:assembleRelease \
+            :lib-session:assembleRelease \
+            :lib-ui:assembleRelease \
+            :lib-ui-danmaku:assembleRelease \
+            :lib-muxer:assembleRelease \
+            :lib-transformer:assembleRelease \
+            :lib-mpvplayer:assembleRelease
+
+      - name: Collect aars
+        run: |
+          mkdir -p aars
+          find media -path "*/build/outputs/aar/*.aar" -exec cp {} aars/ \;
+          ls -lh aars
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: media-aars
+          path: aars/*.aar
+          retention-days: 7
+
+  app:
+    name: build apks
+    needs: media
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "21"
 
-      - name: Detect Android SDK
+      - name: Android SDK env
         run: |
           echo "ANDROID_HOME=${ANDROID_HOME:-/usr/local/lib/android/sdk}" >> "$GITHUB_ENV"
           echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}" >> "$GITHUB_ENV"
-          ls "${ANDROID_HOME:-/usr/local/lib/android/sdk}" || true
+
+      - name: Fetch media3 aars
+        uses: actions/download-artifact@v4
+        with:
+          name: media-aars
+          path: app/libs
 
       - name: Generate self-use keystore
         run: |
@@ -49,18 +126,20 @@ jobs:
           keyPassword=selfuse
           EOF
 
-      - name: Cache Gradle
+      - name: Cache Gradle (app)
         uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ hashFiles('gradle/libs.versions.toml','gradle/wrapper/gradle-wrapper.properties') }}
+          key: app-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml', 'gradle/wrapper/gradle-wrapper.properties') }}
 
-      - name: Build leanback (TV) and mobile debug APKs
+      - name: Build both flavors
         run: |
           chmod +x gradlew
-          ./gradlew --no-daemon assembleLeanbackDebug assembleMobileDebug
+          ./gradlew --no-daemon --build-cache --parallel --max-workers=4 \
+            -Dorg.gradle.jvmargs="-Xmx5g -XX:MaxMetaspaceSize=1g" \
+            assembleLeanbackDebug assembleMobileDebug
 
       - name: Collect APKs
         run: |

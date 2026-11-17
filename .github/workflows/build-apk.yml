@@ -149,7 +149,7 @@ jobs:
           chmod +x gradlew
           ./gradlew --no-daemon --build-cache --parallel --max-workers=4 \
             -Dorg.gradle.jvmargs="-Xmx5g -XX:MaxMetaspaceSize=1g" \
-            assembleLeanbackDebug assembleMobileDebug
+            assembleLeanbackArm64_v8aDebug assembleLeanbackArmeabi_v7aDebug assembleMobileArm64_v8aDebug assembleMobileArmeabi_v7aDebug
 
       - name: Collect APKs
         run: |

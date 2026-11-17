@@ -286,6 +286,7 @@ public class VideoActivity extends PlaybackActivity implements CustomKeyDownVod.
         mBinding.video.setOnClickListener(view -> onVideo());
         mBinding.change1.setOnClickListener(view -> onChange());
         mBinding.content.setOnClickListener(view -> onContent());
+        mBinding.control.action.info.setOnClickListener(this::onInfo);
         mBinding.control.action.text.setOnClickListener(this::onTrack);
         mBinding.control.action.audio.setOnClickListener(this::onTrack);
         mBinding.control.action.video.setOnClickListener(this::onTrack);
@@ -697,6 +698,18 @@ public class VideoActivity extends PlaybackActivity implements CustomKeyDownVod.
     private void onSpeed() {
         mBinding.control.action.speed.setText(player().addSpeed());
         mHistory.setSpeed(player().getSpeed());
+    }
+
+    private void onInfo() {
+        int total = mEpisodeAdapter == null ? 0 : mEpisodeAdapter.getItemCount();
+        String source = VodConfig.get().getConfig().getName();
+        String meta = (TextUtils.isEmpty(source) ? "" : source) + (total > 0 ? " · 共 " + total + " 集" : "");
+        PlaybackPanel.create(this)
+                .title(mBinding.control.title.getText())
+                .meta(meta)
+                .url(player().getUrl())
+                .headers(player().getHeaders())
+                .show();
     }
 
     private void onSpeedAdd() {

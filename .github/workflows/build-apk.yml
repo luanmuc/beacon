@@ -2,6 +2,8 @@ name: build-apk
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "20 19 * * *"
   push:
     branches: [ main, april-base ]
     paths:
@@ -148,6 +150,13 @@ jobs:
         with:
           python-version: "3.10"
 
+      - name: Bump version
+        run: |
+          set -e
+          VCODE=${GITHUB_RUN_NUMBER}
+          sed -i -E "s/versionCode [0-9]+/versionCode $((VCODE + 9000))/" app/build.gradle
+          sed -i -E "s/versionName \"[0-9.]+\"/versionName \"1.0.${VCODE}\"/" app/build.gradle
+          grep -E "versionCode|versionName" app/build.gradle
       - name: Build both flavors
         run: |
           chmod +x gradlew

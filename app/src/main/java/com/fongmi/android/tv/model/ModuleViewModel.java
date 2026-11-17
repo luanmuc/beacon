@@ -289,7 +289,7 @@ public final class ModuleViewModel extends AndroidViewModel {
     private Status getInstalledStatus() throws IOException {
         RuntimeModule.refresh();
         String installed = module.getVersionName();
-        boolean restart = module == RuntimeModule.BDJ ? BdjRuntime.getStatus(getApplication()).restartRequired : module.isRestartRequired();
+        boolean restart = module.isRestartRequired();
         boolean removable = installed != null;
         return new Status(RuntimeInstaller.getAbi(), installed, installed, false, restart, removable);
     }

@@ -1,160 +1,64 @@
 package com.fongmi.android.tv.player.engine;
 
-import androidx.annotation.Nullable;
-import androidx.media3.common.C;
-import androidx.media3.common.DecoderMode;
-import androidx.media3.common.DiscMenuController;
-import androidx.media3.common.Format;
-import androidx.media3.common.MediaItem;
+import androidx.media3.common.MediaMetadata;
+import androidx.media3.common.MediaTitle;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
-import androidx.media3.common.TrackSelectionOverride;
-import androidx.media3.common.text.SubtitleContent;
-import androidx.media3.common.text.SubtitleOffsets;
-import androidx.media3.common.text.SubtitleSelectionState;
-import androidx.media3.ui.PlayerView;
+import androidx.media3.common.Tracks;
 
-import com.fongmi.android.tv.bean.Sub;
-import com.fongmi.android.tv.player.effect.PlayerEffect;
-import com.fongmi.android.tv.player.media.PlaySpec;
-import com.google.gson.JsonObject;
+import com.fongmi.android.tv.bean.Track;
 
+import java.util.Collections;
 import java.util.List;
 
 public interface PlayerEngine {
 
-    @Nullable
-    default DiscMenuController getDiscMenuController() {
-        return null;
-    }
-
-    Type getType();
-
-    default boolean needsRebuild() {
-        return false;
-    }
-
-    default boolean canReuseForPreload() {
-        return false;
-    }
+    int SOFT = 0;
+    int HARD = 1;
 
     Player getPlayer();
 
-    @Nullable
-    default JsonObject getPlaybackLog() {
-        return null;
-    }
-
-    int getAudioChannelCount();
-
     void release();
 
-    default List<DecoderMode> getSupportedDecoderModes(@C.TrackType int trackType) {
-        return List.of();
-    }
+    Player rebuild(Player.Listener listener);
 
-    @Nullable
-    default DecoderMode getDecoderMode(@C.TrackType int trackType) {
-        return null;
-    }
+    int getDecode();
 
-    default void setDecoderMode(@C.TrackType int trackType, DecoderMode mode) {
-    }
+    void setDecode(int decode);
 
-    default void prepareForNewMedia() {
-    }
+    boolean isHard();
 
-    default PlayerEffect getEffect() {
-        return PlayerEffect.NONE;
-    }
+    String getDecodeText();
 
-    boolean setMediaItem(PlaySpec spec, long startPositionMs);
+    void start(PlaySpec spec);
 
-    default void start(PlaySpec spec, long startPositionMs) {
-        if (!setMediaItem(spec, startPositionMs)) return;
-        getPlayer().prepare();
-        getPlayer().play();
-    }
+    void setMetadata(MediaMetadata data);
 
-    default void setEnding(long endingMs) {
-    }
+    boolean isLive();
 
-    default boolean isEndingManaged() {
+    boolean isVod();
+
+    void setTrack(List<Track> tracks);
+
+    void resetTrack();
+
+    boolean haveTrack(int type);
+
+    Tracks getCurrentTracks();
+
+    default boolean haveTitle() {
         return false;
     }
 
-    default long getOriginalDurationMs() {
-        return C.TIME_UNSET;
-    }
-
-    default boolean preload(PlaySpec spec, long startPositionMs) {
-        return preload(spec, startPositionMs, () -> {});
-    }
-
-    default boolean preload(PlaySpec spec, long startPositionMs, Runnable onError) {
+    default boolean isRepeatOne() {
         return false;
     }
 
-    @Nullable
-    default PlaySpec consumePreload(MediaItem mediaItem) {
-        return null;
+    default void setRepeatOne(boolean repeat) {
     }
 
-    default boolean seekToNext() {
-        return false;
-    }
-
-    default void clearPreload() {
-    }
-
-    default void bindPlayerView(PlayerView playerView) {
-    }
-
-    void stop();
-
-    default void applySubtitleStyle() {
-    }
-
-    default SubtitleSelectionState getSubtitleSelectionState() {
-        return SubtitleSelectionState.EMPTY;
-    }
-
-    default SubtitleContent getSubtitleContent(TrackSelectionOverride selection) {
-        return SubtitleContent.UNSUPPORTED;
-    }
-
-    default void setSubtitleContentEnabled(boolean enabled) {
-    }
-
-    default boolean canRetrySubtitleContent(Format format) {
-        return false;
-    }
-
-    default void retrySubtitleContent(Format format) {
-    }
-
-    default boolean supportsSubtitleTranscript() {
-        return false;
-    }
-
-    default SubtitleOffsets getSubtitleOffsets() {
-        long offset = getPlayer().isCommandAvailable(Player.COMMAND_GET_TEXT_OFFSET) ? getPlayer().getTextOffsetMs() : 0;
-        return new SubtitleOffsets(offset, offset);
-    }
-
-    default void setSubtitleOffsets(SubtitleOffsets offsets) {
-    }
-
-    default boolean supportsSubtitleOffsets() {
-        return false;
-    }
-
-    void setSecondarySubtitleSelection(@Nullable TrackSelectionOverride selection);
-
-    void restoreSecondarySubtitleSelection(@Nullable TrackSelectionOverride selection);
-
-    default boolean addSubtitle(Sub sub) {
-        return false;
+    default List<MediaTitle> getCurrentMediaTitles() {
+        return Collections.emptyList();
     }
 
     String getErrorMessage(PlaybackException e);
@@ -163,12 +67,7 @@ public interface PlayerEngine {
 
     enum ErrorAction {
         RECOVERED,
-        REFRESH,
+        DECODE,
         FATAL
-    }
-
-    enum Type {
-        EXO,
-        MPV
     }
 }

@@ -3,7 +3,7 @@ name: build-apk
 on:
   workflow_dispatch:
   push:
-    branches: [ main, april-base, merge-nov ]
+    branches: [ main, april-base, merge-nov, nov-ui ]
     paths:
       - "app/src/**"
       - "app/libs/**"

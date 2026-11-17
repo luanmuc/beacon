@@ -17,7 +17,6 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelStoreOwner;
-import androidx.media3.exoplayer.iso.BdjRuntime;
 import androidx.media3.exoplayer.offline.Downloader;
 
 import com.fongmi.android.tv.App;
@@ -215,7 +214,7 @@ public final class ModuleViewModel extends AndroidViewModel {
         signal.throwIfCanceled();
         long version = module.getVersionCode();
         switch (module) {
-            case BDJ -> BdjRuntime.prepare(getApplication(), signal);
+            case BDJ -> { }
             case PYTHON -> module.entry(PythonRuntime.class).check();
             case NODEJS -> checkNodeRuntime(signal);
             case QUICKJS -> module.entry(QuickJsRuntime.class).check();

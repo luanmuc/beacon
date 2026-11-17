@@ -17,6 +17,7 @@ import androidx.annotation.Nullable;
 import androidx.core.os.HandlerCompat;
 import androidx.media3.mpvplayer.MpvLibrary;
 
+import com.fongmi.android.tv.api.SubDefaults;
 import com.fongmi.android.tv.player.mpv.MpvUtil;
 import com.fongmi.android.tv.receiver.RuntimeReceiver;
 import com.fongmi.android.tv.ui.dialog.SpiderDialog;
@@ -96,6 +97,7 @@ public class App extends Application implements Application.ActivityLifecycleCal
     @Override
     public void onCreate() {
         super.onCreate();
+        SubDefaults.apply();
         initRuntime();
         Notify.createChannel();
         registerActivityLifecycleCallbacks(this);

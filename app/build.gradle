@@ -58,6 +58,12 @@ android {
         }
     }
 
+
+    packaging {
+        jniLibs {
+            pickFirsts += ["**/libavcodec.so", "**/libavformat.so", "**/libavutil.so", "**/libswresample.so", "**/libswscale.so", "**/libavfilter.so", "**/libavdevice.so"]
+        }
+    }
     buildTypes {
         release {
             minifyEnabled = true

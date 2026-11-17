@@ -72,6 +72,15 @@ jobs:
             :lib-transformer:assembleRelease \
             :lib-mpvplayer:assembleRelease
 
+      - name: Inspect outputs
+        run: |
+          echo "--- any aar ---"
+          find media -name "*.aar" | head -40
+          echo "--- build dirs ---"
+          find media -maxdepth 3 -type d -name build | head
+          echo "--- size ---"
+          du -sh media 2>/dev/null | tail -1
+
       - name: Collect aars
         run: |
           mkdir -p aars

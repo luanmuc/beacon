@@ -101,7 +101,7 @@ androidComponents {
 
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.aar"])
-    implementation "io.github.anilbeesetti:nextlib-media3ext:1.11.0-0.15.0"
+    implementation "io.github.anilbeesetti:nextlib-media3ext:1.11.1-0.18.0"
     implementation project(':catvod')
     implementation project(':chaquo')
     implementation project(':quickjs')

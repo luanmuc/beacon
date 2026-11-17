@@ -82,6 +82,7 @@ import com.fongmi.android.tv.ui.dialog.DanmakuDialog;
 import com.fongmi.android.tv.ui.dialog.EpisodeGridDialog;
 import com.fongmi.android.tv.ui.dialog.EpisodeListDialog;
 import com.fongmi.android.tv.ui.dialog.InfoDialog;
+import com.fongmi.android.tv.ui.dialog.PlaybackPanel;
 import com.fongmi.android.tv.ui.dialog.ReceiveDialog;
 import com.fongmi.android.tv.ui.dialog.SubtitleDialog;
 import com.fongmi.android.tv.ui.dialog.TitleDialog;
@@ -676,7 +677,18 @@ public class VideoActivity extends PlaybackActivity implements Clock.Callback, C
     }
 
     private void onInfo() {
-        InfoDialog.create(this).title(mBinding.control.title.getText()).headers(player().getHeaders()).url(player().getUrl()).show();
+        int total = mEpisodeAdapter == null ? 0 : mEpisodeAdapter.getItems().size();
+        String source = VodConfig.get().getConfig().getName();
+        String meta = (TextUtils.isEmpty(source) ? "" : source) + (total > 0 ? " · 共 " + total + " 集" : "");
+        PlaybackPanel.create(this)
+                .title(mBinding.control.title.getText())
+                .meta(meta)
+                .url(player().getUrl())
+                .headers(player().getHeaders())
+                .onPrev(() -> mBinding.control.prev.performClick())
+                .onNext(() -> mBinding.control.next.performClick())
+                .onEpisodes(this::onEpisodes)
+                .show();
     }
 
     private void onKeep() {

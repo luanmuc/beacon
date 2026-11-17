@@ -22,7 +22,7 @@ jobs:
       - name: Checkout media3 fork
         uses: actions/checkout@v4
         with:
-          repository: FongMi/media
+          repository: luanmuc/media
           ref: release-1.11.0-fongmi
           path: media
           fetch-depth: 1

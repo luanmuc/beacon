@@ -67,6 +67,7 @@ import com.fongmi.android.tv.ui.custom.CustomKeyDownVod;
 import com.fongmi.android.tv.ui.custom.CustomMovement;
 import com.fongmi.android.tv.ui.custom.CustomSeekView;
 import com.fongmi.android.tv.ui.dialog.ContentDialog;
+import com.fongmi.android.tv.ui.dialog.PlaybackPanel;
 import com.fongmi.android.tv.ui.dialog.DanmakuDialog;
 import com.fongmi.android.tv.ui.dialog.SubtitleDialog;
 import com.fongmi.android.tv.ui.dialog.TitleDialog;
@@ -286,7 +287,7 @@ public class VideoActivity extends PlaybackActivity implements CustomKeyDownVod.
         mBinding.video.setOnClickListener(view -> onVideo());
         mBinding.change1.setOnClickListener(view -> onChange());
         mBinding.content.setOnClickListener(view -> onContent());
-        mBinding.control.action.info.setOnClickListener(this::onInfo);
+        mBinding.control.action.info.setOnClickListener(v -> onInfo());
         mBinding.control.action.text.setOnClickListener(this::onTrack);
         mBinding.control.action.audio.setOnClickListener(this::onTrack);
         mBinding.control.action.video.setOnClickListener(this::onTrack);
@@ -705,7 +706,7 @@ public class VideoActivity extends PlaybackActivity implements CustomKeyDownVod.
         String source = VodConfig.get().getConfig().getName();
         String meta = (TextUtils.isEmpty(source) ? "" : source) + (total > 0 ? " · 共 " + total + " 集" : "");
         PlaybackPanel.create(this)
-                .title(mBinding.control.title.getText())
+                .title(mHistory.getVodName() + (getEpisode().getName().isEmpty() ? "" : " · " + getEpisode().getName()))
                 .meta(meta)
                 .url(player().getUrl())
                 .headers(player().getHeaders())

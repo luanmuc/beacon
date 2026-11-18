@@ -130,6 +130,7 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
         mBinding.vod.setOnLongClickListener(this::onVodEdit);
         mBinding.vodHome.setOnClickListener(this::onVodHome);
         mBinding.liveUrl.setOnLongClickListener(v -> { showHealth(); return true; });
+        mBinding.vodUrl.setOnClickListener(v -> checkSubscribers());
         mBinding.vodUrl.setOnLongClickListener(v -> { com.fongmi.android.tv.utils.Util.copy(com.fongmi.android.tv.api.config.VodConfig.getDesc()); com.fongmi.android.tv.utils.Notify.show("已复制影视订阅地址（当前 " + VodConfig.get().getSites().size() + " 个站点）"); return true; });
         mBinding.live.setOnLongClickListener(this::onLiveEdit);
         mBinding.liveHome.setOnClickListener(this::onLiveHome);
@@ -386,6 +387,24 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
                 com.fongmi.android.tv.App.post(() -> com.fongmi.android.tv.utils.Notify.show("直播源存活：" + channels + " 频道 / " + lines + " 线路" + (at.isEmpty() ? "" : "（探测于 " + at.replace("T", " ").replace("Z", " UTC") + "）")));
             } catch (Exception e) {
                 com.fongmi.android.tv.App.post(() -> com.fongmi.android.tv.utils.Notify.show("读取探测结果失败"));
+            }
+        });
+    }
+
+
+    private void checkSubscribers() {
+        String url = com.fongmi.android.tv.api.config.VodConfig.getDesc();
+        if (url == null || url.isEmpty()) {
+            com.fongmi.android.tv.utils.Notify.show("当前没有影视订阅地址");
+            return;
+        }
+        com.fongmi.android.tv.utils.Notify.show("正在检测订阅连通性…");
+        com.fongmi.android.tv.utils.Task.execute(() -> {
+            try {
+                String text = com.github.catvod.net.OkHttp.string(url);
+                com.fongmi.android.tv.App.post(() -> com.fongmi.android.tv.utils.Notify.show("订阅可访问，返回 " + (text == null ? 0 : text.length()) + " 字节"));
+            } catch (Exception e) {
+                com.fongmi.android.tv.App.post(() -> com.fongmi.android.tv.utils.Notify.show("订阅不可访问：" + e.getMessage()));
             }
         });
     }

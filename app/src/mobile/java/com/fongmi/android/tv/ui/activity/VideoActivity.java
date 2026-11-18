@@ -681,7 +681,7 @@ public class VideoActivity extends PlaybackActivity implements Clock.Callback, C
     private void onInfo() {
         int total = mEpisodeAdapter == null ? 0 : mEpisodeAdapter.getItems().size();
         String source = VodConfig.get().getConfig().getName();
-        String meta = (TextUtils.isEmpty(source) ? "" : source) + (total > 0 ? " · 共 " + total + " 集" : "");
+        String meta = (TextUtils.isEmpty(source) ? "" : source) + (total > 0 ? " · 共 " + total + " 集" : "") + (player().isHard() ? " · 硬解" : " · 软解");
         PlaybackPanel.create(this)
                 .title(mBinding.control.title.getText())
                 .meta(meta)

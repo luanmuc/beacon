@@ -193,6 +193,7 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
         mBinding.control.action.audio.setOnClickListener(this::onTrack);
         mBinding.control.action.video.setOnClickListener(this::onTrack);
         mBinding.control.action.home.setOnClickListener(view -> onHome());
+        mBinding.control.action.home.setOnLongClickListener(view -> { switchChannelLine(); return true; });
         mBinding.control.action.line.setOnClickListener(view -> onLine());
         mBinding.control.action.scale.setOnClickListener(view -> onScale());
         mBinding.control.action.speed.setOnClickListener(view -> onSpeed());
@@ -1153,4 +1154,16 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
         mViewModel.epg().removeObserver(mObserveEpg);
         super.onDestroy();
     }
+    private void switchChannelLine() {
+        if (mChannel == null || mChannel.getUrls() == null || mChannel.getUrls().size() <= 1) {
+            Notify.show("当前频道只有一条线路");
+            return;
+        }
+        mChannel.switchLine(true);
+        lineRetry = 0;
+        Notify.show("已切到线路 " + (mChannel.getIndex() + 1) + "/" + mChannel.getUrls().size());
+        mViewModel.getUrl(mChannel);
+    }
+
+
 }

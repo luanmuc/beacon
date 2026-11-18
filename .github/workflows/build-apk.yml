@@ -97,7 +97,7 @@ jobs:
         with:
           name: media-aars
           path: aars/*.aar
-          retention-days: 7
+          retention-days: 1
 
   app:
     name: build apks
@@ -209,4 +209,4 @@ jobs:
         with:
           name: apk-debug
           path: out/*.apk
-          retention-days: 30
+          retention-days: 1

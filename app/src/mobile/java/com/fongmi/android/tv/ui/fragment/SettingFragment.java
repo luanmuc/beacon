@@ -126,6 +126,7 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
         mBinding.player.setOnClickListener(this::onPlayer);
         mBinding.restore.setOnClickListener(this::onRestore);
         mBinding.version.setOnClickListener(this::onVersion);
+        mBinding.version.setOnLongClickListener(v -> { openRepo(); return true; });
         mBinding.vod.setOnLongClickListener(this::onVodEdit);
         mBinding.vodHome.setOnClickListener(this::onVodHome);
         mBinding.live.setOnLongClickListener(this::onLiveEdit);
@@ -359,6 +360,15 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
     });
     private void openRelease() {
         com.fongmi.android.tv.utils.UpdateChecker.check(requireActivity());
+    }
+
+
+    private void openRepo() {
+        try {
+            startActivity(new android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://github.com/luanmuc/beacon")));
+        } catch (Exception e) {
+            com.fongmi.android.tv.utils.Notify.show("打开失败");
+        }
     }
 
 

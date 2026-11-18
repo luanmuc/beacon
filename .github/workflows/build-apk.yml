@@ -182,6 +182,11 @@ jobs:
           find app/build/outputs/apk -name "*.apk" -exec cp {} out/ \;
           ls -lh out
 
+      - name: Generate CHANGELOG
+        run: |
+          git log -12 --pretty=format:"- %s (%h)" > CHANGELOG.tmp
+          { echo "# 变更记录"; echo; cat CHANGELOG.tmp; } > CHANGELOG.md
+          rm -f CHANGELOG.tmp
       - name: Rename APKs
         run: |
           set -e

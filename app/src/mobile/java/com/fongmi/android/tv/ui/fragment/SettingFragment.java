@@ -242,7 +242,7 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
     }
 
     private void onVersion(View view) {
-        Updater.create().force().start(requireActivity());
+        openRelease();
     }
 
     private void setWallDefault(View view) {
@@ -357,4 +357,14 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
         if (result.getResultCode() != Activity.RESULT_OK || result.getData() == null || result.getData().getData() == null) return;
         setConfig(Config.find("file:/" + FileChooser.getPathFromUri(result.getData().getData()).replace(Path.rootPath(), ""), type));
     });
+    private void openRelease() {
+        try {
+            android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://github.com/luanmuc/beacon/releases/latest"));
+            startActivity(intent);
+        } catch (Exception e) {
+            com.fongmi.android.tv.utils.Notify.show("打开失败");
+        }
+    }
+
+
 }

@@ -204,6 +204,7 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
         return new Callback() {
             @Override
             public void success() {
+                checkEmpty();
                 showContent();
             }
 
@@ -485,4 +486,14 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
         Server.get().stop();
         super.onDestroy();
     }
+    private void checkEmpty() {
+        try {
+            if (com.fongmi.android.tv.api.config.VodConfig.get().getSites().isEmpty()) {
+                com.fongmi.android.tv.utils.Notify.show("影视订阅为空，请在设置中填写订阅地址");
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
+
 }

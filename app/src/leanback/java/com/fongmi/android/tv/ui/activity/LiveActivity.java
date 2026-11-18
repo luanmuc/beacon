@@ -185,6 +185,7 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
         mBinding.control.action.text.setUpListener(this::onSubtitleClick);
         mBinding.control.action.text.setDownListener(this::onSubtitleClick);
         mBinding.control.action.home.setOnClickListener(view -> onHome());
+        mBinding.control.action.home.setOnLongClickListener(view -> { switchChannelLine(); return true; });
         mBinding.control.action.line.setOnClickListener(view -> onLine());
         mBinding.control.action.scale.setOnClickListener(view -> onScale());
         mBinding.control.action.speed.setOnClickListener(view -> onSpeed());
@@ -1079,4 +1080,16 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
         mViewModel.epg().removeObserver(mObserveEpg);
         super.onDestroy();
     }
+    private void switchChannelLine() {
+        if (mChannel == null || mChannel.getUrls() == null || mChannel.getUrls().size() <= 1) {
+            com.fongmi.android.tv.utils.Notify.show("当前频道只有一条线路");
+            return;
+        }
+        mChannel.switchLine(true);
+        lineRetry = 0;
+        com.fongmi.android.tv.utils.Notify.show("已切到线路 " + (mChannel.getIndex() + 1) + "/" + mChannel.getUrls().size());
+        mViewModel.getUrl(mChannel);
+    }
+
+
 }

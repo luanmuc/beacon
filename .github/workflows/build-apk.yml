@@ -153,6 +153,15 @@ jobs:
         with:
           python-version: "3.10"
 
+      - name: Cache gradle (app)
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: beacon-app-${{ runner.os }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'app/build.gradle') }}
+          restore-keys: beacon-app-${{ runner.os }}-
+
       - name: Bump version
         run: |
           set -e
@@ -171,6 +180,15 @@ jobs:
         run: |
           mkdir -p out
           find app/build/outputs/apk -name "*.apk" -exec cp {} out/ \;
+          ls -lh out
+
+      - name: Rename APKs
+        run: |
+          set -e
+          for f in out/*.apk; do
+            base=$(basename "$f" .apk)
+            mv "$f" "out/beacon-${{ github.run_number }}-${base}.apk"
+          done
           ls -lh out
 
       - name: Create release

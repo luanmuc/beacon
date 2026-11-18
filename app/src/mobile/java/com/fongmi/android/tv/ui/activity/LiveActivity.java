@@ -258,6 +258,9 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
         return new Callback() {
             @Override
             public void success() {
+                if (com.fongmi.android.tv.api.config.LiveConfig.get().getLives() == null || com.fongmi.android.tv.api.config.LiveConfig.get().getLives().isEmpty()) {
+                    Notify.show("直播订阅为空，请在设置中填写直播源");
+                }
                 getLive();
             }
 

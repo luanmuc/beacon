@@ -255,6 +255,9 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
         return new Callback() {
             @Override
             public void success() {
+                if (com.fongmi.android.tv.api.config.LiveConfig.get().getLives() == null || com.fongmi.android.tv.api.config.LiveConfig.get().getLives().isEmpty()) {
+                    com.fongmi.android.tv.utils.Notify.show("直播订阅为空，请在设置中填写直播源");
+                }
                 getLive();
             }
 

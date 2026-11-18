@@ -711,6 +711,7 @@ public class VideoActivity extends PlaybackActivity implements CustomKeyDownVod.
                 .url(player().getUrl())
                 .headers(player().getHeaders())
                 .onRetry(this::onRefresh)
+                .onShare(this::sharePlayback)
                 .show();
     }
 
@@ -1461,4 +1462,19 @@ public class VideoActivity extends PlaybackActivity implements CustomKeyDownVod.
         mViewModel.getSearch().removeObserver(mObserveSearch);
         super.onDestroy();
     }
+    private void sharePlayback() {
+        try {
+            String title = mBinding.control.title.getText() == null ? "" : mBinding.control.title.getText().toString();
+            String url = player().getUrl();
+            android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_SEND);
+            intent.setType("text/plain");
+            intent.putExtra(android.content.Intent.EXTRA_SUBJECT, title);
+            intent.putExtra(android.content.Intent.EXTRA_TEXT, title + "\n" + (url == null ? "" : url));
+            startActivity(android.content.Intent.createChooser(intent, "分享"));
+        } catch (Exception e) {
+            com.fongmi.android.tv.utils.Notify.show("分享失败");
+        }
+    }
+
+
 }

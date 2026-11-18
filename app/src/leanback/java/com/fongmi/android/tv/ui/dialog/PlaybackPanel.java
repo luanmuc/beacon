@@ -29,6 +29,7 @@ public class PlaybackPanel {
     private Runnable nextAction;
     private Runnable episodeAction;
     private Runnable retryAction;
+    private Runnable shareAction;
 
     public static PlaybackPanel create(Activity activity) {
         return new PlaybackPanel(activity);
@@ -70,6 +71,11 @@ public class PlaybackPanel {
         return this;
     }
 
+    public PlaybackPanel onShare(Runnable action) {
+        this.shareAction = action;
+        return this;
+    }
+
     public PlaybackPanel onRetry(Runnable action) {
         this.retryAction = action;
         return this;
@@ -87,6 +93,9 @@ public class PlaybackPanel {
         binding.headers.setText(TextUtils.isEmpty(headers) ? "" : headers.trim());
         binding.headers.setVisibility(TextUtils.isEmpty(headers) ? View.GONE : View.VISIBLE);
         binding.url.setVisibility(TextUtils.isEmpty(url) ? View.GONE : View.VISIBLE);
+        binding.share.setOnClickListener(v -> {
+            if (shareAction != null) shareAction.run();
+        });
         binding.retry.setOnClickListener(v -> {
             dismiss();
             if (retryAction != null) retryAction.run();

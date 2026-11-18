@@ -29,6 +29,7 @@ public class PlaybackPanel {
     private Runnable nextAction;
     private Runnable episodeAction;
     private Runnable retryAction;
+    private Runnable shareAction;
 
     public static PlaybackPanel create(Activity activity) {
         return new PlaybackPanel(activity);
@@ -70,6 +71,11 @@ public class PlaybackPanel {
         return this;
     }
 
+    public PlaybackPanel onShare(Runnable action) {
+        this.shareAction = action;
+        return this;
+    }
+
     public PlaybackPanel onRetry(Runnable action) {
         this.retryAction = action;
         return this;
@@ -91,6 +97,16 @@ public class PlaybackPanel {
             if (TextUtils.isEmpty(url)) return;
             Util.copy(url);
             Notify.show("已复制播放地址");
+        });
+        binding.title.setOnLongClickListener(v -> {
+            if (!TextUtils.isEmpty(binding.title.getText())) {
+                Util.copy(binding.title.getText().toString());
+                Notify.show("已复制标题");
+            }
+            return true;
+        });
+        binding.share.setOnClickListener(v -> {
+            if (shareAction != null) shareAction.run();
         });
         binding.retry.setOnClickListener(v -> {
             dismiss();

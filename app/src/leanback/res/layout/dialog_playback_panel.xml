@@ -43,6 +43,14 @@
         android:ellipsize="end" />
 
     <com.google.android.material.button.MaterialButton
+        android:id="@+id/retry"
+        style="@style/Widget.Material3.Button.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="重试当前线路" />
+
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/copy"
         style="@style/Widget.Material3.Button.TextButton"
         android:layout_width="wrap_content"

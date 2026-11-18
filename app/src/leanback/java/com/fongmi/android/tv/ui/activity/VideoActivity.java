@@ -710,6 +710,7 @@ public class VideoActivity extends PlaybackActivity implements CustomKeyDownVod.
                 .meta(meta)
                 .url(player().getUrl())
                 .headers(player().getHeaders())
+                .onRetry(this::onRefresh)
                 .show();
     }
 

@@ -91,8 +91,8 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
     @Override
     protected void initView() {
         EventBus.getDefault().register(this);
-        mBinding.vodUrl.setText(VodConfig.getDesc());
-        mBinding.liveUrl.setText(LiveConfig.getDesc());
+        mBinding.vodUrl.setText(VodConfig.getDesc() + " · " + (VodConfig.get().getSites() == null ? 0 : VodConfig.get().getSites().size()) + " 个站点");
+        mBinding.liveUrl.setText(LiveConfig.getDesc() + " · " + (LiveConfig.get().getLives() == null ? 0 : LiveConfig.get().getLives().size()) + " 个直播源");
         mBinding.wallUrl.setText(WallConfig.getDesc());
         mBinding.versionText.setText(BuildConfig.VERSION_NAME + "（点击检查更新）");
         setOtherText();
@@ -337,8 +337,8 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onConfigEvent(ConfigEvent event) {
         if (event.type() != ConfigEvent.Type.COMMON) return;
-        mBinding.vodUrl.setText(VodConfig.getDesc());
-        mBinding.liveUrl.setText(LiveConfig.getDesc());
+        mBinding.vodUrl.setText(VodConfig.getDesc() + " · " + (VodConfig.get().getSites() == null ? 0 : VodConfig.get().getSites().size()) + " 个站点");
+        mBinding.liveUrl.setText(LiveConfig.getDesc() + " · " + (LiveConfig.get().getLives() == null ? 0 : LiveConfig.get().getLives().size()) + " 个直播源");
         mBinding.wallUrl.setText(WallConfig.getDesc());
     }
 

@@ -358,12 +358,7 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
         setConfig(Config.find("file:/" + FileChooser.getPathFromUri(result.getData().getData()).replace(Path.rootPath(), ""), type));
     });
     private void openRelease() {
-        try {
-            android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://github.com/luanmuc/beacon/releases/latest"));
-            startActivity(intent);
-        } catch (Exception e) {
-            com.fongmi.android.tv.utils.Notify.show("打开失败");
-        }
+        com.fongmi.android.tv.utils.UpdateChecker.check(requireActivity());
     }
 
 

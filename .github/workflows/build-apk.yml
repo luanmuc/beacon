@@ -15,6 +15,9 @@ on:
       - "build.gradle"
       - ".github/workflows/build-apk.yml"
 
+permissions:
+  contents: write
+
 jobs:
   media:
     name: build media3 aars
@@ -90,6 +93,14 @@ jobs:
           find media -name "*.aar" -exec cp {} aars/ \;
           ls -lh aars | head -30
 
+      - name: Create release
+        if: success()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: v1.0.${{ github.run_number }}
+          body: "自动构建：${{ github.sha }}"
+          files: out/*.apk
       - uses: actions/upload-artifact@v4
         with:
           name: media-aars

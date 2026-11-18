@@ -91,6 +91,7 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
     private List<Group> mHides;
     private String mPlaybackKey;
     private Channel mChannel;
+    private int lineRetry;
     private Group mGroup;
     private Runnable mR1;
     private Runnable mR2;
@@ -600,6 +601,7 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
         } else if (mGroup != null) {
             mGroup.setPosition(mChannelAdapter.setSelected(item.group(mGroup)));
             mChannel = item;
+        lineRetry = 0;
             setArtwork();
             showInfo();
             hideUI();
@@ -753,6 +755,13 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
 
     @Override
     protected void onError(String msg) {
+        if (mChannel != null && mChannel.getUrls() != null && mChannel.getUrls().size() > 1 && lineRetry < mChannel.getUrls().size() - 1) {
+            lineRetry++;
+            mChannel.switchLine(true);
+            Notify.show("当前线路失败，已切换到第 " + (mChannel.getIndex() + 1) + " 条");
+            mViewModel.getUrl(mChannel);
+            return;
+        }
         Track.delete(player().getKey());
         player().resetTrack();
         player().reset();

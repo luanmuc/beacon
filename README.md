@@ -1,135 +1,51 @@
-# 開發者文件
+# beacon
 
-基於 [CatVod](https://github.com/CatVodTVOfficial/CatVodTVJarLoader) 的開源 Android 影音應用程式，同時支援 **Android TV 大螢幕**與**手機**兩種使用情境，並且透過外部配置靈活擴展內容。
+Android TV / 手机双端的聚合播放器，电视台直播与影视点播合并，一个入口切换。
 
-[討論群組](https://t.me/fongmi_official) | [發布頻道](https://t.me/fongmi_release)
+- 基座：`FongMi/TV` 4 月版（`16d347a9`），在其上做二开
+- 播放内核：自有 media3 fork（`luanmuc/media@release-1.11.0-fongmi` + 补丁）
+- 源与订阅：`beacon-feeds` 定时探测维护，`beacon-seed` 提供固定订阅地址
+- 构建：GitHub Actions 两阶段（先编 21 个 media3 模块，再编双端 release），每日定时出包并自动发布 Release
 
-[![Star History Chart](https://api.star-history.com/svg?repos=FongMi/TV&type=Date)](https://www.star-history.com/#FongMi/TV&Date)
+## 特性
 
----
+| 能力 | 说明 |
+|---|---|
+| 双端一套代码 | `leanback`（TV）/ `mobile`（手机），一次构建出两套 APK |
+| 直播 + 影视合并 | 首页底部导航“影视 / 直播”切换，直播入口常驻 |
+| 默认订阅 | 首次启动自动写入 `beacon-seed` 的订阅地址，装完即用 |
+| 源自动维护 | 探测工作流每 6 小时跑一次，产物自动同步到公开种子仓库 |
+| 内容面板 | 播放页展示剧名、来源、集数、播放地址、请求头，带上一集/选集/下一集/复制 |
+| 解码面板 | 显示当前解码方式，可切硬解 / 软解 |
+| 字幕调节 | 字号、位置可调（随播放保存） |
+| 自动版本号 | `versionCode` 取 CI 运行号，`versionName` 为 `1.0.<运行号>` |
 
-## 目錄
+## 仓库
 
-- [專案架構](#專案架構)
-- [播放器](#播放器)
-- [點播功能](#點播功能)
-- [直播功能](#直播功能)
-- [爬蟲引擎](#爬蟲引擎)
-- [網路功能](#網路功能)
-- [DLNA 投放](#dlna-投放)
-- [遠端控制](#遠端控制)
-- [配置說明](#配置說明)
-- [延伸閱讀](#延伸閱讀)
+- 主程序：`luanmuc/beacon`（本仓库）
+- 源探测：https://github.com/luanmuc/beacon-feeds
+- 订阅种子：https://github.com/luanmuc/beacon-seed
+- 骨架试验：https://github.com/luanmuc/beacon-sketch
 
----
+## 固定订阅地址
 
-## 專案架構
+- 影视：`https://raw.githubusercontent.com/luanmuc/beacon-seed/main/tvbox.json`
+- 直播：`https://raw.githubusercontent.com/luanmuc/beacon-seed/main/live.m3u`
 
-| 項目      | 值                             |
-|---------|-------------------------------|
-| package | `com.fongmi.android.tv`       |
-| minSdk  | 24（Android 7.0 Nougat）        |
-| abi     | `arm64-v8a`、`armeabi-v7a`     |
-| flavor  | `leanback`（電視版）、`mobile`（手機版） |
+## 本地构建
 
+```bash
+# 需要 Android SDK、JDK 17、Python 3.10（Chaquopy）
+./gradlew :app:assembleLeanbackArm64_v8aRelease
+./gradlew :app:assembleMobileArm64_v8aRelease
 ```
-TV/
-├── app/            主應用程式（含兩套 UI Flavor）
-├── catvod/         爬蟲抽象層（Spider 介面、OkHttp 網路棧）
-├── quickjs/        QuickJS JavaScript 引擎
-├── chaquo/         Chaquopy Python 引擎
-```
 
-`app/src/main/` 為兩個版本共用的業務邏輯，`app/src/leanback/` 與 `app/src/mobile/` 各自實作對應 UI。
+release 构建依赖 `local.properties` 中的 `storeFile / keyAlias / storePassword / keyPassword`。CI 里由 `keytool` 现场生成调试用 keystore。
 
----
+## 发布
 
-## 播放器
+每次构建成功后自动创建 Release `v1.0.<run_number>`，附件为四个 APK（leanback/mobile × arm64-v8a/armeabi-v7a）。
 
-- **核心**：ExoPlayer（Media3）+ FFmpeg 軟解，硬解 / 軟解自動降級切換
-- **渲染**：SurfaceView / TextureView
-- **DRM**：Widevine、PlayReady、ClearKey，支援 `#KODIPROP` 宣告
-- **彈幕**：DanmakuFlameMaster，與播放時間軸精確同步，支援遠端推送
-- **字幕**：SRT / SSA / ASS 外掛字幕、系統 CaptioningManager、遠端即時注入
-- **其他**：倍速、多縮放比例、畫中畫（PiP）、背景音訊、片頭 / 片尾自動跳過
+## 许可
 
----
-
-## 點播功能
-
-- 多站點分類瀏覽，Filter 篩選（年份 / 地區 / 類型等）
-- 多站點**並行搜尋**，關鍵字自動繁轉簡提升相容性
-- 播放失敗自動換源：解析器 → 線路 → 搜尋其他站 → 下一站點
-- 觀看記錄（保留 60 天）、收藏、無痕模式
-- 電視版使用遙控器操作；手機版支援手勢（亮度 / 音量 / 進度）、上下滑切集、螢幕旋轉與鎖定
-
----
-
-## 直播功能
-
-- 支援 M3U、TXT（`#genre#` 分組）、JSON 三種直播源格式
-- **EPG**：XMLTV 格式（支援 `.gz`），每 6 小時自動刷新
-- **追看 / 時移**：`append`、`pltv` 等多種類型
-- 頻道收藏、隱藏分組密碼保護
-- 特殊引擎：TVBus、ForceTech
-
----
-
-## 爬蟲引擎
-
-支援三種語言撰寫爬蟲：
-
-- Java JAR（DexClassLoader）
-- JavaScript（QuickJS）
-- Python（Chaquopy）
-
-透過 `api` 欄位指定爬蟲，`ext` 欄位傳入初始化參數。完整 API 規格見 [SPIDER.md](docs/SPIDER.md)。
-
----
-
-## 網路功能
-
-- **DoH**：DNS over HTTPS，支援 Bootstrap IP
-- **代理**：HTTP / HTTPS / SOCKS4 / SOCKS5，依 host 正則規則動態選擇
-- **Hosts**：DNS 解析覆蓋，支援萬用字元 `*`
-- **CORS 注入**：依 host 規則在回應中注入自訂標頭
-- **廣告攔截**：`ads` 黑名單，符合域名直接攔截
-- **WebView 嗅探**：Sniffer 以 regex 攔截媒體 URL；支援 UA 偽裝
-
----
-
-## DLNA 投放
-
-- **DMC（投放端）**：手機版，掃描區域網路 DLNA 設備並投放媒體
-- **DMR（被投放端）**：電視版，作為 DLNA Renderer 接收其他設備投放
-
-使用 Cling 2.1.1（UPnP），支援 play / pause / stop / seek 控制。
-
----
-
-## 遠端控制
-
-應用啟動後綁定本地 HTTP 伺服器（NanoHTTPD），埠號從 **9978** 起自動偵測至 **9998**，可用於播放控制、推送字幕 / 彈幕、多裝置同步等。完整端點說明見 [LOCAL.md](docs/LOCAL.md)。
-
----
-
-## 配置說明
-
-Vod 配置為應用主要入口，透過 URL 或本地路徑載入，頂層欄位定義：
-
-- 點播站點（`sites`）、解析規則（`parses`）
-- 直播來源（`lives`）
-- 網路設定（`doh`、`proxy`、`hosts`、`ads`）
-
-Live 配置可內嵌或獨立存放。完整欄位說明見 [CONFIG.md](docs/CONFIG.md)。
-
----
-
-## 延伸閱讀
-
-| 文件                          | 說明                   |
-|-----------------------------|----------------------|
-| [CONFIG.md](docs/CONFIG.md) | Vod / Live 完整配置欄位說明  |
-| [SPIDER.md](docs/SPIDER.md) | Spider 所有方法規格與回傳格式   |
-| [LOCAL.md](docs/LOCAL.md)   | 本地 HTTP API 所有端點完整說明 |
-| [LIVE.md](docs/LIVE.md)     | 直播來源格式完整說明           |
+上游为 GPL-3.0，本仓库作为二开同样遵循 GPL-3.0。仅个人自用，不对外分发。

@@ -62,6 +62,7 @@ import com.fongmi.android.tv.impl.CustomTarget;
 import com.fongmi.android.tv.model.SiteViewModel;
 import com.fongmi.android.tv.player.PlayerHelper;
 import com.fongmi.android.tv.player.PlayerManager;
+import com.fongmi.android.tv.player.engine.PlayerEngine;
 import com.fongmi.android.tv.service.PlaybackService;
 import com.fongmi.android.tv.setting.DanmakuSetting;
 import com.fongmi.android.tv.setting.PlayerSetting;
@@ -81,6 +82,7 @@ import com.fongmi.android.tv.ui.dialog.ControlDialog;
 import com.fongmi.android.tv.ui.dialog.DanmakuDialog;
 import com.fongmi.android.tv.ui.dialog.EpisodeGridDialog;
 import com.fongmi.android.tv.ui.dialog.EpisodeListDialog;
+import com.fongmi.android.tv.ui.dialog.DecodePanel;
 import com.fongmi.android.tv.ui.dialog.InfoDialog;
 import com.fongmi.android.tv.ui.dialog.PlaybackPanel;
 import com.fongmi.android.tv.ui.dialog.ReceiveDialog;
@@ -823,9 +825,22 @@ public class VideoActivity extends PlaybackActivity implements Clock.Callback, C
 
     private void onDecode() {
         mClock.setCallback(null);
-        player().toggleDecode();
+        DecodePanel.create(this)
+                .current(player().getDecodeText(), player().isHard())
+                .onHard(() -> {
+                    if (!player().isHard()) {
+                        player().setDecode(PlayerEngine.HARD);
+                        setDecode();
+                    }
+                })
+                .onSoft(() -> {
+                    if (player().isHard()) {
+                        player().setDecode(PlayerEngine.SOFT);
+                        setDecode();
+                    }
+                })
+                .show();
         setR1Callback();
-        setDecode();
     }
 
     private void onEnding() {

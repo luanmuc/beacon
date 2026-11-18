@@ -305,6 +305,14 @@ public class PlayerManager implements ParseCallback {
         engine.resetTrack();
     }
 
+    public boolean isHard() {
+        return engine.isHard();
+    }
+
+    public void setDecode(int decode) {
+        engine.setDecode(decode);
+    }
+
     public void toggleDecode() {
         engine.setDecode(engine.isHard() ? PlayerEngine.SOFT : PlayerEngine.HARD);
         rebuildPlayer();

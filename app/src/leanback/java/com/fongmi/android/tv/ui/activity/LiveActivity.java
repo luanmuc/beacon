@@ -713,7 +713,7 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
         mBinding.widget.title.setSelected(true);
         mBinding.widget.line.setText(mChannel.getLine());
         mBinding.widget.name.setText(mChannel.getShow());
-        mBinding.widget.title.setText(mChannel.getShow());
+        mBinding.widget.title.setText(mChannel.getShow() + (mChannel.getUrls().size() > 1 ? "（线路 " + (mChannel.getIndex() + 1) + "/" + mChannel.getUrls().size() + "）" : ""));
         mBinding.control.action.line.setText(mChannel.getLine());
         mBinding.widget.number.setText(mChannel.getNumber());
         mBinding.widget.line.setVisibility(mChannel.getLineVisible());

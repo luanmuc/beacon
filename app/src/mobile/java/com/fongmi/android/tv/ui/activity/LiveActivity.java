@@ -653,7 +653,7 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
         mBinding.control.title.setSelected(true);
         mBinding.widget.line.setText(mChannel.getLine());
         mBinding.widget.name.setText(mChannel.getShow());
-        mBinding.control.title.setText(mChannel.getShow());
+        mBinding.control.title.setText(mChannel.getShow() + (mChannel.getUrls().size() > 1 ? "（线路 " + (mChannel.getIndex() + 1) + "/" + mChannel.getUrls().size() + "）" : ""));
         mBinding.widget.namePip.setText(mChannel.getShow());
         mBinding.widget.number.setText(mChannel.getNumber());
         mBinding.widget.numberPip.setText(mChannel.getNumber());

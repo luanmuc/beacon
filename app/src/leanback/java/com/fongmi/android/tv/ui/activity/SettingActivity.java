@@ -121,6 +121,7 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
         mBinding.version.setOnLongClickListener(v -> { openRepo(); return true; });
         mBinding.vod.setOnLongClickListener(this::onVodEdit);
         mBinding.vodHome.setOnClickListener(this::onVodHome);
+        mBinding.liveUrl.setOnLongClickListener(v -> { showHealth(); return true; });
         mBinding.live.setOnLongClickListener(this::onLiveEdit);
         mBinding.liveHome.setOnClickListener(this::onLiveHome);
         mBinding.wall.setOnLongClickListener(this::onWallEdit);
@@ -345,6 +346,22 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
         } catch (Exception e) {
             com.fongmi.android.tv.utils.Notify.show("打开失败");
         }
+    }
+
+
+    private void showHealth() {
+        com.fongmi.android.tv.utils.Task.execute(() -> {
+            try {
+                String url = "https://raw.githubusercontent.com/luanmuc/beacon-seed/main/live-report.json";
+                String text = com.github.catvod.net.OkHttp.string(url);
+                org.json.JSONObject object = new org.json.JSONObject(text);
+                int channels = object.optInt("channels");
+                int lines = object.optInt("lines");
+                com.fongmi.android.tv.App.post(() -> com.fongmi.android.tv.utils.Notify.show("直播源存活：" + channels + " 频道 / " + lines + " 线路"));
+            } catch (Exception e) {
+                com.fongmi.android.tv.App.post(() -> com.fongmi.android.tv.utils.Notify.show("读取探测结果失败"));
+            }
+        });
     }
 
 

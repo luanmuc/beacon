@@ -1464,7 +1464,7 @@ public class VideoActivity extends PlaybackActivity implements CustomKeyDownVod.
     }
     private void sharePlayback() {
         try {
-            String title = mBinding.control.title.getText() == null ? "" : mBinding.control.title.getText().toString();
+            String title = (mHistory.getVodName() == null ? "" : mHistory.getVodName()) + (getEpisode().getName().isEmpty() ? "" : " · " + getEpisode().getName());
             String url = player().getUrl();
             android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_SEND);
             intent.setType("text/plain");

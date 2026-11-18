@@ -690,6 +690,7 @@ public class VideoActivity extends PlaybackActivity implements Clock.Callback, C
                 .onPrev(() -> mBinding.control.prev.performClick())
                 .onNext(() -> mBinding.control.next.performClick())
                 .onEpisodes(this::onEpisodes)
+                .onRetry(this::onRefresh)
                 .show();
     }
 

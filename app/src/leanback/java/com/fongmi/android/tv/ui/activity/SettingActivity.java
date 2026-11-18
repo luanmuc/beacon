@@ -122,6 +122,7 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
         mBinding.vod.setOnLongClickListener(this::onVodEdit);
         mBinding.vodHome.setOnClickListener(this::onVodHome);
         mBinding.liveUrl.setOnLongClickListener(v -> { showHealth(); return true; });
+        mBinding.vodUrl.setOnLongClickListener(v -> { com.fongmi.android.tv.utils.Util.copy(com.fongmi.android.tv.api.config.VodConfig.getDesc()); com.fongmi.android.tv.utils.Notify.show("已复制影视订阅地址"); return true; });
         mBinding.live.setOnLongClickListener(this::onLiveEdit);
         mBinding.liveHome.setOnClickListener(this::onLiveHome);
         mBinding.wall.setOnLongClickListener(this::onWallEdit);

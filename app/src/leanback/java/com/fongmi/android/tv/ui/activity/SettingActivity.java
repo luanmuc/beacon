@@ -417,7 +417,8 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
                 com.fongmi.android.tv.App.post(() -> {
                     try {
                         CharSequence base = mBinding.liveUrl.getText();
-                        mBinding.liveUrl.setText(base + " · 存活 " + channels + " 频道/" + lines + " 线路");
+                        String at = object.optString("generated_at", "");
+                        mBinding.liveUrl.setText(base + " · 存活 " + channels + " 频道/" + lines + " 线路" + (at.isEmpty() ? "" : " · " + at.replace("T", " ").replace("Z", "")));
                     } catch (Exception ignored) {
                     }
                 });

@@ -125,7 +125,7 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
         mBinding.vodHome.setOnClickListener(this::onVodHome);
         mBinding.liveUrl.setOnClickListener(v -> checkLiveSubscription());
         mBinding.liveUrl.setOnLongClickListener(v -> { showHealth(); return true; });
-        mBinding.vodUrl.setOnClickListener(v -> checkSubscribers());
+        mBinding.vodUrl.setOnClickListener(v -> checkAllSubscriptions());
         mBinding.vodUrl.setOnLongClickListener(v -> { com.fongmi.android.tv.utils.Util.copy(com.fongmi.android.tv.api.config.VodConfig.getDesc()); com.fongmi.android.tv.utils.Notify.show("已复制影视订阅地址（当前 " + VodConfig.get().getSites().size() + " 个站点）"); return true; });
         mBinding.live.setOnLongClickListener(this::onLiveEdit);
         mBinding.liveHome.setOnClickListener(this::onLiveHome);
@@ -436,6 +436,31 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
             startActivity(intent);
         } catch (Exception e) {
             com.fongmi.android.tv.utils.Notify.show("打开系统设置失败");
+        }
+    }
+
+
+    private void checkAllSubscriptions() {
+        com.fongmi.android.tv.utils.Notify.show("正在自检影视与直播订阅…");
+        com.fongmi.android.tv.utils.Task.execute(() -> {
+            String vod = com.fongmi.android.tv.api.config.VodConfig.getDesc();
+            String live = com.fongmi.android.tv.api.config.LiveConfig.getDesc();
+            StringBuilder sb = new StringBuilder();
+            sb.append(checkOne("影视", vod));
+            sb.append("；");
+            sb.append(checkOne("直播", live));
+            String result = sb.toString();
+            com.fongmi.android.tv.App.post(() -> com.fongmi.android.tv.utils.Notify.show(result));
+        });
+    }
+
+    private String checkOne(String label, String url) {
+        if (url == null || url.isEmpty()) return label + "：未配置";
+        try {
+            String text = com.github.catvod.net.OkHttp.string(url);
+            return label + "：可访问（" + (text == null ? 0 : text.length()) + " 字节）";
+        } catch (Exception e) {
+            return label + "：不可访问（" + e.getMessage() + "）";
         }
     }
 

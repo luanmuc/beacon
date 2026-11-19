@@ -186,6 +186,7 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
         mBinding.control.action.text.setUpListener(this::onSubtitleClick);
         mBinding.control.action.text.setDownListener(this::onSubtitleClick);
         mBinding.control.action.home.setOnClickListener(view -> onHome());
+        mBinding.group.setOnLongClickListener(view -> { showChannelSearch(); return true; });
         mBinding.control.action.home.setOnLongClickListener(view -> { switchChannelLine(); return true; });
         mBinding.control.action.line.setOnClickListener(view -> onLine());
         mBinding.control.action.scale.setOnClickListener(view -> onScale());
@@ -1098,6 +1099,39 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
         lineRetry = 0;
         com.fongmi.android.tv.utils.Notify.show("已切到线路 " + (mChannel.getIndex() + 1) + "/" + mChannel.getUrls().size());
         mViewModel.getUrl(mChannel);
+    }
+
+
+    private void showChannelSearch() {
+        if (mGroup == null) return;
+        android.widget.EditText input = new android.widget.EditText(this);
+        input.setHint("输入频道关键词");
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("搜索频道")
+                .setView(input)
+                .setPositiveButton("搜索", (d, w) -> filterChannels(input.getText().toString()))
+                .setNeutralButton("重置", (d, w) -> resetChannelFilter())
+                .setNegativeButton("取消", null)
+                .show();
+    }
+
+    private void filterChannels(String key) {
+        String kw = key == null ? "" : key.trim();
+        if (kw.isEmpty()) {
+            resetChannelFilter();
+            return;
+        }
+        java.util.List<com.fongmi.android.tv.bean.Channel> items = new java.util.ArrayList<>();
+        for (com.fongmi.android.tv.bean.Channel channel : mGroup.getChannel()) {
+            if (channel.getName() != null && channel.getName().contains(kw)) items.add(channel);
+        }
+        mChannelAdapter.addAll(items);
+        com.fongmi.android.tv.utils.Notify.show("匹配 " + items.size() + " 个频道");
+    }
+
+    private void resetChannelFilter() {
+        mChannelAdapter.addAll(mGroup.getChannel());
+        com.fongmi.android.tv.utils.Notify.show("已显示全部 " + mGroup.getChannel().size() + " 个频道");
     }
 
 

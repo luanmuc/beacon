@@ -503,6 +503,7 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
 
     private void restoreDefaultVod() {
         try {
+            com.fongmi.android.tv.utils.Notify.show("正在恢复默认影视订阅…");
             com.fongmi.android.tv.bean.Config config = com.fongmi.android.tv.bean.Config.create(0, com.fongmi.android.tv.bean.Config.SEED_VOD, "默认影视");
             com.fongmi.android.tv.api.config.VodConfig.load(config, new com.fongmi.android.tv.impl.Callback() {
                 @Override
@@ -527,6 +528,7 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
 
     private void restoreDefaultLive() {
         try {
+            com.fongmi.android.tv.utils.Notify.show("正在恢复默认直播订阅…");
             com.fongmi.android.tv.bean.Config config = com.fongmi.android.tv.bean.Config.create(1, com.fongmi.android.tv.bean.Config.SEED_LIVE, "默认直播");
             com.fongmi.android.tv.api.config.LiveConfig.load(config, new com.fongmi.android.tv.impl.Callback() {
                 @Override

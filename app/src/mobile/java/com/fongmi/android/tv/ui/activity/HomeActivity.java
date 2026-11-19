@@ -243,6 +243,9 @@ public class HomeActivity extends BaseActivity implements NavigationBarView.OnIt
         try {
             if (com.fongmi.android.tv.api.config.VodConfig.get().getSites().isEmpty()) {
                 com.fongmi.android.tv.utils.Notify.show("影视订阅为空：设置 → 影视订阅 → 填写地址");
+            }
+            if (com.fongmi.android.tv.api.config.LiveConfig.get().getLives() == null || com.fongmi.android.tv.api.config.LiveConfig.get().getLives().isEmpty()) {
+                com.fongmi.android.tv.utils.Notify.show("直播订阅为空：设置 → 直播订阅 → 填写地址");
                 try { App.post(() -> { try { mManager.change(1); } catch (Exception ignored) {} }); } catch (Exception ignored) {}
             }
         } catch (Exception ignored) {

@@ -67,7 +67,7 @@
             android:singleLine="true"
             android:textColor="@color/white"
             android:textSize="20sp"
-            tools:text="慶餘年第二季" />
+            tools:text="庆馀年第二季" />
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/remark"
@@ -106,7 +106,7 @@
             android:singleLine="true"
             android:textColor="@color/white"
             android:textSize="14sp"
-            tools:text="年份：2022 地區：台灣 類型：科幻" />
+            tools:text="年份：2022 地区：台湾 类型：科幻" />
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/director"
@@ -119,7 +119,7 @@
             android:singleLine="true"
             android:textColor="@color/white"
             android:textSize="14sp"
-            tools:text="導演：FongMi" />
+            tools:text="导演：FongMi" />
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/actor"
@@ -134,7 +134,7 @@
             android:maxLines="1"
             android:textColor="@color/white"
             android:textSize="14sp"
-            tools:text="演員：FongMi" />
+            tools:text="演员：FongMi" />
 
         <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
             android:id="@+id/swipeLayout"
@@ -287,7 +287,7 @@
                             android:maxLines="3"
                             android:textColor="@color/white"
                             android:textSize="14sp"
-                            tools:text="一個身世神秘的少年范閒（張若昀飾），因對自身身世的好奇而離開故鄉澹州，前赴南慶京都。范閒在京中各大勢力之間遊走，以探查自己屢遭刺殺的原因。其間結識靖王世子、二皇子，與太子、長公主等人對抗，並遊歷四方、闖蕩江湖，卻意外發現這世界隱藏著的秘密。本劇第一季上半部主要描述范閒在南慶京都追查刺殺的幕後黑手，京中各式人等對范閒繼承內庫的態度和應對，以及監察院院長陳萍萍希望范閒接掌監察院所做的一切舉動。下半部劇情發生在北齊上京。南慶駐北齊上京諜報首領言冰雲被北齊官方抓獲，慶帝與陳萍萍同意用已被關在監察院大牢多年的前北魏諜報首領肖恩交換言冰雲，並派范閒親率南慶使團負責此事。" />
+                            tools:text="一个身世神秘的少年范闲（张若昀饰），因对自身身世的好奇而离开故乡澹州，前赴南庆京都。范闲在京中各大势力之间游走，以探查自己屡遭刺杀的原因。其间结识靖王世子、二皇子，与太子、长公主等人对抗，并游历四方、闯荡江湖，却意外发现这世界隐藏着的秘密。本剧第一季上半部主要描述范闲在南庆京都追查刺杀的幕后黑手，京中各式人等对范闲继承内库的态度和应对，以及监察院院长陈萍萍希望范闲接掌监察院所做的一切举动。下半部剧情发生在北齐上京。南庆驻北齐上京谍报首领言冰云被北齐官方抓获，庆帝与陈萍萍同意用已被关在监察院大牢多年的前北魏谍报首领肖恩交换言冰云，并派范闲亲率南庆使团负责此事。" />
 
                     </androidx.appcompat.widget.LinearLayoutCompat>
 

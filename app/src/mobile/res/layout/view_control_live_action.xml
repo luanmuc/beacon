@@ -21,7 +21,7 @@
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/home"
             style="@style/Control"
-            tools:text="首頁" />
+            tools:text="首页" />
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/player"
@@ -49,7 +49,7 @@
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/line"
             style="@style/Control"
-            tools:text="來源 1" />
+            tools:text="来源 1" />
 
         <View
             android:layout_width="0dp"

@@ -53,9 +53,9 @@
     <string name="play_forward_hint">已切换正序播放</string>
     <string name="play_backward_hint">已切换倒序播放</string>
     <string name="play_ready">准备播放：<xliff:g name="name">%s</xliff:g></string>
-    <string name="play_switch_flag">正在切换线路至「<xliff:g name="name">%s</xliff:g>」</string>
-    <string name="play_switch_site">正在切换站源至「<xliff:g name="name">%s</xliff:g>」</string>
-    <string name="play_switch_parse">正在切换解析至「<xliff:g name="name">%s</xliff:g>」</string>
+    <string name="play_switch_flag">正在切换线路至“<xliff:g name="name">%s</xliff:g>”</string>
+    <string name="play_switch_site">正在切换站源至“<xliff:g name="name">%s</xliff:g>”</string>
+    <string name="play_switch_parse">正在切换解析至“<xliff:g name="name">%s</xliff:g>”</string>
 
     <!-- Danmaku -->
     <string name="danmaku">弹幕</string>
@@ -177,7 +177,7 @@
     <string name="error_play_timeout">连接超时</string>
     <string name="error_play_tvbus">错误代码：<xliff:g name="name">%s</xliff:g></string>
     <string name="error_detail">暂无播放数据</string>
-    <string name="error_empty">这里什麽都没有 👀</string>
+    <string name="error_empty">这里什么都没有 👀</string>
 
     <!-- Update -->
     <string name="update_version">发现新版本 <xliff:g name="name">%s</xliff:g></string>

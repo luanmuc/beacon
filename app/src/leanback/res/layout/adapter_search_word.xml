@@ -12,4 +12,4 @@
     android:singleLine="true"
     android:textColor="@color/white"
     android:textSize="16sp"
-    tools:text="推薦" />
+    tools:text="推荐" />

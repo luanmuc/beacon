@@ -77,7 +77,7 @@
                     android:gravity="end"
                     android:textColor="@color/white"
                     android:textSize="16sp"
-                    tools:text="預設" />
+                    tools:text="预设" />
 
             </androidx.appcompat.widget.LinearLayoutCompat>
 
@@ -106,7 +106,7 @@
                     android:singleLine="true"
                     android:textColor="@color/white"
                     android:textSize="16sp"
-                    tools:text="預設" />
+                    tools:text="预设" />
 
             </androidx.appcompat.widget.LinearLayoutCompat>
 
@@ -205,7 +205,7 @@
                     android:gravity="end"
                     android:textColor="@color/white"
                     android:textSize="16sp"
-                    tools:text="關" />
+                    tools:text="关" />
 
             </androidx.appcompat.widget.LinearLayoutCompat>
 
@@ -232,7 +232,7 @@
                     android:gravity="end"
                     android:textColor="@color/white"
                     android:textSize="16sp"
-                    tools:text="開" />
+                    tools:text="开" />
 
             </androidx.appcompat.widget.LinearLayoutCompat>
 
@@ -259,7 +259,7 @@
                     android:gravity="end"
                     android:textColor="@color/white"
                     android:textSize="16sp"
-                    tools:text="開" />
+                    tools:text="开" />
 
             </androidx.appcompat.widget.LinearLayoutCompat>
 
@@ -286,7 +286,7 @@
                     android:gravity="end"
                     android:textColor="@color/white"
                     android:textSize="16sp"
-                    tools:text="開" />
+                    tools:text="开" />
 
             </androidx.appcompat.widget.LinearLayoutCompat>
 
@@ -313,7 +313,7 @@
                     android:gravity="end"
                     android:textColor="@color/white"
                     android:textSize="16sp"
-                    tools:text="開" />
+                    tools:text="开" />
 
             </androidx.appcompat.widget.LinearLayoutCompat>
 
@@ -340,7 +340,7 @@
                     android:gravity="end"
                     android:textColor="@color/white"
                     android:textSize="16sp"
-                    tools:text="開" />
+                    tools:text="开" />
 
             </androidx.appcompat.widget.LinearLayoutCompat>
 
@@ -367,7 +367,7 @@
                     android:gravity="end"
                     android:textColor="@color/white"
                     android:textSize="16sp"
-                    tools:text="畫中畫" />
+                    tools:text="画中画" />
 
             </androidx.appcompat.widget.LinearLayoutCompat>
 

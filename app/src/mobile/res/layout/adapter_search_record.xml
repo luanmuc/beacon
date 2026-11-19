@@ -10,4 +10,4 @@
     android:singleLine="true"
     android:textColor="@color/white"
     android:textSize="14sp"
-    tools:text="歷史" />
+    tools:text="历史" />

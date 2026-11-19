@@ -152,7 +152,7 @@
             android:singleLine="true"
             android:textColor="@color/white"
             android:textSize="14sp"
-            tools:text="民視" />
+            tools:text="民视" />
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/play"
@@ -171,7 +171,7 @@
             android:layout_height="wrap_content"
             android:textColor="@color/white"
             android:textSize="14sp"
-            tools:text="來源 1" />
+            tools:text="来源 1" />
 
     </androidx.appcompat.widget.LinearLayoutCompat>
 
@@ -206,7 +206,7 @@
             android:singleLine="true"
             android:textColor="@color/white"
             android:textSize="12sp"
-            tools:text="民視" />
+            tools:text="民视" />
 
     </androidx.appcompat.widget.LinearLayoutCompat>
 </FrameLayout>

@@ -17,7 +17,7 @@
         android:singleLine="true"
         android:textColor="@color/live"
         android:textSize="16sp"
-        tools:text="七龍珠" />
+        tools:text="七龙珠" />
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/time"

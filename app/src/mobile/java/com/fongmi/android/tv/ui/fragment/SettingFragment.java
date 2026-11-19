@@ -132,7 +132,7 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
         mBinding.vod.setOnLongClickListener(this::onVodEdit);
         mBinding.vodHome.setOnClickListener(this::onVodHome);
         mBinding.liveUrl.setOnClickListener(v -> checkLiveSubscription());
-        mBinding.liveUrl.setOnLongClickListener(v -> { showHealth(); return true; });
+        mBinding.liveUrl.setOnLongClickListener(v -> { showProbeMenu(); return true; });
         mBinding.vodUrl.setOnClickListener(v -> checkAllSubscriptions());
         mBinding.vodUrl.setOnLongClickListener(v -> { com.fongmi.android.tv.utils.Util.copy(com.fongmi.android.tv.api.config.VodConfig.getDesc()); com.fongmi.android.tv.utils.Notify.show("已复制影视订阅地址（当前 " + VodConfig.get().getSites().size() + " 个站点）"); return true; });
         mBinding.live.setOnLongClickListener(this::onLiveEdit);
@@ -485,6 +485,26 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
             return label + "：可访问（" + (text == null ? 0 : text.length()) + " 字节）";
         } catch (Exception e) {
             return label + "：不可访问（" + e.getMessage() + "）";
+        }
+    }
+
+
+    private void showProbeMenu() {
+        String[] items = {"查看存活统计", "打开 Actions 探测页"};
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("直播源维护")
+                .setItems(items, (d, which) -> {
+                    if (which == 0) showHealth();
+                    else openActions();
+                })
+                .show();
+    }
+
+    private void openActions() {
+        try {
+            startActivity(new android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://github.com/luanmuc/beacon-feeds/actions")));
+        } catch (Exception e) {
+            com.fongmi.android.tv.utils.Notify.show("打开失败");
         }
     }
 

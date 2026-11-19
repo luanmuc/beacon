@@ -288,6 +288,7 @@ public class VideoActivity extends PlaybackActivity implements CustomKeyDownVod.
         mBinding.change1.setOnClickListener(view -> onChange());
         mBinding.content.setOnClickListener(view -> onContent());
         mBinding.control.action.info.setOnClickListener(v -> onInfo());
+        mBinding.control.action.info.setOnLongClickListener(v -> { copyCurrentUrl(); return true; });
         mBinding.control.action.text.setOnClickListener(this::onTrack);
         mBinding.control.action.audio.setOnClickListener(this::onTrack);
         mBinding.control.action.video.setOnClickListener(this::onTrack);
@@ -1473,6 +1474,21 @@ public class VideoActivity extends PlaybackActivity implements CustomKeyDownVod.
             startActivity(android.content.Intent.createChooser(intent, "分享"));
         } catch (Exception e) {
             com.fongmi.android.tv.utils.Notify.show("分享失败");
+        }
+    }
+
+
+    private void copyCurrentUrl() {
+        try {
+            String url = player().getUrl();
+            if (url == null || url.isEmpty()) {
+                com.fongmi.android.tv.utils.Notify.show("当前没有播放地址");
+                return;
+            }
+            Util.copy(url);
+            com.fongmi.android.tv.utils.Notify.show("已复制当前播放地址");
+        } catch (Exception e) {
+            com.fongmi.android.tv.utils.Notify.show("复制失败");
         }
     }
 

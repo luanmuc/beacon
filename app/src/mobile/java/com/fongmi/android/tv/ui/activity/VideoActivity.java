@@ -328,6 +328,7 @@ public class VideoActivity extends PlaybackActivity implements Clock.Callback, C
         mBinding.control.back.setOnClickListener(view -> onBack());
         mBinding.control.cast.setOnClickListener(view -> onCast());
         mBinding.control.info.setOnClickListener(view -> onInfo());
+        mBinding.control.info.setOnLongClickListener(view -> { copyCurrentUrl(); return true; });
         mBinding.control.keep.setOnClickListener(view -> onKeep());
         mBinding.control.play.setOnClickListener(view -> checkPlay());
         mBinding.control.play.setOnLongClickListener(view -> { com.fongmi.android.tv.ui.dialog.TimerDialog.create().show(this); return true; });
@@ -1722,6 +1723,21 @@ public class VideoActivity extends PlaybackActivity implements Clock.Callback, C
             startActivity(android.content.Intent.createChooser(intent, "分享"));
         } catch (Exception e) {
             Notify.show("分享失败");
+        }
+    }
+
+
+    private void copyCurrentUrl() {
+        try {
+            String url = player().getUrl();
+            if (url == null || url.isEmpty()) {
+                Notify.show("当前没有播放地址");
+                return;
+            }
+            Util.copy(url);
+            Notify.show("已复制当前播放地址");
+        } catch (Exception e) {
+            Notify.show("复制失败");
         }
     }
 

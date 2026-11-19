@@ -120,7 +120,7 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
         mBinding.player.setOnClickListener(this::onPlayer);
         mBinding.restore.setOnClickListener(this::onRestore);
         mBinding.version.setOnClickListener(this::onVersion);
-        mBinding.version.setOnLongClickListener(v -> { openRepo(); return true; });
+        mBinding.version.setOnLongClickListener(v -> { showBuildInfo(); return true; });
         mBinding.vod.setOnLongClickListener(this::onVodEdit);
         mBinding.vodHome.setOnClickListener(this::onVodHome);
         mBinding.liveUrl.setOnClickListener(v -> checkLiveSubscription());
@@ -544,6 +544,19 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
         } catch (Exception e) {
             com.fongmi.android.tv.utils.Notify.show("恢复失败：" + e.getMessage());
         }
+    }
+
+
+    private void showBuildInfo() {
+        String info = "版本：" + BuildConfig.VERSION_NAME + "\n构建号：" + BuildConfig.VERSION_CODE
+                + "\n渠道：" + BuildConfig.FLAVOR_mode + "-" + BuildConfig.FLAVOR_abi
+                + "\n仓库：github.com/luanmuc/beacon";
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("构建信息")
+                .setMessage(info)
+                .setPositiveButton("打开项目主页", (d, w) -> openRepo())
+                .setNegativeButton("关闭", null)
+                .show();
     }
 
 

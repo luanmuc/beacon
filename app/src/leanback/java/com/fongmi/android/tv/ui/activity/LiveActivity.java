@@ -88,6 +88,7 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
     private String mPlaybackKey;
     private Channel mChannel;
     private int lineRetry;
+    private boolean sameLineRetry;
     private View mOldView;
     private Group mGroup;
     private Runnable mR0;
@@ -479,6 +480,13 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
 
     @Override
     protected void onError(String msg) {
+        if (mChannel != null && mChannel.getUrls() != null && !sameLineRetry) {
+            sameLineRetry = true;
+            Notify.show("播放失败，正在重试当前线路…");
+            mViewModel.getUrl(mChannel);
+            return;
+        }
+        sameLineRetry = false;
         if (mChannel != null && mChannel.getUrls() != null && mChannel.getUrls().size() > 1 && lineRetry < mChannel.getUrls().size() - 1) {
             lineRetry++;
             mChannel.switchLine(true);
@@ -702,6 +710,7 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
         App.post(mR0, 100);
         mChannel = item;
         lineRetry = 0;
+        sameLineRetry = false;
         setArtwork();
         showInfo();
     }

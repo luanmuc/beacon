@@ -92,6 +92,7 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
     private String mPlaybackKey;
     private Channel mChannel;
     private int lineRetry;
+    private boolean sameLineRetry;
     private Group mGroup;
     private Runnable mR1;
     private Runnable mR2;
@@ -604,6 +605,7 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
             mGroup.setPosition(mChannelAdapter.setSelected(item.group(mGroup)));
             mChannel = item;
         lineRetry = 0;
+        sameLineRetry = false;
             setArtwork();
             showInfo();
             hideUI();
@@ -757,6 +759,13 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
 
     @Override
     protected void onError(String msg) {
+        if (mChannel != null && mChannel.getUrls() != null && !sameLineRetry) {
+            sameLineRetry = true;
+            Notify.show("播放失败，正在重试当前线路…");
+            mViewModel.getUrl(mChannel);
+            return;
+        }
+        sameLineRetry = false;
         if (mChannel != null && mChannel.getUrls() != null && mChannel.getUrls().size() > 1 && lineRetry < mChannel.getUrls().size() - 1) {
             lineRetry++;
             mChannel.switchLine(true);

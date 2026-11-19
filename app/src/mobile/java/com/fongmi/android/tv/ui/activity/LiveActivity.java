@@ -617,10 +617,31 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
     public boolean onLongClick(Channel item) {
         if (mGroup.isHidden()) return false;
         boolean exist = Keep.exist(item.getName());
-        Notify.show((exist ? "取消收藏：" : "收藏：") + item.getName() + "（共 " + (item.getUrls() == null ? 1 : item.getUrls().size()) + " 条线路）");
-        if (exist) delKeep(item);
-        else addKeep(item);
+        String[] items = {exist ? "取消收藏" : "收藏频道", "频道信息"};
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(item.getName())
+                .setItems(items, (d, which) -> {
+                    if (which == 0) {
+                        if (exist) delKeep(item);
+                        else addKeep(item);
+                        Notify.show(exist ? "已取消收藏" : "已收藏");
+                    } else {
+                        showChannelInfo(item);
+                    }
+                })
+                .show();
         return true;
+    }
+
+    private void showChannelInfo(Channel item) {
+        int lines = item.getUrls() == null ? 0 : item.getUrls().size();
+        String group = item.getGroup() == null ? "" : item.getGroup().getName();
+        String info = "分组：" + group + "\n线路：" + lines + " 条\nEPG：" + (item.getEpg() == null || item.getEpg().isEmpty() ? "无" : item.getEpg());
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(item.getName())
+                .setMessage(info)
+                .setPositiveButton("关闭", null)
+                .show();
     }
 
     @Override

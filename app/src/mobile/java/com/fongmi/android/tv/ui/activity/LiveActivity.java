@@ -637,11 +637,12 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
     private void showChannelInfo(Channel item) {
         int lines = item.getUrls() == null ? 0 : item.getUrls().size();
         String group = item.getGroup() == null ? "" : item.getGroup().getName();
-        String cur = "";
+        String tmp = "";
         try {
-            cur = item.getCurrent();
+            tmp = item.getCurrent();
         } catch (Exception ignored) {
         }
+        final String cur = tmp;
         String info = "分组：" + group + "\n线路：" + lines + " 条"
                 + "\n当前线路：" + (item.getLine() == null || item.getLine().isEmpty() ? "1" : item.getLine())
                 + "\nEPG：" + (item.getEpg() == null || item.getEpg().isEmpty() ? "无" : item.getEpg())

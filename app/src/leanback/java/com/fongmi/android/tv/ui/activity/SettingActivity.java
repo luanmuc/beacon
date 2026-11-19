@@ -466,12 +466,13 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
 
 
     private void showProbeMenu() {
-        String[] items = {"查看存活统计", "打开 Actions 探测页"};
+        String[] items = {"查看存活统计", "打开 Actions 探测页", "恢复默认直播订阅"};
         new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle("直播源维护")
                 .setItems(items, (d, which) -> {
                     if (which == 0) showHealth();
-                    else openActions();
+                    else if (which == 1) openActions();
+                    else restoreDefaultLive();
                 })
                 .show();
     }
@@ -511,6 +512,26 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
                 @Override
                 public void success() {
                     com.fongmi.android.tv.utils.Notify.show("已恢复默认影视订阅");
+                }
+
+                @Override
+                public void error(String msg) {
+                    com.fongmi.android.tv.utils.Notify.show("恢复失败：" + msg);
+                }
+            });
+        } catch (Exception e) {
+            com.fongmi.android.tv.utils.Notify.show("恢复失败：" + e.getMessage());
+        }
+    }
+
+
+    private void restoreDefaultLive() {
+        try {
+            com.fongmi.android.tv.bean.Config config = com.fongmi.android.tv.bean.Config.create(1, com.fongmi.android.tv.bean.Config.SEED_LIVE, "默认直播");
+            com.fongmi.android.tv.api.config.LiveConfig.load(config, new com.fongmi.android.tv.impl.Callback() {
+                @Override
+                public void success() {
+                    com.fongmi.android.tv.utils.Notify.show("已恢复默认直播订阅");
                 }
 
                 @Override

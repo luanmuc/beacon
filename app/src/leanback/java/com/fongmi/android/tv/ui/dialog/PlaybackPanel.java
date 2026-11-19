@@ -100,6 +100,13 @@ public class PlaybackPanel {
             dismiss();
             if (retryAction != null) retryAction.run();
         });
+        binding.headers.setOnLongClickListener(v -> {
+            if (!TextUtils.isEmpty(binding.headers.getText())) {
+                Util.copy(binding.headers.getText().toString());
+                Notify.show("已复制请求头");
+            }
+            return true;
+        });
         binding.copy.setOnClickListener(v -> {
             if (TextUtils.isEmpty(url)) return;
             Util.copy(url);

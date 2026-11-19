@@ -767,7 +767,7 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
         player().resetTrack();
         player().reset();
         player().stop();
-        showError(msg);
+        showError(msg + "（可长按刷新键换线）");
         startFlow();
     }
 

@@ -490,7 +490,7 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
         player().resetTrack();
         player().reset();
         player().stop();
-        showError(msg);
+        showError(msg + "（可长按刷新键换线）");
         startFlow();
     }
 

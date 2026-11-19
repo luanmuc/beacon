@@ -93,6 +93,13 @@ public class PlaybackPanel {
         binding.headers.setText(TextUtils.isEmpty(headers) ? "" : headers.trim());
         binding.headers.setVisibility(TextUtils.isEmpty(headers) ? View.GONE : View.VISIBLE);
         binding.url.setVisibility(TextUtils.isEmpty(url) ? View.GONE : View.VISIBLE);
+        binding.headers.setOnLongClickListener(v -> {
+            if (!TextUtils.isEmpty(binding.headers.getText())) {
+                Util.copy(binding.headers.getText().toString());
+                Notify.show("已复制请求头");
+            }
+            return true;
+        });
         binding.copy.setOnClickListener(v -> {
             if (TextUtils.isEmpty(url)) return;
             Util.copy(url);

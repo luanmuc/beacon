@@ -86,7 +86,7 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
         mBinding.vodUrl.setText(VodConfig.getDesc() + " · " + (VodConfig.get().getSites() == null ? 0 : VodConfig.get().getSites().size()) + " 个站点");
         mBinding.liveUrl.setText(LiveConfig.getDesc() + " · " + (LiveConfig.get().getLives() == null ? 0 : LiveConfig.get().getLives().size()) + " 个直播源");
         mBinding.wallUrl.setText(WallConfig.getDesc());
-        mBinding.versionText.setText(BuildConfig.VERSION_NAME + "（点击检查更新）");
+        mBinding.versionText.setText(BuildConfig.VERSION_NAME + "（#" + BuildConfig.VERSION_CODE + "，点击检查更新）");
         setCacheText();
         setOtherText();
     }

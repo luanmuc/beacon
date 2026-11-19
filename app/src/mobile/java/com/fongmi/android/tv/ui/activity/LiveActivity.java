@@ -614,7 +614,7 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
     public boolean onLongClick(Channel item) {
         if (mGroup.isHidden()) return false;
         boolean exist = Keep.exist(item.getName());
-        Notify.show(exist ? R.string.keep_del : R.string.keep_add);
+        Notify.show((exist ? "取消收藏：" : "收藏：") + item.getName() + "（共 " + (item.getUrls() == null ? 1 : item.getUrls().size()) + " 条线路）");
         if (exist) delKeep(item);
         else addKeep(item);
         return true;

@@ -637,11 +637,23 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
     private void showChannelInfo(Channel item) {
         int lines = item.getUrls() == null ? 0 : item.getUrls().size();
         String group = item.getGroup() == null ? "" : item.getGroup().getName();
-        String info = "分组：" + group + "\n线路：" + lines + " 条\nEPG：" + (item.getEpg() == null || item.getEpg().isEmpty() ? "无" : item.getEpg());
+        String cur = "";
+        try {
+            cur = item.getCurrent();
+        } catch (Exception ignored) {
+        }
+        String info = "分组：" + group + "\n线路：" + lines + " 条"
+                + "\n当前线路：" + (item.getLine() == null || item.getLine().isEmpty() ? "1" : item.getLine())
+                + "\nEPG：" + (item.getEpg() == null || item.getEpg().isEmpty() ? "无" : item.getEpg())
+                + (cur.isEmpty() ? "" : "\n地址：" + cur);
         new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle(item.getName())
                 .setMessage(info)
                 .setPositiveButton("关闭", null)
+                .setNeutralButton("复制地址", (d, w) -> {
+                    if (cur.isEmpty()) com.fongmi.android.tv.utils.Notify.show("没有可复制的地址");
+                    else { com.fongmi.android.tv.utils.Util.copy(cur); com.fongmi.android.tv.utils.Notify.show("已复制"); }
+                })
                 .show();
     }
 

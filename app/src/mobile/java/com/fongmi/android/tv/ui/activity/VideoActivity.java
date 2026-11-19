@@ -792,10 +792,21 @@ public class VideoActivity extends PlaybackActivity implements Clock.Callback, C
     }
 
     private boolean onSpeedLong() {
-        mBinding.control.action.speed.setText(player().toggleSpeed());
-        mHistory.setSpeed(player().getSpeed());
+        showSpeedPresets();
         setR1Callback();
         return true;
+    }
+
+    private void showSpeedPresets() {
+        String[] items = {"0.5x", "0.75x", "1.0x", "1.25x", "1.5x", "2.0x", "3.0x"};
+        float[] values = {0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f, 3.0f};
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("播放速度")
+                .setItems(items, (dialog, which) -> {
+                    mBinding.control.action.speed.setText(player().setSpeed(values[which]));
+                    mHistory.setSpeed(player().getSpeed());
+                })
+                .show();
     }
 
     private void onReset() {

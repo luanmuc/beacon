@@ -92,6 +92,7 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
     protected void initView() {
         EventBus.getDefault().register(this);
         mBinding.vodUrl.setText(VodConfig.getDesc() + " · " + (VodConfig.get().getSites() == null ? 0 : VodConfig.get().getSites().size()) + " 个站点");
+        loadHealthSummary();
         mBinding.liveUrl.setText(LiveConfig.getDesc() + " · " + (LiveConfig.get().getLives() == null ? 0 : LiveConfig.get().getLives().size()) + " 个直播源");
         mBinding.wallUrl.setText(WallConfig.getDesc());
         mBinding.versionText.setText(BuildConfig.VERSION_NAME + "（#" + BuildConfig.VERSION_CODE + "，点击检查更新）");
@@ -425,6 +426,26 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
                 com.fongmi.android.tv.App.post(() -> com.fongmi.android.tv.utils.Notify.show("直播订阅可访问，" + lines + " 行"));
             } catch (Exception e) {
                 com.fongmi.android.tv.App.post(() -> com.fongmi.android.tv.utils.Notify.show("直播订阅不可访问：" + e.getMessage()));
+            }
+        });
+    }
+
+
+    private void loadHealthSummary() {
+        com.fongmi.android.tv.utils.Task.execute(() -> {
+            try {
+                String text = com.github.catvod.net.OkHttp.string("https://raw.githubusercontent.com/luanmuc/beacon-seed/main/live-report.json");
+                org.json.JSONObject object = new org.json.JSONObject(text);
+                int channels = object.optInt("channels");
+                int lines = object.optInt("lines");
+                com.fongmi.android.tv.App.post(() -> {
+                    try {
+                        CharSequence base = mBinding.liveUrl.getText();
+                        mBinding.liveUrl.setText(base + " · 存活 " + channels + " 频道/" + lines + " 线路");
+                    } catch (Exception ignored) {
+                    }
+                });
+            } catch (Exception ignored) {
             }
         });
     }

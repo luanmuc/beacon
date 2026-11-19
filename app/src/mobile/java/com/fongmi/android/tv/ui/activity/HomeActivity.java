@@ -267,7 +267,8 @@ public class HomeActivity extends BaseActivity implements NavigationBarView.OnIt
                 .setTitle("还没有订阅")
                 .setMessage(msg + "\n可以直接使用内置默认订阅，也可以前往设置手动填写地址。")
                 .setPositiveButton("使用默认订阅", (d, w) -> fillDefault(vodEmpty, liveEmpty))
-                .setNegativeButton("稍后", null)
+                .setNeutralButton("稍后", null)
+                .setNegativeButton("去设置", (d, w) -> { try { mManager.change(1); } catch (Exception ignored) {} })
                 .show();
     }
 

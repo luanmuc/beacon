@@ -330,6 +330,7 @@ public class VideoActivity extends PlaybackActivity implements Clock.Callback, C
         mBinding.control.info.setOnClickListener(view -> onInfo());
         mBinding.control.keep.setOnClickListener(view -> onKeep());
         mBinding.control.play.setOnClickListener(view -> checkPlay());
+        mBinding.control.play.setOnLongClickListener(view -> { com.fongmi.android.tv.ui.dialog.TimerDialog.create().show(this); return true; });
         mBinding.control.next.setOnClickListener(view -> checkNext());
         mBinding.control.prev.setOnClickListener(view -> checkPrev());
         mBinding.control.setting.setOnClickListener(view -> onSetting());

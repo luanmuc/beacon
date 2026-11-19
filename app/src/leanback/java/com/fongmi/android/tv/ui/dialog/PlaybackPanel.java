@@ -107,6 +107,13 @@ public class PlaybackPanel {
             }
             return true;
         });
+        binding.title.setOnLongClickListener(v -> {
+            if (!TextUtils.isEmpty(binding.title.getText())) {
+                Util.copy(binding.title.getText().toString());
+                Notify.show("已复制标题");
+            }
+            return true;
+        });
         binding.copy.setOnClickListener(v -> {
             if (TextUtils.isEmpty(url)) return;
             Util.copy(url);

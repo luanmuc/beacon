@@ -134,7 +134,7 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
         mBinding.liveUrl.setOnClickListener(v -> checkLiveSubscription());
         mBinding.liveUrl.setOnLongClickListener(v -> { showProbeMenu(); return true; });
         mBinding.vodUrl.setOnClickListener(v -> checkAllSubscriptions());
-        mBinding.vodUrl.setOnLongClickListener(v -> { com.fongmi.android.tv.utils.Util.copy(com.fongmi.android.tv.api.config.VodConfig.getDesc()); com.fongmi.android.tv.utils.Notify.show("已复制影视订阅地址（当前 " + VodConfig.get().getSites().size() + " 个站点）"); return true; });
+        mBinding.vodUrl.setOnLongClickListener(v -> { showVodMenu(); return true; });
         mBinding.live.setOnLongClickListener(this::onLiveEdit);
         mBinding.liveHome.setOnClickListener(this::onLiveHome);
         mBinding.wall.setOnLongClickListener(this::onWallEdit);
@@ -505,6 +505,45 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
             startActivity(new android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://github.com/luanmuc/beacon-feeds/actions")));
         } catch (Exception e) {
             com.fongmi.android.tv.utils.Notify.show("打开失败");
+        }
+    }
+
+
+    private void showVodMenu() {
+        String[] items = {"复制订阅地址", "恢复默认影视订阅"};
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("影视订阅")
+                .setItems(items, (d, which) -> {
+                    if (which == 0) {
+                        com.fongmi.android.tv.utils.Util.copy(com.fongmi.android.tv.api.config.VodConfig.getDesc());
+                        com.fongmi.android.tv.utils.Notify.show("已复制影视订阅地址");
+                    } else {
+                        restoreDefaultVod();
+                    }
+                })
+                .show();
+    }
+
+    private void restoreDefaultVod() {
+        try {
+            com.fongmi.android.tv.bean.Config config = com.fongmi.android.tv.bean.Config.create(0, com.fongmi.android.tv.bean.Config.SEED_VOD, "默认影视");
+            com.fongmi.android.tv.api.config.VodConfig.load(config, new com.fongmi.android.tv.impl.Callback() {
+                @Override
+                public void start() {
+                }
+
+                @Override
+                public void success() {
+                    com.fongmi.android.tv.utils.Notify.show("已恢复默认影视订阅");
+                }
+
+                @Override
+                public void error(String msg) {
+                    com.fongmi.android.tv.utils.Notify.show("恢复失败：" + msg);
+                }
+            });
+        } catch (Exception e) {
+            com.fongmi.android.tv.utils.Notify.show("恢复失败：" + e.getMessage());
         }
     }
 

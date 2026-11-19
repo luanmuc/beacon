@@ -189,6 +189,7 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
         mBinding.group.setOnLongClickListener(view -> { showChannelSearch(); return true; });
         mBinding.control.action.home.setOnLongClickListener(view -> { switchChannelLine(); return true; });
         mBinding.control.action.line.setOnClickListener(view -> onLine());
+        mBinding.control.action.line.setOnLongClickListener(view -> { showLineList(); return true; });
         mBinding.control.action.scale.setOnClickListener(view -> onScale());
         mBinding.control.action.speed.setOnClickListener(view -> onSpeed());
         mBinding.control.action.config.setOnClickListener(view -> onConfig());
@@ -1132,6 +1133,35 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
     private void resetChannelFilter() {
         mChannelAdapter.addAll(mGroup.getChannel());
         com.fongmi.android.tv.utils.Notify.show("已显示全部 " + mGroup.getChannel().size() + " 个频道");
+    }
+
+
+    private void showLineList() {
+        try {
+            if (mChannel == null || mChannel.isOnly()) {
+                com.fongmi.android.tv.utils.Notify.show("当前频道只有一条线路");
+                return;
+            }
+            java.util.List<String> urls = mChannel.getUrls();
+            String[] names = new String[urls.size()];
+            for (int i = 0; i < urls.size(); i++) {
+                String[] sp = urls.get(i).split("\\$");
+                String title = sp.length > 1 && !sp[1].isEmpty() ? sp[1] : ("线路 " + (i + 1));
+                names[i] = (i == mChannel.getIndex() ? "✓ " : "") + title;
+            }
+            new androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("选择线路")
+                    .setItems(names, (d, which) -> {
+                        mChannel.setIndex(which);
+                        setInfo();
+                        fetch();
+                        com.fongmi.android.tv.utils.Notify.show("已切换到 " + names[which].replace("✓ ", ""));
+                    })
+                    .setNegativeButton("取消", null)
+                    .show();
+        } catch (Exception e) {
+            com.fongmi.android.tv.utils.Notify.show("线路列表不可用");
+        }
     }
 
 

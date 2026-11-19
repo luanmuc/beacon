@@ -496,6 +496,44 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
             }
         } catch (Exception ignored) {
         }
+        promptEmpty();
+    }
+
+
+    private boolean emptyPrompted;
+
+    private void promptEmpty() {
+        if (emptyPrompted) return;
+        emptyPrompted = true;
+        boolean vodEmpty = com.fongmi.android.tv.api.config.VodConfig.get().getSites().isEmpty();
+        boolean liveEmpty = com.fongmi.android.tv.api.config.LiveConfig.get().getLives() == null || com.fongmi.android.tv.api.config.LiveConfig.get().getLives().isEmpty();
+        if (!vodEmpty && !liveEmpty) return;
+        String msg = (vodEmpty ? "影视订阅为空" : "") + (vodEmpty && liveEmpty ? "；" : "") + (liveEmpty ? "直播订阅为空" : "");
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("还没有订阅")
+                .setMessage(msg + "\n可以直接使用内置默认订阅，也可以前往设置手动填写地址。")
+                .setPositiveButton("使用默认订阅", (d, w) -> fillDefault(vodEmpty, liveEmpty))
+                .setNegativeButton("稍后", null)
+                .show();
+    }
+
+    private void fillDefault(boolean vod, boolean live) {
+        try {
+            com.fongmi.android.tv.utils.Notify.show("正在填入默认订阅…");
+            if (vod) com.fongmi.android.tv.api.config.VodConfig.load(com.fongmi.android.tv.bean.Config.create(0, com.fongmi.android.tv.bean.Config.SEED_VOD, "默认影视"), new com.fongmi.android.tv.impl.Callback() {
+                @Override public void start() {}
+                @Override public void success() {}
+                @Override public void error(String msg) {}
+            });
+            if (live) com.fongmi.android.tv.api.config.LiveConfig.load(com.fongmi.android.tv.bean.Config.create(1, com.fongmi.android.tv.bean.Config.SEED_LIVE, "默认直播"), new com.fongmi.android.tv.impl.Callback() {
+                @Override public void start() {}
+                @Override public void success() {}
+                @Override public void error(String msg) {}
+            });
+            com.fongmi.android.tv.utils.Notify.show("已填入默认订阅，如未生效请重启应用");
+        } catch (Exception e) {
+            com.fongmi.android.tv.utils.Notify.show("填入失败：" + e.getMessage());
+        }
     }
 
 

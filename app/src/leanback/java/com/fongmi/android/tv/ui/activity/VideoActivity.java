@@ -704,7 +704,7 @@ public class VideoActivity extends PlaybackActivity implements CustomKeyDownVod.
     private void onInfo() {
         int total = mEpisodeAdapter == null ? 0 : mEpisodeAdapter.getItemCount();
         String source = VodConfig.get().getConfig().getName();
-        String meta = (TextUtils.isEmpty(source) ? "" : source) + (total > 0 ? " · 共 " + total + " 集" : "") + (player().isHard() ? " · 硬解" : " · 软解");
+        String meta = (TextUtils.isEmpty(source) ? "" : source) + (total > 0 ? " · 共 " + total + " 集" : "") + (player().isHard() ? " · 硬解" : " · 软解") + (com.fongmi.android.tv.api.config.VodConfig.get().getSites().size() > 1 ? " · " + com.fongmi.android.tv.api.config.VodConfig.get().getSites().size() + " 站点可选" : "");
         PlaybackPanel.create(this)
                 .title(mHistory.getVodName() + (getEpisode().getName().isEmpty() ? "" : " · " + getEpisode().getName()))
                 .meta(meta)

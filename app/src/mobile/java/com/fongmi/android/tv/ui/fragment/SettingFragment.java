@@ -122,6 +122,7 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
         mBinding.live.setOnClickListener(this::onLive);
         mBinding.wall.setOnClickListener(this::onWall);
         mBinding.size.setOnClickListener(this::setSize);
+        mBinding.cache.setOnLongClickListener(v -> { openAppSettings(); return true; });
         mBinding.cache.setOnClickListener(this::onCache);
         mBinding.backup.setOnClickListener(this::onBackup);
         mBinding.player.setOnClickListener(this::onPlayer);
@@ -449,6 +450,17 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
             } catch (Exception ignored) {
             }
         });
+    }
+
+
+    private void openAppSettings() {
+        try {
+            android.content.Intent intent = new android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            intent.setData(android.net.Uri.parse("package:" + requireContext().getPackageName()));
+            startActivity(intent);
+        } catch (Exception e) {
+            com.fongmi.android.tv.utils.Notify.show("打开系统设置失败");
+        }
     }
 
 

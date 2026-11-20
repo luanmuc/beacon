@@ -1238,7 +1238,7 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
     private void showGlobalKeeps() {
         try {
             java.util.List<com.fongmi.android.tv.bean.Channel> keeps = new java.util.ArrayList<>();
-            java.util.List<com.fongmi.android.tv.bean.Group> groups = com.fongmi.android.tv.api.config.LiveConfig.get().getGroups();
+            java.util.List<com.fongmi.android.tv.bean.Group> groups = com.fongmi.android.tv.api.config.LiveConfig.get().getHome().getGroups();
             if (groups != null) for (com.fongmi.android.tv.bean.Group group : groups) {
                 if (group.getChannel() == null) continue;
                 for (com.fongmi.android.tv.bean.Channel channel : group.getChannel()) {

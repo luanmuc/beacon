@@ -85,6 +85,47 @@ public class App extends Application implements Application.ActivityLifecycleCal
         Notify.createChannel();
         registerActivityLifecycleCallbacks(this);
         DynamicColors.applyToActivitiesIfAvailable(this);
+        installCrashHandler();
+    }
+
+    private void installCrashHandler() {
+        final Thread.UncaughtExceptionHandler origin = Thread.getDefaultUncaughtExceptionHandler();
+        Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+            try {
+                java.io.File file = new java.io.File(getFilesDir(), "last-crash.log");
+                java.io.PrintWriter writer = new java.io.PrintWriter(new java.io.StringWriter());
+                throwable.printStackTrace(writer);
+                String text = "time=" + new java.util.Date() + "\n" + writer.toString();
+                java.io.FileWriter fw = new java.io.FileWriter(file, false);
+                fw.write(text.length() > 4000 ? text.substring(0, 4000) : text);
+                fw.close();
+            } catch (Exception ignored) {
+            }
+            if (origin != null) origin.uncaughtException(thread, throwable);
+        });
+    }
+
+    public static String crashLog() {
+        try {
+            java.io.File file = new java.io.File(get().getFilesDir(), "last-crash.log");
+            if (!file.exists()) return "";
+            java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.FileReader(file));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) sb.append(line).append("\n");
+            reader.close();
+            return sb.toString();
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    public static void clearCrashLog() {
+        try {
+            java.io.File file = new java.io.File(get().getFilesDir(), "last-crash.log");
+            if (file.exists()) file.delete();
+        } catch (Exception ignored) {
+        }
     }
 
     @Override

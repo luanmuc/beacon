@@ -230,6 +230,12 @@ public class HomeActivity extends BaseActivity implements NavigationBarView.OnIt
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        showCrashDialog();
+    }
+
+    @Override
     protected void onDestroy() {
         LiveConfig.get().clear();
         VodConfig.get().clear();
@@ -296,6 +302,19 @@ public class HomeActivity extends BaseActivity implements NavigationBarView.OnIt
         } catch (Exception e) {
             com.fongmi.android.tv.utils.Notify.show("填入失败：" + e.getMessage());
         }
+    }
+
+
+    private void showCrashDialog() {
+        String log = com.fongmi.android.tv.App.crashLog();
+        if (log.isEmpty()) return;
+        com.fongmi.android.tv.App.clearCrashLog();
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("上次异常退出")
+                .setMessage(log.length() > 1200 ? log.substring(0, 1200) + "…" : log)
+                .setPositiveButton("复制日志", (d, w) -> { com.fongmi.android.tv.utils.Util.copy(log); com.fongmi.android.tv.utils.Notify.show("已复制崩溃日志"); })
+                .setNegativeButton("忽略", null)
+                .show();
     }
 
 

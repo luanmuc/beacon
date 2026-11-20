@@ -498,10 +498,12 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
         } catch (Exception ignored) {
         }
         promptEmpty();
+        showStatusOnce();
     }
 
 
     private boolean emptyPrompted;
+    private boolean statusShown;
 
     private void promptEmpty() {
         if (emptyPrompted) return;
@@ -556,6 +558,19 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
                 .setPositiveButton("复制日志", (d, w) -> { com.fongmi.android.tv.utils.Util.copy(log); com.fongmi.android.tv.utils.Notify.show("已复制崩溃日志"); })
                 .setNegativeButton("忽略", null)
                 .show();
+    }
+
+
+    private void showStatusOnce() {
+        if (statusShown) return;
+        statusShown = true;
+        try {
+            int sites = com.fongmi.android.tv.api.config.VodConfig.get().getSites().size();
+            int lives = com.fongmi.android.tv.api.config.LiveConfig.get().getLives() == null ? 0 : com.fongmi.android.tv.api.config.LiveConfig.get().getLives().size();
+            if (sites == 0 && lives == 0) return;
+            com.fongmi.android.tv.utils.Notify.show("影视 " + sites + " 个站点 · 直播 " + lives + " 个源");
+        } catch (Exception ignored) {
+        }
     }
 
 

@@ -1227,7 +1227,7 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
     private void showGroupMenu() {
         String[] items = {"搜索频道", "全部收藏频道", "最近观看", "清空最近观看", "重置筛选"};
         new androidx.appcompat.app.AlertDialog.Builder(this)
-                .setTitle(mGroup == null ? "频道" : mGroup.getName())
+                .setTitle(mGroup == null ? "频道" : mGroup.getName() + "（" + (mGroup.getChannel() == null ? 0 : mGroup.getChannel().size()) + " 个频道）")
                 .setItems(items, (d, which) -> {
                     if (which == 0) showChannelSearch();
                     else if (which == 1) showGlobalKeeps();

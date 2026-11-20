@@ -1144,13 +1144,14 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
 
 
     private void showGroupMenu() {
-        String[] items = {"搜索频道", "全部收藏频道", "最近观看", "重置筛选"};
+        String[] items = {"搜索频道", "全部收藏频道", "最近观看", "清空最近观看", "重置筛选"};
         new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle(mGroup == null ? "频道" : mGroup.getName())
                 .setItems(items, (d, which) -> {
                     if (which == 0) showChannelSearch();
                     else if (which == 1) showGlobalKeeps();
                     else if (which == 2) showRecentChannels();
+                    else if (which == 3) { com.fongmi.android.tv.setting.Setting.putRecent(""); com.fongmi.android.tv.utils.Notify.show("已清空最近观看"); }
                     else resetChannelFilter();
                 })
                 .show();

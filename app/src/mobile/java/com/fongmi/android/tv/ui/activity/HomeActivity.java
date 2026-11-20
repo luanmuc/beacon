@@ -263,10 +263,17 @@ public class HomeActivity extends BaseActivity implements NavigationBarView.OnIt
         boolean liveEmpty = com.fongmi.android.tv.api.config.LiveConfig.get().getLives() == null || com.fongmi.android.tv.api.config.LiveConfig.get().getLives().isEmpty();
         if (!vodEmpty && !liveEmpty) return;
         String msg = (vodEmpty ? "影视订阅为空" : "") + (vodEmpty && liveEmpty ? "；" : "") + (liveEmpty ? "直播订阅为空" : "");
+        boolean first = !com.fongmi.android.tv.setting.Setting.getGuide();
+        String tips = first
+                ? "\n\n首次使用建议：\n1. 点“使用默认订阅”即可自动填入内置影视与直播源；\n2. 想看电视台直播，进直播页后长按频道可收藏；\n3. 播放页长按“信息”键可复制地址、查看内容详情。"
+                : "";
         new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle("还没有订阅")
-                .setMessage(msg + "\n可以直接使用内置默认订阅，也可以前往设置手动填写地址。")
-                .setPositiveButton("使用默认订阅", (d, w) -> fillDefault(vodEmpty, liveEmpty))
+                .setMessage(msg + tips + "\n\n也可以前往设置手动填写订阅地址。")
+                .setPositiveButton("使用默认订阅", (d, w) -> {
+                    com.fongmi.android.tv.setting.Setting.putGuide(true);
+                    fillDefault(vodEmpty, liveEmpty);
+                })
                 .setNeutralButton("稍后", null)
                 .setNegativeButton("去设置", (d, w) -> { try { mManager.change(1); } catch (Exception ignored) {} })
                 .show();

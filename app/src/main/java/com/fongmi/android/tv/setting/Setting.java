@@ -107,4 +107,12 @@ public class Setting {
     public static void putZhuyin(boolean zhuyin) {
         Prefers.put("zhuyin", zhuyin);
     }
+    public static boolean getGuide() {
+        return Prefers.getBoolean("guide_empty", false);
+    }
+
+    public static void putGuide(boolean guide) {
+        Prefers.put("guide_empty", guide);
+    }
+
 }

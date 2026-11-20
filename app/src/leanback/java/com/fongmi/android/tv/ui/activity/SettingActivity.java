@@ -450,7 +450,12 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
             sb.append("；");
             sb.append(checkOne("直播", live));
             String result = sb.toString();
-            com.fongmi.android.tv.App.post(() -> com.fongmi.android.tv.utils.Notify.show(result));
+            com.fongmi.android.tv.App.post(() -> new androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("订阅自检结果")
+                    .setMessage(result)
+                    .setPositiveButton("复制结果", (d, w) -> { com.fongmi.android.tv.utils.Util.copy(result); com.fongmi.android.tv.utils.Notify.show("已复制"); })
+                    .setNegativeButton("关闭", null)
+                    .show());
         });
     }
 

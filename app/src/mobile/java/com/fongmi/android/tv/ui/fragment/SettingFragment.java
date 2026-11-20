@@ -503,15 +503,16 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
 
 
     private void showProbeMenu() {
-        String[] items = {"刷新存活统计", "查看存活统计", "查看直播源列表", "打开 Actions 探测页", "复制订阅地址", "恢复默认直播订阅"};
+        String[] items = {"刷新存活统计", "查看存活统计", "查看直播源列表", "检查源清单", "打开 Actions 探测页", "复制订阅地址", "恢复默认直播订阅"};
         new androidx.appcompat.app.AlertDialog.Builder(requireContext())
                 .setTitle("直播源维护")
                 .setItems(items, (d, which) -> {
                     if (which == 0) { loadHealthSummary(true); com.fongmi.android.tv.utils.Notify.show("正在刷新存活统计…"); }
                     else if (which == 1) showHealth();
                     else if (which == 2) showLiveList();
-                    else if (which == 3) openActions();
-                    else if (which == 4) {
+                    else if (which == 3) checkManifest();
+                    else if (which == 4) openActions();
+                    else if (which == 5) {
                         com.fongmi.android.tv.utils.Util.copy(com.fongmi.android.tv.api.config.LiveConfig.getDesc());
                         com.fongmi.android.tv.utils.Notify.show("已复制直播订阅地址");
                     } else restoreDefaultLive();
@@ -720,6 +721,28 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
         } catch (Exception e) {
             com.fongmi.android.tv.utils.Notify.show("切换失败：" + e.getMessage());
         }
+    }
+
+
+    private void checkManifest() {
+        com.fongmi.android.tv.utils.Task.execute(() -> {
+            try {
+                String text = com.github.catvod.net.OkHttp.string("https://raw.githubusercontent.com/luanmuc/beacon-seed/stable/manifest.json");
+                org.json.JSONObject o = new org.json.JSONObject(text);
+                String msg = "源版本：" + o.optString("version", "未知")
+                        + "\n更新时间：" + o.optString("updated_at", "未知").replace("T", " ").replace("Z", "")
+                        + "\n影视站点：" + o.optInt("vod_sites") + " 个"
+                        + "\n直播频道：" + o.optInt("live_channels") + " 个 / 线路 " + o.optInt("live_lines") + " 条";
+                com.fongmi.android.tv.App.post(() -> new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                        .setTitle("源清单")
+                        .setMessage(msg)
+                        .setPositiveButton("复制", (d, w) -> { com.fongmi.android.tv.utils.Util.copy(msg); com.fongmi.android.tv.utils.Notify.show("已复制"); })
+                        .setNegativeButton("关闭", null)
+                        .show());
+            } catch (Exception e) {
+                com.fongmi.android.tv.App.post(() -> com.fongmi.android.tv.utils.Notify.show("检查源清单失败：" + e.getMessage()));
+            }
+        });
     }
 
 

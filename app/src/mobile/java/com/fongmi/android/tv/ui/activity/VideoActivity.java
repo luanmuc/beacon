@@ -323,7 +323,7 @@ public class VideoActivity extends PlaybackActivity implements Clock.Callback, C
         mBinding.content.setOnClickListener(view -> onContent());
         mBinding.reverse.setOnClickListener(view -> onReverse());
         mBinding.director.setOnClickListener(view -> onDirector());
-        mBinding.name.setOnLongClickListener(view -> onChange());
+        mBinding.name.setOnLongClickListener(view -> onNameLong());
         mBinding.content.setOnLongClickListener(view -> onCopy());
         mBinding.control.back.setOnClickListener(view -> onBack());
         mBinding.control.cast.setOnClickListener(view -> onCast());
@@ -1739,6 +1739,23 @@ public class VideoActivity extends PlaybackActivity implements Clock.Callback, C
         } catch (Exception e) {
             Notify.show("复制失败");
         }
+    }
+
+
+    private boolean onNameLong() {
+        String[] items = {"切换站点", "复制剧名"};
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(getName())
+                .setItems(items, (d, which) -> {
+                    if (which == 0) onChange();
+                    else {
+                        com.fongmi.android.tv.utils.Util.copy(getName());
+                        com.fongmi.android.tv.utils.Notify.show("已复制剧名");
+                    }
+                })
+                .setNegativeButton("取消", null)
+                .show();
+        return true;
     }
 
 

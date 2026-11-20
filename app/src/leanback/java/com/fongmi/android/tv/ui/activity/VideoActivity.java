@@ -1493,4 +1493,21 @@ public class VideoActivity extends PlaybackActivity implements CustomKeyDownVod.
     }
 
 
+    private boolean onNameLong() {
+        String[] items = {"切换站点", "复制剧名"};
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(getName())
+                .setItems(items, (d, which) -> {
+                    if (which == 0) onChange();
+                    else {
+                        com.fongmi.android.tv.utils.Util.copy(getName());
+                        com.fongmi.android.tv.utils.Notify.show("已复制剧名");
+                    }
+                })
+                .setNegativeButton("取消", null)
+                .show();
+        return true;
+    }
+
+
 }

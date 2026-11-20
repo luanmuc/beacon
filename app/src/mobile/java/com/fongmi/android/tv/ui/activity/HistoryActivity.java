@@ -29,6 +29,7 @@ public class HistoryActivity extends BaseActivity implements HistoryAdapter.OnCl
 
     private ActivityHistoryBinding mBinding;
     private HistoryAdapter mAdapter;
+    private String filterSite;
 
     public static void start(Activity activity) {
         activity.startActivity(new Intent(activity, HistoryActivity.class));
@@ -118,7 +119,11 @@ public class HistoryActivity extends BaseActivity implements HistoryAdapter.OnCl
 
     @Override
     protected void onBackInvoked() {
-        if (mAdapter.isDelete()) mAdapter.setDelete(false);
+        if (filterSite != null) {
+            filterSite = null;
+            try { if (getSupportActionBar() != null) getSupportActionBar().setSubtitle(null); } catch (Exception ignored) {}
+            getHistory();
+        } else if (mAdapter.isDelete()) mAdapter.setDelete(false);
         else super.onBackInvoked();
     }
     private void showSiteFilter() {
@@ -133,10 +138,12 @@ public class HistoryActivity extends BaseActivity implements HistoryAdapter.OnCl
             new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
                     .setTitle("按站点筛选")
                     .setItems(names.toArray(new String[0]), (d, which) -> {
-                        if (which == 0) {                         try { if (getSupportActionBar() != null) getSupportActionBar().setSubtitle(null); } catch (Exception ignored) {} getHistory(); com.fongmi.android.tv.utils.Notify.show("已显示全部记录"); return; }
+                        if (which == 0) {                         filterSite = null;
+                        try { if (getSupportActionBar() != null) getSupportActionBar().setSubtitle(null); } catch (Exception ignored) {} getHistory(); com.fongmi.android.tv.utils.Notify.show("已显示全部记录"); return; }
                         String site = names.get(which);
                         java.util.List<com.fongmi.android.tv.bean.History> filtered = new java.util.ArrayList<>();
                         for (com.fongmi.android.tv.bean.History item : all) if (site.equals(item.getSiteName())) filtered.add(item);
+                        filterSite = site;
                         try { if (getSupportActionBar() != null) getSupportActionBar().setSubtitle("筛选：" + site); } catch (Exception ignored) {}
                         mAdapter.setItems(filtered, () -> mBinding.progressLayout.showContent(true, mAdapter.getItemCount()));
                         com.fongmi.android.tv.utils.Notify.show("仅显示：" + site + "（" + filtered.size() + "）");

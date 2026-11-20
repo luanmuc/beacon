@@ -492,13 +492,15 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
 
 
     private void showVodMenu() {
-        String[] items = {"复制订阅地址", "恢复默认影视订阅"};
+        String[] items = {"复制订阅地址", "查看站点列表", "恢复默认影视订阅"};
         new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle("影视订阅")
                 .setItems(items, (d, which) -> {
                     if (which == 0) {
                         com.fongmi.android.tv.utils.Util.copy(com.fongmi.android.tv.api.config.VodConfig.getDesc());
                         com.fongmi.android.tv.utils.Notify.show("已复制影视订阅地址");
+                    } else if (which == 1) {
+                        showSiteList();
                     } else {
                         restoreDefaultVod();
                     }

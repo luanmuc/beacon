@@ -160,10 +160,11 @@ public class KeepActivity extends BaseActivity implements KeepAdapter.OnClickLis
             new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
                     .setTitle("按站点筛选")
                     .setItems(names.toArray(new String[0]), (d, which) -> {
-                        if (which == 0) { getKeep(); com.fongmi.android.tv.utils.Notify.show("已显示全部收藏"); return; }
+                        if (which == 0) {                         try { if (getSupportActionBar() != null) getSupportActionBar().setSubtitle(null); } catch (Exception ignored) {} getKeep(); com.fongmi.android.tv.utils.Notify.show("已显示全部收藏"); return; }
                         String site = names.get(which);
                         java.util.List<com.fongmi.android.tv.bean.Keep> filtered = new java.util.ArrayList<>();
                         for (com.fongmi.android.tv.bean.Keep keep : all) if (site.equals(keep.getSiteName())) filtered.add(keep);
+                        try { if (getSupportActionBar() != null) getSupportActionBar().setSubtitle("筛选：" + site); } catch (Exception ignored) {}
                         mAdapter.setItems(filtered, () -> mBinding.progressLayout.showContent(true, mAdapter.getItemCount()));
                         com.fongmi.android.tv.utils.Notify.show("仅显示：" + site + "（" + filtered.size() + "）");
                     })

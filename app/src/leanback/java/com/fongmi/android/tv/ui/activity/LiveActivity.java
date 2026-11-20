@@ -675,10 +675,39 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
     public boolean onLongClick(Channel item) {
         if (mGroup.isHidden()) return false;
         boolean exist = Keep.exist(item.getName());
-        Notify.show(exist ? R.string.keep_del : R.string.keep_add);
-        if (exist) delKeep(item);
-        else addKeep(item);
+        String[] items = {exist ? "取消收藏" : "收藏频道", "频道信息"};
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(item.getName())
+                .setItems(items, (d, which) -> {
+                    if (which == 0) {
+                        if (exist) delKeep(item);
+                        else addKeep(item);
+                        Notify.show(exist ? "已取消收藏" : "已收藏");
+                    } else showChannelInfo(item);
+                })
+                .show();
         return true;
+    }
+
+    private void showChannelInfo(Channel item) {
+        int lines = item.getUrls() == null ? 0 : item.getUrls().size();
+        String group = item.getGroup() == null ? "" : item.getGroup().getName();
+        String tmp = "";
+        try { tmp = item.getCurrent(); } catch (Exception ignored) {}
+        final String cur = tmp;
+        String info = "分组：" + group + "\n线路：" + lines + " 条"
+                + "\n当前线路：" + (item.getLine() == null || item.getLine().isEmpty() ? "1" : item.getLine())
+                + "\nEPG：" + (item.getEpg() == null || item.getEpg().isEmpty() ? "无" : item.getEpg())
+                + (cur.isEmpty() ? "" : "\n地址：" + cur);
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(item.getName())
+                .setMessage(info)
+                .setPositiveButton("关闭", null)
+                .setNeutralButton("复制地址", (d, w) -> {
+                    if (cur.isEmpty()) Notify.show("没有可复制的地址");
+                    else { com.fongmi.android.tv.utils.Util.copy(cur); Notify.show("已复制"); }
+                })
+                .show();
     }
 
     @Override

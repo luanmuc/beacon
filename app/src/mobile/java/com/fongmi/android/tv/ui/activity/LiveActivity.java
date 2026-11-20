@@ -1192,6 +1192,15 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
     }
 
     @Override
+    public void onBackPressed() {
+        if (channelFiltering) {
+            resetChannelFilter();
+            return;
+        }
+        super.onBackPressed();
+    }
+
+    @Override
     protected void onDestroy() {
         Source.get().exit();
         App.removeCallbacks(mR1, mR2, mR3);
@@ -1214,37 +1223,52 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
     private void showChannelSearch() {
         if (mGroup == null) return;
         android.widget.EditText input = new android.widget.EditText(this);
-        input.setHint("输入频道关键词");
+        input.setHint("输入频道关键词（留空即仅按条件筛选）");
+        android.widget.CheckBox only = new android.widget.CheckBox(this);
+        only.setText("仅看收藏频道");
+        android.widget.LinearLayout box = new android.widget.LinearLayout(this);
+        box.setOrientation(android.widget.LinearLayout.VERTICAL);
+        box.setPadding(48, 16, 48, 0);
+        box.addView(input);
+        box.addView(only);
         new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle("搜索频道")
-                .setView(input)
-                .setPositiveButton("搜索", (d, w) -> filterChannels(input.getText().toString()))
+                .setView(box)
+                .setPositiveButton("筛选", (d, w) -> filterChannels(input.getText().toString(), only.isChecked()))
                 .setNeutralButton("重置", (d, w) -> resetChannelFilter())
                 .setNegativeButton("取消", null)
                 .show();
     }
 
     private void filterChannels(String key) {
+        filterChannels(key, false);
+    }
+
+    private boolean channelFiltering;
+
+    private void filterChannels(String key, boolean onlyKeep) {
         String kw = key == null ? "" : key.trim();
-        if (kw.isEmpty()) {
+        if (kw.isEmpty() && !onlyKeep) {
             resetChannelFilter();
             return;
         }
         java.util.List<com.fongmi.android.tv.bean.Channel> keeps = new java.util.ArrayList<>();
         java.util.List<com.fongmi.android.tv.bean.Channel> others = new java.util.ArrayList<>();
         for (com.fongmi.android.tv.bean.Channel channel : mGroup.getChannel()) {
-            if (channel.getName() != null && channel.getName().contains(kw)) {
+            if (channel.getName() != null && channel.getName().contains(kw) && (!onlyKeep || com.fongmi.android.tv.bean.Keep.exist(channel.getName()))) {
                 if (com.fongmi.android.tv.bean.Keep.exist(channel.getName())) keeps.add(channel);
                 else others.add(channel);
             }
         }
         java.util.List<com.fongmi.android.tv.bean.Channel> items = new java.util.ArrayList<>(keeps);
         items.addAll(others);
+        channelFiltering = true;
         mChannelAdapter.addAll(items);
-        Notify.show("匹配 " + items.size() + " 个频道");
+        Notify.show("匹配 " + items.size() + " 个频道（按返回键恢复全部）");
     }
 
     private void resetChannelFilter() {
+        channelFiltering = false;
         mChannelAdapter.addAll(mGroup.getChannel());
         Notify.show("已显示全部 " + mGroup.getChannel().size() + " 个频道");
     }

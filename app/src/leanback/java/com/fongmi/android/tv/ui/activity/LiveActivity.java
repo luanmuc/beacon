@@ -1291,33 +1291,61 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
                 com.fongmi.android.tv.utils.Notify.show("当前频道只有一条线路");
                 return;
             }
-            java.util.List<String> urls = mChannel.getUrls();
-            String[] names = new String[urls.size()];
+            final java.util.List<String> urls = mChannel.getUrls();
+            final String[] names = new String[urls.size()];
             for (int i = 0; i < urls.size(); i++) {
                 String[] sp = urls.get(i).split("\\$");
                 String title = sp.length > 1 && !sp[1].isEmpty() ? sp[1] : ("线路 " + (i + 1));
                 String host = "";
-                try { host = new java.net.URI(urls.get(i).split("\\$")[0]).getHost(); } catch (Exception ignored) {}
-                String raw = urls.get(i).split("\\$")[0].toLowerCase();
+                try { host = new java.net.URI(sp[0]).getHost(); } catch (Exception ignored) {}
+                String raw = sp[0].toLowerCase();
                 String proto = raw.startsWith("rtsp") ? "RTSP" : raw.contains(".m3u8") ? "HLS" : raw.contains(".flv") ? "FLV" : "HTTP";
                 if (host != null && !host.isEmpty()) title = title + " · " + proto + " · " + host;
                 names[i] = (i == mChannel.getIndex() ? "✓ " : "") + title;
             }
-            new androidx.appcompat.app.AlertDialog.Builder(this)
-                    .setTitle("选择线路")
-                    .setItems(names, (d, which) -> {
-                        mChannel.setIndex(which);
-                        setInfo();
-                        fetch();
-                        com.fongmi.android.tv.utils.Notify.show("已切换到 " + names[which].replace("✓ ", ""));
-                    })
-                    .setNegativeButton("取消", null)
-                    .show();
+            com.fongmi.android.tv.utils.Task.execute(() -> {
+                final long[] lat = new long[urls.size()];
+                java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newFixedThreadPool(Math.min(4, Math.max(1, urls.size())));
+                for (int i = 0; i < urls.size(); i++) {
+                    final int idx = i;
+                    pool.execute(() -> lat[idx] = ping(urls.get(idx).split("\\$")[0]));
+                }
+                pool.shutdown();
+                try { pool.awaitTermination(8, java.util.concurrent.TimeUnit.SECONDS); } catch (Exception ignored) {}
+                for (int i = 0; i < names.length; i++) names[i] = names[i] + " · " + (lat[i] < 0 ? "测速超时" : lat[i] + "ms");
+                com.fongmi.android.tv.App.post(() -> new androidx.appcompat.app.AlertDialog.Builder(this)
+                        .setTitle("选择线路（含延迟）")
+                        .setItems(names, (d, which) -> {
+                            mChannel.setIndex(which);
+                            setInfo();
+                            fetch();
+                            com.fongmi.android.tv.utils.Notify.show("已切换到 " + names[which].replace("✓ ", "").split(" · ")[0]);
+                        })
+                        .setNegativeButton("取消", null)
+                        .show());
+            });
         } catch (Exception e) {
             com.fongmi.android.tv.utils.Notify.show("线路列表不可用");
         }
     }
 
+    private long ping(String url) {
+        java.net.HttpURLConnection c = null;
+        try {
+            long start = System.currentTimeMillis();
+            c = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
+            c.setConnectTimeout(1500);
+            c.setReadTimeout(1500);
+            c.setRequestMethod("GET");
+            c.setRequestProperty("Range", "bytes=0-0");
+            c.getResponseCode();
+            return System.currentTimeMillis() - start;
+        } catch (Exception e) {
+            return -1;
+        } finally {
+            if (c != null) c.disconnect();
+        }
+    }
 
     private String groupTitle() {
         try {

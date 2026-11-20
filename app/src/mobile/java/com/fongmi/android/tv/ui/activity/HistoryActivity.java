@@ -113,6 +113,15 @@ public class HistoryActivity extends BaseActivity implements HistoryAdapter.OnCl
         if (item.getItemId() == android.R.id.home) onBackInvoked();
         else if (item.getItemId() == R.id.delete) onDelete();
         else if (item.getItemId() == R.id.filter_site_h) showSiteFilter();
+        else if (item.getItemId() == R.id.export_history) {
+            java.util.List<com.fongmi.android.tv.bean.History> all = com.fongmi.android.tv.bean.History.get();
+            if (all.isEmpty()) { com.fongmi.android.tv.utils.Notify.show("还没有观看记录"); return true; }
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < all.size(); i++) sb.append(i + 1).append(". ").append(all.get(i).getVodName()).append(" - ").append(all.get(i).getSiteName()).append("\n");
+            String msg = sb.toString().trim();
+            new com.google.android.material.dialog.MaterialAlertDialogBuilder(this).setTitle("导出观看记录（" + all.size() + "）").setMessage(msg.length() > 1200 ? msg.substring(0, 1200) + "…" : msg).setPositiveButton("复制", (d, w) -> { com.fongmi.android.tv.utils.Util.copy(msg); com.fongmi.android.tv.utils.Notify.show("已复制观看记录"); }).setNegativeButton("关闭", null).show();
+        }
+
         else if (item.getItemId() == R.id.sync) onSync();
         return super.onOptionsItemSelected(item);
     }

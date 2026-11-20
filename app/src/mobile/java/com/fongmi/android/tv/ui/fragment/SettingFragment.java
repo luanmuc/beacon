@@ -495,13 +495,16 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
 
 
     private void showProbeMenu() {
-        String[] items = {"查看存活统计", "打开 Actions 探测页", "恢复默认直播订阅"};
+        String[] items = {"查看存活统计", "打开 Actions 探测页", "复制订阅地址", "恢复默认直播订阅"};
         new androidx.appcompat.app.AlertDialog.Builder(requireContext())
                 .setTitle("直播源维护")
                 .setItems(items, (d, which) -> {
                     if (which == 0) showHealth();
                     else if (which == 1) openActions();
-                    else restoreDefaultLive();
+                    else if (which == 2) {
+                        com.fongmi.android.tv.utils.Util.copy(com.fongmi.android.tv.api.config.LiveConfig.getDesc());
+                        com.fongmi.android.tv.utils.Notify.show("已复制直播订阅地址");
+                    } else restoreDefaultLive();
                 })
                 .show();
     }

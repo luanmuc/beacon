@@ -186,7 +186,7 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
         mBinding.control.action.text.setUpListener(this::onSubtitleClick);
         mBinding.control.action.text.setDownListener(this::onSubtitleClick);
         mBinding.control.action.home.setOnClickListener(view -> onHome());
-        mBinding.group.setOnLongClickListener(view -> { showChannelSearch(); return true; });
+        mBinding.group.setOnLongClickListener(view -> { showGroupMenu(); return true; });
         mBinding.control.action.home.setOnLongClickListener(view -> { switchChannelLine(); return true; });
         mBinding.control.action.line.setOnClickListener(view -> onLine());
         mBinding.control.action.line.setOnLongClickListener(view -> { showLineList(); return true; });
@@ -662,6 +662,7 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
 
     @Override
     public void onItemClick(Channel item) {
+        if (globalKeep && item.getGroup() != null) { mGroup = item.getGroup(); globalKeep = false; }
         if (!item.getData(mViewModel.getZoneId()).getList().isEmpty() && item.isSelected() && mChannel != null && mChannel.equals(item) && mChannel.getGroup().equals(mGroup)) {
             showEpg(item);
         } else if (mGroup != null) {
@@ -1141,6 +1142,41 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
     }
 
 
+    private void showGroupMenu() {
+        String[] items = {"搜索频道", "全部收藏频道", "重置筛选"};
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(mGroup == null ? "频道" : mGroup.getName())
+                .setItems(items, (d, which) -> {
+                    if (which == 0) showChannelSearch();
+                    else if (which == 1) showGlobalKeeps();
+                    else resetChannelFilter();
+                })
+                .show();
+    }
+
+    private void showGlobalKeeps() {
+        try {
+            java.util.List<com.fongmi.android.tv.bean.Channel> keeps = new java.util.ArrayList<>();
+            java.util.List<com.fongmi.android.tv.bean.Group> groups = com.fongmi.android.tv.api.config.LiveConfig.get().getGroups();
+            if (groups != null) for (com.fongmi.android.tv.bean.Group group : groups) {
+                if (group.getChannel() == null) continue;
+                for (com.fongmi.android.tv.bean.Channel channel : group.getChannel()) {
+                    if (com.fongmi.android.tv.bean.Keep.exist(channel.getName())) keeps.add(channel);
+                }
+            }
+            if (keeps.isEmpty()) {
+                com.fongmi.android.tv.utils.Notify.show("还没有收藏频道，长按频道即可收藏");
+                return;
+            }
+            globalKeep = true;
+            channelFiltering = true;
+            mChannelAdapter.addAll(keeps);
+            com.fongmi.android.tv.utils.Notify.show("全部收藏：" + keeps.size() + " 个频道（按返回键恢复）");
+        } catch (Exception e) {
+            com.fongmi.android.tv.utils.Notify.show("读取收藏失败");
+        }
+    }
+
     private void showChannelSearch() {
         if (mGroup == null) return;
         android.widget.EditText input = new android.widget.EditText(this);
@@ -1166,6 +1202,7 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
     }
 
     private boolean channelFiltering;
+    private boolean globalKeep;
 
     private void filterChannels(String key, boolean onlyKeep) {
         String kw = key == null ? "" : key.trim();
@@ -1183,6 +1220,7 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
 
     private void resetChannelFilter() {
         channelFiltering = false;
+        globalKeep = false;
         mChannelAdapter.addAll(mGroup.getChannel());
         com.fongmi.android.tv.utils.Notify.show("已显示全部 " + mGroup.getChannel().size() + " 个频道");
     }

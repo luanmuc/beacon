@@ -420,6 +420,7 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
                         CharSequence base = mBinding.liveUrl.getText();
                         String at = object.optString("generated_at", "");
                         mBinding.liveUrl.setText(base + " · 存活 " + channels + " 频道/" + lines + " 线路" + (at.isEmpty() ? "" : " · " + at.replace("T", " ").replace("Z", "")));
+                        com.fongmi.android.tv.utils.Notify.show("存活统计已更新：" + channels + " 频道/" + lines + " 线路");
                     } catch (Exception ignored) {
                     }
                 });

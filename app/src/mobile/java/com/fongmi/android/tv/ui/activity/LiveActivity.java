@@ -507,7 +507,8 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
 
     private void showError(String text) {
         mBinding.widget.error.setVisibility(View.VISIBLE);
-        mBinding.widget.error.setText(text);
+        mBinding.widget.error.setText(text + "\n（点击此处切换线路）");
+        mBinding.widget.error.setOnClickListener(v -> switchChannelLine());
         hideProgress();
     }
 

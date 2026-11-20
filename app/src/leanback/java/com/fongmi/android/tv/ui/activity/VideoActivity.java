@@ -853,6 +853,8 @@ public class VideoActivity extends PlaybackActivity implements CustomKeyDownVod.
 
     private void showError(String text) {
         mBinding.widget.error.setVisibility(View.VISIBLE);
+        try { mBinding.widget.error.setOnClickListener(v -> onChange()); } catch (Exception ignored) {}
+
         String hint = errorHint(text);
         mBinding.widget.text.setText(hint.isEmpty() ? text : text + "\n" + hint);
         hideProgress();
@@ -1513,10 +1515,10 @@ public class VideoActivity extends PlaybackActivity implements CustomKeyDownVod.
 
     private String errorHint(String text) {
         String lower = text == null ? "" : text.toLowerCase();
-        if (lower.contains("403") || lower.contains("404") || lower.contains("not found") || lower.contains("410")) return "源可能已失效（HTTP 4xx），可长按剧名切换站点";
-        if (lower.contains("timeout") || lower.contains("connect") || lower.contains("network") || lower.contains("unable to resolve")) return "网络或线路异常，请检查网络后重试，或切换站点";
-        if (lower.contains("decode") || lower.contains("decoder") || lower.contains("unsupported") || lower.contains("format")) return "解码失败，可尝试切换硬解/软解，或换一条线路";
-        if (lower.contains("source error") || lower.contains("invalid")) return "资源地址异常，可切换站点或重新搜索";
+        if (lower.contains("403") || lower.contains("404") || lower.contains("not found") || lower.contains("410")) return "源可能已失效（HTTP 4xx），可点击此处切换站点或长按剧名";
+        if (lower.contains("timeout") || lower.contains("connect") || lower.contains("network") || lower.contains("unable to resolve")) return "网络或线路异常，请检查网络后重试；也可点击此处切换站点";
+        if (lower.contains("decode") || lower.contains("decoder") || lower.contains("unsupported") || lower.contains("format")) return "解码失败，可尝试切换硬解/软解，或点击此处换个站点";
+        if (lower.contains("source error") || lower.contains("invalid")) return "资源地址异常，可点击此处切换站点或重新搜索";
         return "";
     }
 

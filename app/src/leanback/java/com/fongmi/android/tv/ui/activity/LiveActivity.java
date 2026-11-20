@@ -1147,7 +1147,7 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
     private void showGroupMenu() {
         String[] items = {"搜索频道", "全部收藏频道", "最近观看", "清空最近观看", "重置筛选"};
         new androidx.appcompat.app.AlertDialog.Builder(this)
-                .setTitle(mGroup == null ? "频道" : mGroup.getName() + "（" + (mGroup.getChannel() == null ? 0 : mGroup.getChannel().size()) + " 个频道）")
+                .setTitle(mGroup == null ? "频道" : groupTitle())
                 .setItems(items, (d, which) -> {
                     if (which == 0) showChannelSearch();
                     else if (which == 1) showGlobalKeeps();
@@ -1307,6 +1307,18 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
                     .show();
         } catch (Exception e) {
             com.fongmi.android.tv.utils.Notify.show("线路列表不可用");
+        }
+    }
+
+
+    private String groupTitle() {
+        try {
+            int total = mGroup.getChannel() == null ? 0 : mGroup.getChannel().size();
+            int keeps = 0;
+            if (mGroup.getChannel() != null) for (com.fongmi.android.tv.bean.Channel channel : mGroup.getChannel()) if (com.fongmi.android.tv.bean.Keep.exist(channel.getName())) keeps++;
+            return mGroup.getName() + "（" + total + " 个频道 · 收藏 " + keeps + "）";
+        } catch (Exception e) {
+            return mGroup.getName();
         }
     }
 

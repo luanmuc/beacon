@@ -9,6 +9,11 @@
         app:showAsAction="always" />
 
     <item
+        android:id="@+id/clear"
+        android:title="清空收藏"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/batch"
         android:icon="@drawable/ic_action_delete"
         android:title="批量管理"

@@ -129,7 +129,9 @@ public class KeepActivity extends BaseActivity implements KeepAdapter.OnClickLis
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == android.R.id.home) onBackInvoked();
         else if (item.getItemId() == R.id.delete) onDelete();
-        else if (item.getItemId() == R.id.batch) { mAdapter.setDelete(!mAdapter.isDelete()); com.fongmi.android.tv.utils.Notify.show(mAdapter.isDelete() ? "批量管理：点击条目删除，返回键退出" : "已退出批量管理"); }
+        else if (item.getItemId() == R.id.clear) {
+            new com.google.android.material.dialog.MaterialAlertDialogBuilder(this).setTitle("清空收藏").setMessage("确定删除全部收藏频道与影视收藏？").setNegativeButton("取消", null).setPositiveButton("清空", (d, w) -> { com.fongmi.android.tv.bean.Keep.deleteAll(); getKeep(); com.fongmi.android.tv.utils.Notify.show("已清空收藏"); }).show();
+        } else if (item.getItemId() == R.id.batch) { mAdapter.setDelete(!mAdapter.isDelete()); com.fongmi.android.tv.utils.Notify.show(mAdapter.isDelete() ? "批量管理：点击条目删除，返回键退出" : "已退出批量管理"); }
         else if (item.getItemId() == R.id.sync) onSync();
         return super.onOptionsItemSelected(item);
     }

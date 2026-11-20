@@ -1746,14 +1746,16 @@ public class VideoActivity extends PlaybackActivity implements Clock.Callback, C
 
 
     private boolean onNameLong() {
-        String[] items = {"切换站点", "复制剧名"};
+        String[] items = {"切换站点", "复制剧名", "进入画中画"};
         new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle(getName())
                 .setItems(items, (d, which) -> {
                     if (which == 0) onChange();
-                    else {
+                    else if (which == 1) {
                         com.fongmi.android.tv.utils.Util.copy(getName());
                         com.fongmi.android.tv.utils.Notify.show("已复制剧名");
+                    } else {
+                        enterPip();
                     }
                 })
                 .setNegativeButton("取消", null)
@@ -1769,6 +1771,16 @@ public class VideoActivity extends PlaybackActivity implements Clock.Callback, C
         if (lower.contains("decode") || lower.contains("decoder") || lower.contains("unsupported") || lower.contains("format")) return "解码失败，可尝试切换硬解/软解，或点击此处换个站点";
         if (lower.contains("source error") || lower.contains("invalid")) return "资源地址异常，可点击此处切换站点或重新搜索";
         return "";
+    }
+
+
+    private void enterPip() {
+        if (android.os.Build.VERSION.SDK_INT < 26) { com.fongmi.android.tv.utils.Notify.show("当前系统不支持画中画"); return; }
+        try {
+            enterPictureInPictureMode(new android.app.PictureInPictureParams.Builder().build());
+        } catch (Exception e) {
+            com.fongmi.android.tv.utils.Notify.show("进入画中画失败：" + e.getMessage());
+        }
     }
 
 

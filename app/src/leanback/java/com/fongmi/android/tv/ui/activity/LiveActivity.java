@@ -652,6 +652,8 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
 
     @Override
     public void onItemClick(Group item) {
+        channelFiltering = false;
+        globalKeep = false;
         mChannelAdapter.addAll(setWidth(item).getChannel());
         mBinding.channel.setSelectedPosition(Math.max(item.getPosition(), 0));
         if (!item.isKeep() || ++count < 5 || mHides.isEmpty()) return;
@@ -662,6 +664,9 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
 
     @Override
     public void onItemClick(Channel item) {
+        long now = android.os.SystemClock.elapsedRealtime();
+        if (now - lastChannelClick < 500) return;
+        lastChannelClick = now;
         if (globalKeep && item.getGroup() != null) { mGroup = item.getGroup(); globalKeep = false; }
         saveRecent(item);
         if (!item.getData(mViewModel.getZoneId()).getList().isEmpty() && item.isSelected() && mChannel != null && mChannel.equals(item) && mChannel.getGroup().equals(mGroup)) {
@@ -1256,6 +1261,7 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
 
     private boolean channelFiltering;
     private boolean globalKeep;
+    private long lastChannelClick;
 
     private void filterChannels(String key, boolean onlyKeep) {
         String kw = key == null ? "" : key.trim();

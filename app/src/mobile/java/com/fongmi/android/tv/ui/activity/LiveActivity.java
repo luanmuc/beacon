@@ -590,6 +590,8 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
 
     @Override
     public void onItemClick(Group item) {
+        channelFiltering = false;
+        globalKeep = false;
         mGroupAdapter.setSelected(mGroup = item);
         mChannelAdapter.addAll(item.getChannel());
         mChannelAdapter.setSelected(item.getPosition());
@@ -602,6 +604,9 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
 
     @Override
     public void onItemClick(Channel item) {
+        long now = android.os.SystemClock.elapsedRealtime();
+        if (now - lastChannelClick < 500) return;
+        lastChannelClick = now;
         if (globalKeep && item.getGroup() != null) { mGroup = item.getGroup(); globalKeep = false; }
         saveRecent(item);
         if (!item.getData(mViewModel.getZoneId()).getList().isEmpty() && item.isSelected() && mChannel != null && mChannel.equals(item) && mChannel.getGroup().equals(mGroup)) {
@@ -1337,6 +1342,7 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
 
     private boolean channelFiltering;
     private boolean globalKeep;
+    private long lastChannelClick;
 
     private void filterChannels(String key, boolean onlyKeep) {
         String kw = key == null ? "" : key.trim();

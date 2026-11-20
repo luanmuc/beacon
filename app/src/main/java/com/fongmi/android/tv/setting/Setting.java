@@ -131,4 +131,13 @@ public class Setting {
         Prefers.put("recent_channels", json);
     }
 
+
+    public static String getSeedVer() {
+        return com.github.catvod.utils.Prefers.getString("seed_ver");
+    }
+
+    public static void putSeedVer(String ver) {
+        com.github.catvod.utils.Prefers.put("seed_ver", ver);
+    }
+
 }

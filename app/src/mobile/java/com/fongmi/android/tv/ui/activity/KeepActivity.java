@@ -137,6 +137,13 @@ public class KeepActivity extends BaseActivity implements KeepAdapter.OnClickLis
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < lives.size(); i++) sb.append(i + 1).append(". ").append(lives.get(i).getVodName()).append("\n");
             new com.google.android.material.dialog.MaterialAlertDialogBuilder(this).setTitle("直播收藏（" + lives.size() + "）").setMessage(sb.toString().trim()).setPositiveButton("复制", (d, w) -> { com.fongmi.android.tv.utils.Util.copy(sb.toString().trim()); com.fongmi.android.tv.utils.Notify.show("已复制"); }).setNegativeButton("关闭", null).show();
+        } else if (item.getItemId() == R.id.export) {
+            java.util.List<com.fongmi.android.tv.bean.Keep> all = com.fongmi.android.tv.bean.Keep.getVod();
+            if (all.isEmpty()) { com.fongmi.android.tv.utils.Notify.show("还没有影视收藏"); return true; }
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < all.size(); i++) sb.append(i + 1).append(". ").append(all.get(i).getVodName()).append(" - ").append(all.get(i).getSiteName()).append("\n");
+            String msg = sb.toString().trim();
+            new com.google.android.material.dialog.MaterialAlertDialogBuilder(this).setTitle("导出收藏（" + all.size() + "）").setMessage(msg.length() > 1200 ? msg.substring(0, 1200) + "…" : msg).setPositiveButton("复制", (d, w) -> { com.fongmi.android.tv.utils.Util.copy(msg); com.fongmi.android.tv.utils.Notify.show("已复制收藏清单"); }).setNegativeButton("关闭", null).show();
         } else if (item.getItemId() == R.id.clear) {
             new com.google.android.material.dialog.MaterialAlertDialogBuilder(this).setTitle("清空收藏").setMessage("确定删除全部收藏频道与影视收藏？").setNegativeButton("取消", null).setPositiveButton("清空", (d, w) -> { com.fongmi.android.tv.bean.Keep.deleteAll(); getKeep(); com.fongmi.android.tv.utils.Notify.show("已清空收藏"); }).show();
         } else if (item.getItemId() == R.id.batch) { mAdapter.setDelete(!mAdapter.isDelete()); com.fongmi.android.tv.utils.Notify.show(mAdapter.isDelete() ? "批量管理：点击条目删除，返回键退出" : "已退出批量管理"); }

@@ -499,6 +499,7 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
         }
         promptEmpty();
         showStatusOnce();
+        checkSeedUpdate();
     }
 
 
@@ -507,10 +508,10 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
 
     private void promptEmpty() {
         if (emptyPrompted) return;
-        emptyPrompted = true;
         boolean vodEmpty = com.fongmi.android.tv.api.config.VodConfig.get().getSites().isEmpty();
         boolean liveEmpty = com.fongmi.android.tv.api.config.LiveConfig.get().getLives() == null || com.fongmi.android.tv.api.config.LiveConfig.get().getLives().isEmpty();
         if (!vodEmpty && !liveEmpty) return;
+        emptyPrompted = true;
         String msg = (vodEmpty ? "影视订阅为空" : "") + (vodEmpty && liveEmpty ? "；" : "") + (liveEmpty ? "直播订阅为空" : "");
         boolean first = !com.fongmi.android.tv.setting.Setting.getGuide();
         String tips = first
@@ -562,7 +563,7 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
 
 
     private void showStatusOnce() {
-        if (statusShown || emptyPrompted) return;
+        if (statusShown) return;
         statusShown = true;
         try {
             int sites = com.fongmi.android.tv.api.config.VodConfig.get().getSites().size();
@@ -573,5 +574,24 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
         }
     }
 
+
+
+    private void checkSeedUpdate() {
+        com.fongmi.android.tv.utils.Task.execute(() -> {
+            try {
+                String text = com.github.catvod.net.OkHttp.string("https://raw.githubusercontent.com/luanmuc/beacon-seed/stable/manifest.json");
+                org.json.JSONObject o = new org.json.JSONObject(text);
+                String ver = o.optString("version", "");
+                String old = com.fongmi.android.tv.setting.Setting.getSeedVer();
+                if (ver.isEmpty()) return;
+                if (old.isEmpty()) { com.fongmi.android.tv.setting.Setting.putSeedVer(ver); return; }
+                if (!ver.equals(old)) {
+                    com.fongmi.android.tv.setting.Setting.putSeedVer(ver);
+                    com.fongmi.android.tv.utils.Notify.show("源已更新至 " + ver + "：影视 " + o.optInt("vod_sites") + " 站点 / 直播 " + o.optInt("live_channels") + " 频道");
+                }
+            } catch (Exception ignored) {
+            }
+        });
+    }
 
 }

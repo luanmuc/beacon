@@ -19,6 +19,11 @@
         app:showAsAction="never" />
 
     <item
+        android:id="@+id/export"
+        android:title="导出收藏"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/clear"
         android:title="清空收藏"
         app:showAsAction="never" />

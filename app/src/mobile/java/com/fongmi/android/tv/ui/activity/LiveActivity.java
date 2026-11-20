@@ -603,6 +603,7 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
     @Override
     public void onItemClick(Channel item) {
         if (globalKeep && item.getGroup() != null) { mGroup = item.getGroup(); globalKeep = false; }
+        saveRecent(item);
         if (!item.getData(mViewModel.getZoneId()).getList().isEmpty() && item.isSelected() && mChannel != null && mChannel.equals(item) && mChannel.getGroup().equals(mGroup)) {
             showEpg(item);
         } else if (mGroup != null) {
@@ -1224,15 +1225,65 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
 
 
     private void showGroupMenu() {
-        String[] items = {"搜索频道", "全部收藏频道", "重置筛选"};
+        String[] items = {"搜索频道", "全部收藏频道", "最近观看", "重置筛选"};
         new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle(mGroup == null ? "频道" : mGroup.getName())
                 .setItems(items, (d, which) -> {
                     if (which == 0) showChannelSearch();
                     else if (which == 1) showGlobalKeeps();
+                    else if (which == 2) showRecentChannels();
                     else resetChannelFilter();
                 })
                 .show();
+    }
+
+    private void saveRecent(com.fongmi.android.tv.bean.Channel item) {
+        try {
+            java.util.List<String> list = new java.util.ArrayList<>();
+            String json = com.fongmi.android.tv.setting.Setting.getRecent();
+            if (json != null && !json.isEmpty()) {
+                java.util.List<String> old = com.fongmi.android.tv.App.gson().fromJson(json, new com.google.gson.reflect.TypeToken<java.util.List<String>>() {}.getType());
+                if (old != null) list.addAll(old);
+            }
+            list.remove(item.getName());
+            list.add(0, item.getName());
+            while (list.size() > 12) list.remove(list.size() - 1);
+            com.fongmi.android.tv.setting.Setting.putRecent(com.fongmi.android.tv.App.gson().toJson(list));
+        } catch (Exception ignored) {
+        }
+    }
+
+    private void showRecentChannels() {
+        try {
+            String json = com.fongmi.android.tv.setting.Setting.getRecent();
+            if (json == null || json.isEmpty()) {
+                com.fongmi.android.tv.utils.Notify.show("还没有观看记录");
+                return;
+            }
+            java.util.List<String> names = com.fongmi.android.tv.App.gson().fromJson(json, new com.google.gson.reflect.TypeToken<java.util.List<String>>() {}.getType());
+            if (names == null || names.isEmpty()) {
+                com.fongmi.android.tv.utils.Notify.show("还没有观看记录");
+                return;
+            }
+            java.util.List<com.fongmi.android.tv.bean.Channel> channels = new java.util.ArrayList<>();
+            java.util.List<com.fongmi.android.tv.bean.Group> groups = com.fongmi.android.tv.api.config.LiveConfig.get().getHome().getGroups();
+            if (groups != null) for (com.fongmi.android.tv.bean.Group group : groups) {
+                if (group.getChannel() == null) continue;
+                for (com.fongmi.android.tv.bean.Channel channel : group.getChannel()) {
+                    if (names.contains(channel.getName()) && !channels.contains(channel)) channels.add(channel);
+                }
+            }
+            if (channels.isEmpty()) {
+                com.fongmi.android.tv.utils.Notify.show("最近观看的频道已不在当前订阅中");
+                return;
+            }
+            globalKeep = true;
+            channelFiltering = true;
+            mChannelAdapter.addAll(channels);
+            com.fongmi.android.tv.utils.Notify.show("最近观看：" + channels.size() + " 个频道（按返回键恢复）");
+        } catch (Exception e) {
+            com.fongmi.android.tv.utils.Notify.show("读取最近观看失败");
+        }
     }
 
     private void showGlobalKeeps() {

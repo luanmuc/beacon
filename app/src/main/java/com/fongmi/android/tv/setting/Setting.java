@@ -123,4 +123,12 @@ public class Setting {
         Prefers.put("health_ts", ts);
     }
 
+    public static String getRecent() {
+        return Prefers.getString("recent_channels");
+    }
+
+    public static void putRecent(String json) {
+        Prefers.put("recent_channels", json);
+    }
+
 }

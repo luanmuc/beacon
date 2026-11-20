@@ -114,7 +114,7 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
         mBinding.live.setOnClickListener(this::onLive);
         mBinding.wall.setOnClickListener(this::onWall);
         mBinding.size.setOnClickListener(this::setSize);
-        mBinding.cache.setOnLongClickListener(v -> { openAppSettings(); return true; });
+        mBinding.cache.setOnLongClickListener(v -> { showCacheMenu(); return true; });
         mBinding.cache.setOnClickListener(this::onCache);
         mBinding.backup.setOnClickListener(this::onBackup);
         mBinding.player.setOnClickListener(this::onPlayer);
@@ -651,6 +651,33 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
                     .setNegativeButton("关闭", null)
                     .show();
         } catch (Exception e) { com.fongmi.android.tv.utils.Notify.show("读取直播源失败"); }
+    }
+
+
+    private void showCacheMenu() {
+        String[] items = {"打开应用详情", "清理缓存", "关于应用"};
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("应用")
+                .setItems(items, (d, which) -> {
+                    if (which == 0) openAppSettings();
+                    else if (which == 1) onCache(null);
+                    else showAbout();
+                })
+                .show();
+    }
+
+    private void showAbout() {
+        String text = "版本：" + BuildConfig.VERSION_NAME + "（#" + BuildConfig.VERSION_CODE + "）\n"
+                + "渠道：" + BuildConfig.FLAVOR_mode + "-" + BuildConfig.FLAVOR_abi + "\n\n"
+                + "基于 FongMi/TV 四月版二次开发，遵循 GPL-3.0。\n"
+                + "影视源来自公开 TVBox 配置聚合，直播源来自公开 iptv-org 清单，均已探测筛选。\n"
+                + "本项目仅供学习与技术交流，内容版权归各源站所有。";
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("关于应用")
+                .setMessage(text)
+                .setPositiveButton("复制", (d, w) -> { com.fongmi.android.tv.utils.Util.copy(text); com.fongmi.android.tv.utils.Notify.show("已复制"); })
+                .setNegativeButton("关闭", null)
+                .show();
     }
 
 

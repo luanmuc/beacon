@@ -985,7 +985,8 @@ public class VideoActivity extends PlaybackActivity implements Clock.Callback, C
 
     private void showError(String text) {
         mBinding.widget.error.setVisibility(View.VISIBLE);
-        mBinding.widget.error.setText(text);
+        String hint = errorHint(text);
+        mBinding.widget.error.setText(hint.isEmpty() ? text : text + "\n" + hint);
         hideProgress();
     }
 
@@ -1756,6 +1757,16 @@ public class VideoActivity extends PlaybackActivity implements Clock.Callback, C
                 .setNegativeButton("取消", null)
                 .show();
         return true;
+    }
+
+
+    private String errorHint(String text) {
+        String lower = text == null ? "" : text.toLowerCase();
+        if (lower.contains("403") || lower.contains("404") || lower.contains("not found") || lower.contains("410")) return "源可能已失效（HTTP 4xx），可长按剧名切换站点";
+        if (lower.contains("timeout") || lower.contains("connect") || lower.contains("network") || lower.contains("unable to resolve")) return "网络或线路异常，请检查网络后重试，或切换站点";
+        if (lower.contains("decode") || lower.contains("decoder") || lower.contains("unsupported") || lower.contains("format")) return "解码失败，可尝试切换硬解/软解，或换一条线路";
+        if (lower.contains("source error") || lower.contains("invalid")) return "资源地址异常，可切换站点或重新搜索";
+        return "";
     }
 
 

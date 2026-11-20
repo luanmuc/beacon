@@ -677,7 +677,13 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
                 + "渠道：" + BuildConfig.FLAVOR_mode + "-" + BuildConfig.FLAVOR_abi + "\n\n"
                 + "基于 FongMi/TV 四月版二次开发，遵循 GPL-3.0。\n"
                 + "影视源来自公开 TVBox 配置聚合，直播源来自公开 iptv-org 清单，均已探测筛选。\n"
-                + "本项目仅供学习与技术交流，内容版权归各源站所有。";
+                + "本项目仅供学习与技术交流，内容版权归各源站所有。\n\n"
+                + "维护仓库：\n"
+                + "壳：github.com/luanmuc/beacon\n"
+                + "源工厂：github.com/luanmuc/beacon-feeds\n"
+                + "源发布：github.com/luanmuc/beacon-seed\n"
+                + "试验壳：github.com/luanmuc/beacon-sketch\n"
+                + "播放内核：github.com/luanmuc/media";
         new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle("关于应用")
                 .setMessage(text)

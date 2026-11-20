@@ -1234,7 +1234,7 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
         java.util.List<com.fongmi.android.tv.bean.Channel> others = new java.util.ArrayList<>();
         for (com.fongmi.android.tv.bean.Channel channel : mGroup.getChannel()) {
             if (channel.getName() != null && channel.getName().contains(kw)) {
-                if (com.fongmi.android.tv.utils.Keep.exist(channel.getName())) keeps.add(channel);
+                if (com.fongmi.android.tv.bean.Keep.exist(channel.getName())) keeps.add(channel);
                 else others.add(channel);
             }
         }

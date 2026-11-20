@@ -479,12 +479,13 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
 
 
     private void showProbeMenu() {
-        String[] items = {"刷新存活统计", "打开 Actions 探测页", "恢复默认直播订阅"};
+        String[] items = {"刷新存活统计", "查看直播源列表", "打开 Actions 探测页", "恢复默认直播订阅"};
         new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle("直播源维护")
                 .setItems(items, (d, which) -> {
                     if (which == 0) { loadHealthSummary(true); com.fongmi.android.tv.utils.Notify.show("正在刷新存活统计…"); }
-                    else if (which == 1) openActions();
+                    else if (which == 1) showLiveList();
+                    else if (which == 2) openActions();
                     else restoreDefaultLive();
                 })
                 .show();
@@ -570,7 +571,8 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
         String info = "版本：" + BuildConfig.VERSION_NAME + "\n构建号：" + BuildConfig.VERSION_CODE
                 + "\n渠道：" + BuildConfig.FLAVOR_mode + "-" + BuildConfig.FLAVOR_abi
                 + "\n影视站点：" + sites + " 个\n直播源：" + lives + " 个"
-                + "\n仓库：github.com/luanmuc/beacon";
+                + "\n仓库：github.com/luanmuc/beacon"
+                + "\n\n基于 FongMi/TV 四月版二次开发（GPL-3.0）";
         new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle("构建信息")
                 .setMessage(info)
@@ -609,6 +611,23 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
                 .setMessage(text)
                 .setPositiveButton("知道了", null)
                 .show();
+    }
+
+
+    private void showLiveList() {
+        try {
+            java.util.List<com.fongmi.android.tv.bean.Live> lives = com.fongmi.android.tv.api.config.LiveConfig.get().getLives();
+            if (lives == null || lives.isEmpty()) { com.fongmi.android.tv.utils.Notify.show("当前没有直播源"); return; }
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < lives.size(); i++) sb.append(i + 1).append(". ").append(lives.get(i).getName())
+                    .append("（").append(lives.get(i).getGroups() == null ? 0 : lives.get(i).getGroups().size()).append(" 个分组）\n");
+            new androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("直播源列表（" + lives.size() + "）")
+                    .setMessage(sb.toString().trim())
+                    .setPositiveButton("复制", (d, w) -> { com.fongmi.android.tv.utils.Util.copy(sb.toString().trim()); com.fongmi.android.tv.utils.Notify.show("已复制直播源列表"); })
+                    .setNegativeButton("关闭", null)
+                    .show();
+        } catch (Exception e) { com.fongmi.android.tv.utils.Notify.show("读取直播源失败"); }
     }
 
 

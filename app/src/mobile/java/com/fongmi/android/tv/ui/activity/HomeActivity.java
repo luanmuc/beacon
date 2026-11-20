@@ -252,7 +252,7 @@ public class HomeActivity extends BaseActivity implements NavigationBarView.OnIt
             }
             if (com.fongmi.android.tv.api.config.LiveConfig.get().getLives() == null || com.fongmi.android.tv.api.config.LiveConfig.get().getLives().isEmpty()) {
                 com.fongmi.android.tv.utils.Notify.show("直播订阅为空：设置 → 直播订阅 → 填写地址");
-                try { App.post(() -> { try { mManager.change(1); } catch (Exception ignored) {} }); } catch (Exception ignored) {}
+                try { if (!com.fongmi.android.tv.setting.Setting.getGuide()) App.post(() -> { try { mManager.change(1); } catch (Exception ignored) {} }); } catch (Exception ignored) {}
             }
         } catch (Exception ignored) {
         }
@@ -321,7 +321,7 @@ public class HomeActivity extends BaseActivity implements NavigationBarView.OnIt
 
 
     private void showStatusOnce() {
-        if (statusShown) return;
+        if (statusShown || emptyPrompted) return;
         statusShown = true;
         try {
             int sites = com.fongmi.android.tv.api.config.VodConfig.get().getSites().size();

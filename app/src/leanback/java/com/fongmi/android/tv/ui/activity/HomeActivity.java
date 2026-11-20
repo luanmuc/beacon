@@ -562,7 +562,7 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
 
 
     private void showStatusOnce() {
-        if (statusShown) return;
+        if (statusShown || emptyPrompted) return;
         statusShown = true;
         try {
             int sites = com.fongmi.android.tv.api.config.VodConfig.get().getSites().size();

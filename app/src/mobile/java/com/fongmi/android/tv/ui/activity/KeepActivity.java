@@ -129,6 +129,7 @@ public class KeepActivity extends BaseActivity implements KeepAdapter.OnClickLis
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == android.R.id.home) onBackInvoked();
         else if (item.getItemId() == R.id.delete) onDelete();
+        else if (item.getItemId() == R.id.filter_site) { showSiteFilter(); }
         else if (item.getItemId() == R.id.live_keep) {
             java.util.List<com.fongmi.android.tv.bean.Keep> lives = com.fongmi.android.tv.bean.Keep.getLive();
             if (lives.isEmpty()) { com.fongmi.android.tv.utils.Notify.show("还没有直播收藏"); return true; }
@@ -147,4 +148,29 @@ public class KeepActivity extends BaseActivity implements KeepAdapter.OnClickLis
         if (mAdapter.isDelete()) mAdapter.setDelete(false);
         else super.onBackInvoked();
     }
+    private void showSiteFilter() {
+        try {
+            java.util.List<com.fongmi.android.tv.bean.Keep> all = com.fongmi.android.tv.bean.Keep.getVod();
+            java.util.LinkedHashSet<String> sites = new java.util.LinkedHashSet<>();
+            for (com.fongmi.android.tv.bean.Keep keep : all) if (keep.getSiteName() != null && !keep.getSiteName().isEmpty()) sites.add(keep.getSiteName());
+            if (sites.isEmpty()) { com.fongmi.android.tv.utils.Notify.show("还没有收藏内容"); return; }
+            java.util.List<String> names = new java.util.ArrayList<>();
+            names.add("全部站点");
+            names.addAll(sites);
+            new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                    .setTitle("按站点筛选")
+                    .setItems(names.toArray(new String[0]), (d, which) -> {
+                        if (which == 0) { getKeep(); com.fongmi.android.tv.utils.Notify.show("已显示全部收藏"); return; }
+                        String site = names.get(which);
+                        java.util.List<com.fongmi.android.tv.bean.Keep> filtered = new java.util.ArrayList<>();
+                        for (com.fongmi.android.tv.bean.Keep keep : all) if (site.equals(keep.getSiteName())) filtered.add(keep);
+                        mAdapter.setItems(filtered, () -> mBinding.progressLayout.showContent(true, mAdapter.getItemCount()));
+                        com.fongmi.android.tv.utils.Notify.show("仅显示：" + site + "（" + filtered.size() + "）");
+                    })
+                    .setNegativeButton("取消", null)
+                    .show();
+        } catch (Exception e) { com.fongmi.android.tv.utils.Notify.show("筛选失败：" + e.getMessage()); }
+    }
+
+
 }

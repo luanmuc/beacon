@@ -1230,10 +1230,16 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
             resetChannelFilter();
             return;
         }
-        java.util.List<com.fongmi.android.tv.bean.Channel> items = new java.util.ArrayList<>();
+        java.util.List<com.fongmi.android.tv.bean.Channel> keeps = new java.util.ArrayList<>();
+        java.util.List<com.fongmi.android.tv.bean.Channel> others = new java.util.ArrayList<>();
         for (com.fongmi.android.tv.bean.Channel channel : mGroup.getChannel()) {
-            if (channel.getName() != null && channel.getName().contains(kw)) items.add(channel);
+            if (channel.getName() != null && channel.getName().contains(kw)) {
+                if (com.fongmi.android.tv.utils.Keep.exist(channel.getName())) keeps.add(channel);
+                else others.add(channel);
+            }
         }
+        java.util.List<com.fongmi.android.tv.bean.Channel> items = new java.util.ArrayList<>(keeps);
+        items.addAll(others);
         mChannelAdapter.addAll(items);
         Notify.show("匹配 " + items.size() + " 个频道");
     }

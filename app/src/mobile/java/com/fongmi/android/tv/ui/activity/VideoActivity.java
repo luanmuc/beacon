@@ -800,8 +800,8 @@ public class VideoActivity extends PlaybackActivity implements Clock.Callback, C
     }
 
     private void showSpeedPresets() {
-        String[] items = {"0.5x", "0.75x", "1.0x", "1.25x", "1.5x", "2.0x", "3.0x"};
-        float[] values = {0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f, 3.0f};
+        String[] items = {"0.25x", "0.5x", "0.75x", "1.0x", "1.25x", "1.5x", "1.75x", "2.0x", "3.0x", "4.0x"};
+        float[] values = {0.25f, 0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f, 3.0f, 4.0f};
         new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle("播放速度")
                 .setItems(items, (dialog, which) -> {

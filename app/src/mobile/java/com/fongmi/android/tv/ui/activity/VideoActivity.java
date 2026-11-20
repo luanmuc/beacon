@@ -986,6 +986,12 @@ public class VideoActivity extends PlaybackActivity implements Clock.Callback, C
     private void showError(String text) {
         mBinding.widget.error.setVisibility(View.VISIBLE);
         try { mBinding.widget.error.setOnClickListener(v -> onChange()); } catch (Exception ignored) {}
+        try { mBinding.widget.error.setOnLongClickListener(v -> {
+            CharSequence text = ((android.widget.TextView) mBinding.widget.error).getText();
+            com.fongmi.android.tv.utils.Util.copy(text == null ? "" : text.toString());
+            com.fongmi.android.tv.utils.Notify.show("已复制错误信息");
+            return true;
+        }); } catch (Exception ignored) {}
 
         String hint = errorHint(text);
         mBinding.widget.error.setText(hint.isEmpty() ? text : text + "\n" + hint);

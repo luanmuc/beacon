@@ -126,7 +126,7 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
         mBinding.cache.setOnClickListener(this::onCache);
         mBinding.backup.setOnClickListener(this::onBackup);
         mBinding.player.setOnClickListener(this::onPlayer);
-        mBinding.player.setOnLongClickListener(v -> { showGestureHelp(); return true; });
+        mBinding.player.setOnLongClickListener(v -> { showPlayerMenu(); return true; });
         mBinding.restore.setOnClickListener(this::onRestore);
         mBinding.version.setOnClickListener(this::onVersion);
         mBinding.version.setOnLongClickListener(v -> { showBuildInfo(); return true; });
@@ -630,6 +630,28 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
         }
     }
 
+
+    private void showPlayerMenu() {
+        String[] items = {"手势与按键说明", "应用推荐播放配置"};
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("播放器设置")
+                .setItems(items, (d, which) -> {
+                    if (which == 0) showGestureHelp();
+                    else applyRecommended();
+                })
+                .show();
+    }
+
+    private void applyRecommended() {
+        try {
+            com.fongmi.android.tv.setting.PlayerSetting.putSpeed(1.0f);
+            com.fongmi.android.tv.setting.PlayerSetting.putTunnel(false);
+            com.fongmi.android.tv.setting.Setting.putIncognito(false);
+            com.fongmi.android.tv.utils.Notify.show("已应用推荐播放配置：常规速度、关闭隧道、关闭无痕");
+        } catch (Exception e) {
+            com.fongmi.android.tv.utils.Notify.show("应用失败：" + e.getMessage());
+        }
+    }
 
     private void showGestureHelp() {
         String text = "手机端：\n• 左右滑动：快进 / 快退\n• 上下滑动：调节亮度（左半屏）/ 音量（右半屏）\n• 双击：暂停 / 继续\n• 长按倍速键：选择 0.25x–4.0x\n• 长按信息键：复制当前播放地址\n• 长按剧名：切换站点\n\n电视端：\n• 左右键：快退 / 快进 10 秒\n• 上下键：呼出 / 收起控制栏\n• OK 键：暂停 / 继续，长按呼出菜单";

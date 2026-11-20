@@ -479,13 +479,14 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
 
 
     private void showProbeMenu() {
-        String[] items = {"刷新存活统计", "查看直播源列表", "打开 Actions 探测页", "恢复默认直播订阅"};
+        String[] items = {"刷新存活统计", "查看存活统计", "查看直播源列表", "打开 Actions 探测页", "恢复默认直播订阅"};
         new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle("直播源维护")
                 .setItems(items, (d, which) -> {
                     if (which == 0) { loadHealthSummary(true); com.fongmi.android.tv.utils.Notify.show("正在刷新存活统计…"); }
-                    else if (which == 1) showLiveList();
-                    else if (which == 2) openActions();
+                    else if (which == 1) showHealth();
+                    else if (which == 2) showLiveList();
+                    else if (which == 3) openActions();
                     else restoreDefaultLive();
                 })
                 .show();

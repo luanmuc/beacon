@@ -563,8 +563,13 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
 
 
     private void showBuildInfo() {
+        int sites = 0;
+        int lives = 0;
+        try { sites = com.fongmi.android.tv.api.config.VodConfig.get().getSites().size(); } catch (Exception ignored) {}
+        try { lives = com.fongmi.android.tv.api.config.LiveConfig.get().getLives() == null ? 0 : com.fongmi.android.tv.api.config.LiveConfig.get().getLives().size(); } catch (Exception ignored) {}
         String info = "版本：" + BuildConfig.VERSION_NAME + "\n构建号：" + BuildConfig.VERSION_CODE
                 + "\n渠道：" + BuildConfig.FLAVOR_mode + "-" + BuildConfig.FLAVOR_abi
+                + "\n影视站点：" + sites + " 个\n直播源：" + lives + " 个"
                 + "\n仓库：github.com/luanmuc/beacon";
         new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle("构建信息")

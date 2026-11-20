@@ -646,7 +646,7 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
         } catch (Exception ignored) {
         }
         final String cur = tmp;
-        String info = "分组：" + group + "\n线路：" + lines + " 条"
+        String info = "分组：" + group + "\n收藏：" + (com.fongmi.android.tv.bean.Keep.exist(item.getName()) ? "是" : "否") + "\n线路：" + lines + " 条"
                 + "\n当前线路：" + (item.getLine() == null || item.getLine().isEmpty() ? "1" : item.getLine())
                 + "\nEPG：" + (item.getEpg() == null || item.getEpg().isEmpty() ? "无" : item.getEpg())
                 + (cur.isEmpty() ? "" : "\n地址：" + cur);

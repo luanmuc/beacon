@@ -115,4 +115,12 @@ public class Setting {
         Prefers.put("guide_empty", guide);
     }
 
+    public static long getHealthTs() {
+        return Prefers.getLong("health_ts", 0L);
+    }
+
+    public static void putHealthTs(long ts) {
+        Prefers.put("health_ts", ts);
+    }
+
 }

@@ -118,6 +118,7 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
         mBinding.cache.setOnClickListener(this::onCache);
         mBinding.backup.setOnClickListener(this::onBackup);
         mBinding.player.setOnClickListener(this::onPlayer);
+        mBinding.player.setOnLongClickListener(v -> { showGestureHelp(); return true; });
         mBinding.restore.setOnClickListener(this::onRestore);
         mBinding.version.setOnClickListener(this::onVersion);
         mBinding.version.setOnLongClickListener(v -> { showBuildInfo(); return true; });
@@ -409,9 +410,15 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
 
 
     private void loadHealthSummary() {
+        loadHealthSummary(false);
+    }
+
+    private void loadHealthSummary(boolean force) {
         com.fongmi.android.tv.utils.Task.execute(() -> {
+            if (!force && System.currentTimeMillis() - com.fongmi.android.tv.setting.Setting.getHealthTs() < 30L * 60L * 1000L) return;
             try {
                 String text = com.github.catvod.net.OkHttp.string("https://raw.githubusercontent.com/luanmuc/beacon-seed/main/live-report.json");
+                com.fongmi.android.tv.setting.Setting.putHealthTs(System.currentTimeMillis());
                 org.json.JSONObject object = new org.json.JSONObject(text);
                 int channels = object.optInt("channels");
                 int lines = object.optInt("lines");
@@ -476,7 +483,7 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
         new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle("直播源维护")
                 .setItems(items, (d, which) -> {
-                    if (which == 0) { loadHealthSummary(); com.fongmi.android.tv.utils.Notify.show("正在刷新存活统计…"); }
+                    if (which == 0) { loadHealthSummary(true); com.fongmi.android.tv.utils.Notify.show("正在刷新存活统计…"); }
                     else if (which == 1) openActions();
                     else restoreDefaultLive();
                 })
@@ -587,6 +594,16 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
         } catch (Exception e) {
             com.fongmi.android.tv.utils.Notify.show("读取站点失败");
         }
+    }
+
+
+    private void showGestureHelp() {
+        String text = "手机端：\n• 左右滑动：快进 / 快退\n• 上下滑动：调节亮度（左半屏）/ 音量（右半屏）\n• 双击：暂停 / 继续\n• 长按倍速键：选择 0.25x–4.0x\n• 长按信息键：复制当前播放地址\n• 长按剧名：切换站点\n\n电视端：\n• 左右键：快退 / 快进 10 秒\n• 上下键：呼出 / 收起控制栏\n• OK 键：暂停 / 继续，长按呼出菜单";
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("手势与按键说明")
+                .setMessage(text)
+                .setPositiveButton("知道了", null)
+                .show();
     }
 
 

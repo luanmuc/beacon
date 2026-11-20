@@ -697,4 +697,25 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
     }
 
 
+    private void checkManifest() {
+        com.fongmi.android.tv.utils.Task.execute(() -> {
+            try {
+                String text = com.github.catvod.net.OkHttp.string("https://raw.githubusercontent.com/luanmuc/beacon-seed/stable/manifest.json");
+                org.json.JSONObject o = new org.json.JSONObject(text);
+                String msg = "源版本：" + o.optString("version", "未知")
+                        + "\n更新时间：" + o.optString("updated_at", "未知").replace("T", " ").replace("Z", "")
+                        + "\n影视站点：" + o.optInt("vod_sites") + " 个"
+                        + "\n直播频道：" + o.optInt("live_channels") + " 个 / 线路 " + o.optInt("live_lines") + " 条";
+                com.fongmi.android.tv.App.post(() -> new androidx.appcompat.app.AlertDialog.Builder(this)
+                        .setTitle("源清单")
+                        .setMessage(msg)
+                        .setPositiveButton("关闭", null)
+                        .show());
+            } catch (Exception e) {
+                com.fongmi.android.tv.App.post(() -> com.fongmi.android.tv.utils.Notify.show("检查源清单失败：" + e.getMessage()));
+            }
+        });
+    }
+
+
 }

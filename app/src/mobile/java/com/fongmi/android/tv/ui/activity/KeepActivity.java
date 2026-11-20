@@ -129,6 +129,7 @@ public class KeepActivity extends BaseActivity implements KeepAdapter.OnClickLis
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == android.R.id.home) onBackInvoked();
         else if (item.getItemId() == R.id.delete) onDelete();
+        else if (item.getItemId() == R.id.batch) { mAdapter.setDelete(!mAdapter.isDelete()); com.fongmi.android.tv.utils.Notify.show(mAdapter.isDelete() ? "批量管理：点击条目删除，返回键退出" : "已退出批量管理"); }
         else if (item.getItemId() == R.id.sync) onSync();
         return super.onOptionsItemSelected(item);
     }

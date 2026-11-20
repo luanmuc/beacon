@@ -655,6 +655,7 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
                 .setTitle(item.getName())
                 .setMessage(info)
                 .setPositiveButton("关闭", null)
+                .setNegativeButton("复制频道名", (d, w) -> { com.fongmi.android.tv.utils.Util.copy(item.getName()); com.fongmi.android.tv.utils.Notify.show("已复制频道名"); })
                 .setNeutralButton("复制地址", (d, w) -> {
                     if (cur.isEmpty()) com.fongmi.android.tv.utils.Notify.show("没有可复制的地址");
                     else { com.fongmi.android.tv.utils.Util.copy(cur); com.fongmi.android.tv.utils.Notify.show("已复制"); }

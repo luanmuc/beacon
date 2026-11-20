@@ -584,6 +584,7 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
                 .setTitle("构建信息")
                 .setMessage(info)
                 .setPositiveButton("打开项目主页", (d, w) -> openRepo())
+                .setNeutralButton("检查更新", (d, w) -> com.fongmi.android.tv.utils.UpdateChecker.check(requireActivity()))
                 .setNegativeButton("关闭", null)
                 .show();
     }

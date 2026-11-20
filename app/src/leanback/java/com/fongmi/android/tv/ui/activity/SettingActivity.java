@@ -568,4 +568,25 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
     }
 
 
+    private void showSiteList() {
+        try {
+            java.util.List<com.fongmi.android.tv.bean.Site> sites = com.fongmi.android.tv.api.config.VodConfig.get().getSites();
+            if (sites == null || sites.isEmpty()) {
+                com.fongmi.android.tv.utils.Notify.show("当前没有可用站点");
+                return;
+            }
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < sites.size(); i++) sb.append(i + 1).append(". ").append(sites.get(i).getName()).append("\n");
+            new androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("站点列表（" + sites.size() + "）")
+                    .setMessage(sb.toString().trim())
+                    .setPositiveButton("复制", (d, w) -> { com.fongmi.android.tv.utils.Util.copy(sb.toString().trim()); com.fongmi.android.tv.utils.Notify.show("已复制站点列表"); })
+                    .setNegativeButton("关闭", null)
+                    .show();
+        } catch (Exception e) {
+            com.fongmi.android.tv.utils.Notify.show("读取站点失败");
+        }
+    }
+
+
 }

@@ -83,6 +83,7 @@ public class HomeActivity extends BaseActivity implements NavigationBarView.OnIt
     @Override
     protected void initEvent() {
         mBinding.navigation.setOnItemSelectedListener(this);
+        mBinding.navigation.setOnLongClickListener(v -> { continueWatching(); return true; });
         mBinding.navigation.findViewById(R.id.live).setOnLongClickListener(this::addShortcut);
     }
 
@@ -329,6 +330,21 @@ public class HomeActivity extends BaseActivity implements NavigationBarView.OnIt
             if (sites == 0 && lives == 0) return;
             com.fongmi.android.tv.utils.Notify.show("影视 " + sites + " 个站点 · 直播 " + lives + " 个源");
         } catch (Exception ignored) {
+        }
+    }
+
+
+    private void continueWatching() {
+        try {
+            java.util.List<com.fongmi.android.tv.bean.History> list = com.fongmi.android.tv.bean.History.get(com.fongmi.android.tv.api.config.VodConfig.getCid());
+            if (list == null || list.isEmpty()) {
+                com.fongmi.android.tv.utils.Notify.show("还没有观看记录");
+                return;
+            }
+            com.fongmi.android.tv.bean.History item = list.get(0);
+            com.fongmi.android.tv.ui.activity.VideoActivity.start(this, item.getSiteKey(), item.getVodId(), item.getVodName(), item.getVodPic());
+        } catch (Exception e) {
+            com.fongmi.android.tv.utils.Notify.show("没有可继续观看的内容");
         }
     }
 

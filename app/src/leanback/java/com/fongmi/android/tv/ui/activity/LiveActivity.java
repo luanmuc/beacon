@@ -1316,7 +1316,8 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
             int total = mGroup.getChannel() == null ? 0 : mGroup.getChannel().size();
             int keeps = 0;
             if (mGroup.getChannel() != null) for (com.fongmi.android.tv.bean.Channel channel : mGroup.getChannel()) if (com.fongmi.android.tv.bean.Keep.exist(channel.getName())) keeps++;
-            return mGroup.getName() + "（" + total + " 个频道 · 收藏 " + keeps + "）";
+            int all = com.fongmi.android.tv.bean.Keep.getLive().size();
+            return mGroup.getName() + "（" + total + " 个频道 · 本组收藏 " + keeps + " · 全站收藏 " + all + "）";
         } catch (Exception e) {
             return mGroup.getName();
         }

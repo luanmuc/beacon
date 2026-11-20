@@ -9,6 +9,11 @@
         app:showAsAction="always" />
 
     <item
+        android:id="@+id/live_keep"
+        android:title="直播收藏"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/clear"
         android:title="清空收藏"
         app:showAsAction="never" />

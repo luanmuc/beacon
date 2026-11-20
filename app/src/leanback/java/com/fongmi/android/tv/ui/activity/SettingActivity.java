@@ -571,6 +571,7 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
         String info = "版本：" + BuildConfig.VERSION_NAME + "\n构建号：" + BuildConfig.VERSION_CODE
                 + "\n渠道：" + BuildConfig.FLAVOR_mode + "-" + BuildConfig.FLAVOR_abi
                 + "\n影视站点：" + sites + " 个\n直播源：" + lives + " 个"
+                + "\n收藏：" + com.fongmi.android.tv.bean.Keep.getVod().size() + " 部影视 / " + com.fongmi.android.tv.bean.Keep.getLive().size() + " 个频道"
                 + "\n仓库：github.com/luanmuc/beacon"
                 + "\n\n基于 FongMi/TV 四月版二次开发（GPL-3.0）";
         new androidx.appcompat.app.AlertDialog.Builder(this)

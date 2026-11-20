@@ -668,13 +668,17 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
         try {
             java.util.List<com.fongmi.android.tv.bean.Live> lives = com.fongmi.android.tv.api.config.LiveConfig.get().getLives();
             if (lives == null || lives.isEmpty()) { com.fongmi.android.tv.utils.Notify.show("当前没有直播源"); return; }
+            String[] names = new String[lives.size()];
             StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < lives.size(); i++) sb.append(i + 1).append(". ").append(lives.get(i).getName())
-                    .append("（").append(lives.get(i).getGroups() == null ? 0 : lives.get(i).getGroups().size()).append(" 个分组）\n");
+            for (int i = 0; i < lives.size(); i++) {
+                boolean cur = lives.get(i).isActivated();
+                names[i] = (cur ? "✓ " : "") + lives.get(i).getName() + "（" + (lives.get(i).getGroups() == null ? 0 : lives.get(i).getGroups().size()) + " 分组）";
+                sb.append(i + 1).append(". ").append(names[i]).append("\n");
+            }
             new androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                    .setTitle("直播源列表（" + lives.size() + "）")
-                    .setMessage(sb.toString().trim())
-                    .setPositiveButton("复制", (d, w) -> { com.fongmi.android.tv.utils.Util.copy(sb.toString().trim()); com.fongmi.android.tv.utils.Notify.show("已复制直播源列表"); })
+                    .setTitle("直播源列表（" + lives.size() + "，点击切换）")
+                    .setItems(names, (d, which) -> switchLiveSource(lives.get(which)))
+                    .setPositiveButton("复制列表", (d, w) -> { com.fongmi.android.tv.utils.Util.copy(sb.toString().trim()); com.fongmi.android.tv.utils.Notify.show("已复制直播源列表"); })
                     .setNegativeButton("关闭", null)
                     .show();
         } catch (Exception e) { com.fongmi.android.tv.utils.Notify.show("读取直播源失败"); }
@@ -705,6 +709,16 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
                 .setPositiveButton("复制", (d, w) -> { com.fongmi.android.tv.utils.Util.copy(text); com.fongmi.android.tv.utils.Notify.show("已复制"); })
                 .setNegativeButton("关闭", null)
                 .show();
+    }
+
+
+    private void switchLiveSource(com.fongmi.android.tv.bean.Live live) {
+        try {
+            com.fongmi.android.tv.api.config.LiveConfig.get().setHome(live);
+            com.fongmi.android.tv.utils.Notify.show("已切换直播源：" + live.getName() + "，返回直播页生效");
+        } catch (Exception e) {
+            com.fongmi.android.tv.utils.Notify.show("切换失败：" + e.getMessage());
+        }
     }
 
 

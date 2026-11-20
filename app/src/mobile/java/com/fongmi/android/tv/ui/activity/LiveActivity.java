@@ -1386,7 +1386,9 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
                 String title = sp.length > 1 && !sp[1].isEmpty() ? sp[1] : ("线路 " + (i + 1));
                 String host = "";
                 try { host = new java.net.URI(urls.get(i).split("\\$")[0]).getHost(); } catch (Exception ignored) {}
-                if (host != null && !host.isEmpty()) title = title + " · " + host;
+                String raw = urls.get(i).split("\\$")[0].toLowerCase();
+                String proto = raw.startsWith("rtsp") ? "RTSP" : raw.contains(".m3u8") ? "HLS" : raw.contains(".flv") ? "FLV" : "HTTP";
+                if (host != null && !host.isEmpty()) title = title + " · " + proto + " · " + host;
                 names[i] = (i == mChannel.getIndex() ? "✓ " : "") + title;
             }
             new androidx.appcompat.app.AlertDialog.Builder(this)

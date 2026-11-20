@@ -111,6 +111,7 @@ public class HistoryActivity extends BaseActivity implements HistoryAdapter.OnCl
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == android.R.id.home) onBackInvoked();
         else if (item.getItemId() == R.id.delete) onDelete();
+        else if (item.getItemId() == R.id.filter_site_h) showSiteFilter();
         else if (item.getItemId() == R.id.sync) onSync();
         return super.onOptionsItemSelected(item);
     }
@@ -120,4 +121,29 @@ public class HistoryActivity extends BaseActivity implements HistoryAdapter.OnCl
         if (mAdapter.isDelete()) mAdapter.setDelete(false);
         else super.onBackInvoked();
     }
+    private void showSiteFilter() {
+        try {
+            java.util.List<com.fongmi.android.tv.bean.History> all = com.fongmi.android.tv.bean.History.get();
+            java.util.LinkedHashSet<String> sites = new java.util.LinkedHashSet<>();
+            for (com.fongmi.android.tv.bean.History item : all) if (item.getSiteName() != null && !item.getSiteName().isEmpty()) sites.add(item.getSiteName());
+            if (sites.isEmpty()) { com.fongmi.android.tv.utils.Notify.show("还没有观看记录"); return; }
+            java.util.List<String> names = new java.util.ArrayList<>();
+            names.add("全部站点");
+            names.addAll(sites);
+            new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                    .setTitle("按站点筛选")
+                    .setItems(names.toArray(new String[0]), (d, which) -> {
+                        if (which == 0) { getHistory(); com.fongmi.android.tv.utils.Notify.show("已显示全部记录"); return; }
+                        String site = names.get(which);
+                        java.util.List<com.fongmi.android.tv.bean.History> filtered = new java.util.ArrayList<>();
+                        for (com.fongmi.android.tv.bean.History item : all) if (site.equals(item.getSiteName())) filtered.add(item);
+                        mAdapter.setItems(filtered, () -> mBinding.progressLayout.showContent(true, mAdapter.getItemCount()));
+                        com.fongmi.android.tv.utils.Notify.show("仅显示：" + site + "（" + filtered.size() + "）");
+                    })
+                    .setNegativeButton("取消", null)
+                    .show();
+        } catch (Exception e) { com.fongmi.android.tv.utils.Notify.show("筛选失败：" + e.getMessage()); }
+    }
+
+
 }

@@ -855,9 +855,8 @@ public class VideoActivity extends PlaybackActivity implements CustomKeyDownVod.
         mBinding.widget.error.setVisibility(View.VISIBLE);
         try { mBinding.widget.error.setOnClickListener(v -> onChange()); } catch (Exception ignored) {}
         try { mBinding.widget.error.setOnLongClickListener(v -> {
-            CharSequence text = mBinding.widget.error instanceof android.widget.TextView ? ((android.widget.TextView) mBinding.widget.error).getText() : null;
-            if (text == null) text = mBinding.widget.text == null ? "" : mBinding.widget.text.getText();
-            com.fongmi.android.tv.utils.Util.copy(text == null ? "" : text.toString());
+            String msg = mBinding.widget.text.getText() == null ? "" : mBinding.widget.text.getText().toString();
+            com.fongmi.android.tv.utils.Util.copy(msg);
             com.fongmi.android.tv.utils.Notify.show("已复制错误信息");
             return true;
         }); } catch (Exception ignored) {}

@@ -10,6 +10,12 @@
         app:showAsAction="always" />
 
     <item
+        android:id="@+id/action_clear_history"
+        android:icon="@drawable/ic_action_delete"
+        android:title="清空搜索历史"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/action_site"
         android:icon="@drawable/ic_action_site"
         android:title="@string/menu_site"

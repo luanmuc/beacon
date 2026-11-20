@@ -33,6 +33,7 @@ import com.fongmi.android.tv.ui.adapter.WordAdapter;
 import com.fongmi.android.tv.ui.base.BaseFragment;
 import com.fongmi.android.tv.ui.custom.CustomTextListener;
 import com.fongmi.android.tv.ui.dialog.SiteDialog;
+import com.fongmi.android.tv.utils.Notify;
 import com.fongmi.android.tv.utils.Util;
 import com.github.catvod.net.OkHttp;
 import com.google.android.flexbox.FlexDirection;
@@ -220,6 +221,7 @@ public class SearchFragment extends BaseFragment implements MenuProvider, WordAd
         if (menuItem.getItemId() == android.R.id.home) requireActivity().getOnBackPressedDispatcher().onBackPressed();
         if (menuItem.getItemId() == R.id.action_reset) onReset();
         if (menuItem.getItemId() == R.id.action_site) onSite();
+        if (menuItem.getItemId() == R.id.action_clear_history) { mRecordAdapter.clear(); Notify.show("已清空搜索历史"); }
         return true;
     }
 

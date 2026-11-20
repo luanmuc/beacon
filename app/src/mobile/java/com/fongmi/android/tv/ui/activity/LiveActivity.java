@@ -186,6 +186,7 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
         mBinding.control.cast.setOnClickListener(view -> onCast());
         mBinding.control.info.setOnClickListener(view -> onInfo());
         mBinding.control.play.setOnClickListener(view -> checkPlay());
+        mBinding.control.play.setOnLongClickListener(view -> { com.fongmi.android.tv.ui.dialog.TimerDialog.create().show(this); return true; });
         mBinding.control.next.setOnClickListener(view -> nextChannel());
         mBinding.control.prev.setOnClickListener(view -> prevChannel());
         mBinding.control.right.lock.setOnClickListener(view -> onLock());
@@ -1285,6 +1286,9 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
             for (int i = 0; i < urls.size(); i++) {
                 String[] sp = urls.get(i).split("\\$");
                 String title = sp.length > 1 && !sp[1].isEmpty() ? sp[1] : ("线路 " + (i + 1));
+                String host = "";
+                try { host = new java.net.URI(urls.get(i).split("\\$")[0]).getHost(); } catch (Exception ignored) {}
+                if (host != null && !host.isEmpty()) title = title + " · " + host;
                 names[i] = (i == mChannel.getIndex() ? "✓ " : "") + title;
             }
             new androidx.appcompat.app.AlertDialog.Builder(this)

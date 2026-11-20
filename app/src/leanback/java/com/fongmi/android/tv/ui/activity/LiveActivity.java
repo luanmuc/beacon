@@ -1170,6 +1170,9 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
             for (int i = 0; i < urls.size(); i++) {
                 String[] sp = urls.get(i).split("\\$");
                 String title = sp.length > 1 && !sp[1].isEmpty() ? sp[1] : ("线路 " + (i + 1));
+                String host = "";
+                try { host = new java.net.URI(urls.get(i).split("\\$")[0]).getHost(); } catch (Exception ignored) {}
+                if (host != null && !host.isEmpty()) title = title + " · " + host;
                 names[i] = (i == mChannel.getIndex() ? "✓ " : "") + title;
             }
             new androidx.appcompat.app.AlertDialog.Builder(this)

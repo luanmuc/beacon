@@ -18,6 +18,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: build-apk-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   media:
     name: build media3 aars
@@ -25,6 +29,7 @@ jobs:
     timeout-minutes: 90
     steps:
       - name: Checkout media3 fork
+        id: media_checkout
         uses: actions/checkout@v4
         with:
           repository: luanmuc/media
@@ -42,6 +47,17 @@ jobs:
           echo "ANDROID_HOME=${ANDROID_HOME:-/usr/local/lib/android/sdk}" >> "$GITHUB_ENV"
           echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}" >> "$GITHUB_ENV"
 
+      - name: Resolve media commit
+        id: media_sha
+        run: echo "sha=$(git -C media rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache media aars by commit
+        id: media_cache
+        uses: actions/cache@v4
+        with:
+          path: aars
+          key: media-aars-${{ steps.media_sha.outputs.sha }}
+
       - name: Cache Gradle (media3)
         uses: actions/cache@v4
         with:
@@ -49,8 +65,10 @@ jobs:
             ~/.gradle/caches
             ~/.gradle/wrapper
           key: media3-${{ runner.os }}-${{ hashFiles('media/gradle/libs.versions.toml', 'media/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: media3-${{ runner.os }}-
 
       - name: Build aars (parallel + build cache)
+        if: steps.media_cache.outputs.cache-hit != 'true'
         working-directory: media
         run: |
           chmod +x gradlew
@@ -78,16 +96,8 @@ jobs:
             :lib-transformer:assembleRelease \
             :lib-mpvplayer:assembleRelease
 
-      - name: Inspect outputs
-        run: |
-          echo "--- any aar ---"
-          find media -name "*.aar" | head -40
-          echo "--- build dirs ---"
-          find media -maxdepth 3 -type d -name build | head
-          echo "--- size ---"
-          du -sh media 2>/dev/null | tail -1
-
       - name: Collect aars
+        if: steps.media_cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p aars
           find media -name "*.aar" -exec cp {} aars/ \;
@@ -98,12 +108,57 @@ jobs:
           name: media-aars
           path: aars/*.aar
           retention-days: 1
+          if-no-files-found: error
+
+  prepare:
+    name: prepare signing key
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Restore persistent signing key
+        id: keystore
+        uses: actions/cache@v4
+        with:
+          path: keystore.jks
+          key: beacon-keystore-v1
+
+      - name: Generate signing key on first run
+        if: steps.keystore.outputs.cache-hit != 'true'
+        run: |
+          keytool -genkeypair -v \
+            -keystore "$GITHUB_WORKSPACE/keystore.jks" \
+            -alias app -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass selfuse -keypass selfuse \
+            -dname "CN=Self Use, OU=Self, O=Self, L=NA, ST=NA, C=CN"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: beacon-keystore
+          path: keystore.jks
+          retention-days: 1
+          if-no-files-found: error
 
   app:
-    name: build apks
-    needs: media
+    name: build ${{ matrix.slug }}
+    needs: [prepare, media]
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - mode: Leanback
+            abi: Arm64_v8a
+            slug: leanback-arm64_v8a
+          - mode: Leanback
+            abi: Armeabi_v7a
+            slug: leanback-armeabi_v7a
+          - mode: Mobile
+            abi: Arm64_v8a
+            slug: mobile-arm64_v8a
+          - mode: Mobile
+            abi: Armeabi_v7a
+            slug: mobile-armeabi_v7a
     steps:
       - uses: actions/checkout@v4
 
@@ -117,19 +172,22 @@ jobs:
           echo "ANDROID_HOME=${ANDROID_HOME:-/usr/local/lib/android/sdk}" >> "$GITHUB_ENV"
           echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}" >> "$GITHUB_ENV"
 
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
+          gradle-home-cache-cleanup: true
+
       - name: Fetch media3 aars
         uses: actions/download-artifact@v4
         with:
           name: media-aars
           path: app/libs
 
-      - name: Generate self-use keystore
-        run: |
-          keytool -genkeypair -v \
-            -keystore "$GITHUB_WORKSPACE/keystore.jks" \
-            -alias app -keyalg RSA -keysize 2048 -validity 10000 \
-            -storepass selfuse -keypass selfuse \
-            -dname "CN=Self Use, OU=Self, O=Self, L=NA, ST=NA, C=CN"
+      - name: Fetch signing key
+        uses: actions/download-artifact@v4
+        with:
+          name: beacon-keystore
+          path: .
 
       - name: Write local.properties
         run: |
@@ -141,26 +199,9 @@ jobs:
           keyPassword=selfuse
           EOF
 
-      - name: Cache Gradle (app)
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: app-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml', 'gradle/wrapper/gradle-wrapper.properties') }}
-
       - uses: actions/setup-python@v5
         with:
           python-version: "3.10"
-
-      - name: Cache gradle (app)
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: beacon-app-${{ runner.os }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'app/build.gradle') }}
-          restore-keys: beacon-app-${{ runner.os }}-
 
       - name: Bump version
         run: |
@@ -169,25 +210,21 @@ jobs:
           sed -i -E "s/versionCode [0-9]+/versionCode $((VCODE + 9000))/" app/build.gradle
           sed -i -E "s/versionName \"[0-9.]+\"/versionName \"1.0.${VCODE}\"/" app/build.gradle
           grep -E "versionCode|versionName" app/build.gradle
-      - name: Build both flavors
+
+      - name: Build ${{ matrix.slug }}
         run: |
           chmod +x gradlew
-          ./gradlew --no-daemon --build-cache --parallel --max-workers=4 \
-            -Dorg.gradle.jvmargs="-Xmx5g -XX:MaxMetaspaceSize=1g" \
-            assembleLeanbackArm64_v8aRelease assembleLeanbackArmeabi_v7aRelease assembleMobileArm64_v8aRelease assembleMobileArmeabi_v7aRelease
+          ./gradlew --no-daemon --build-cache --parallel --max-workers=3 \
+            -Dorg.gradle.jvmargs="-Xmx3g -XX:MaxMetaspaceSize=1g" \
+            assemble${{ matrix.mode }}${{ matrix.abi }}Release
 
-      - name: Collect APKs
+      - name: Collect APK
         run: |
           mkdir -p out
           find app/build/outputs/apk -name "*.apk" -exec cp {} out/ \;
           ls -lh out
 
-      - name: Generate CHANGELOG
-        run: |
-          git log -12 --pretty=format:"- %s (%h)" > CHANGELOG.tmp
-          { echo "# 变更记录"; echo; cat CHANGELOG.tmp; } > CHANGELOG.md
-          rm -f CHANGELOG.tmp
-      - name: Rename APKs
+      - name: Rename APK
         run: |
           set -e
           for f in out/*.apk; do
@@ -196,17 +233,39 @@ jobs:
           done
           ls -lh out
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apk-${{ matrix.slug }}
+          path: out/*.apk
+          retention-days: 1
+          if-no-files-found: error
+
+  release:
+    name: publish release
+    needs: app
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 12
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: apk-*
+          merge-multiple: true
+          path: out
+
+      - name: Generate CHANGELOG
+        run: |
+          git log -12 --pretty=format:"- %s (%h)" > CHANGELOG.tmp
+          { echo "# 变更记录"; echo; cat CHANGELOG.tmp; } > CHANGELOG.md
+          rm -f CHANGELOG.tmp
+
       - name: Create release
-        if: success()
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.${{ github.run_number }}
           name: v1.0.${{ github.run_number }}
           body_path: CHANGELOG.md
           files: out/*.apk
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: apk-debug
-          path: out/*.apk
-          retention-days: 1

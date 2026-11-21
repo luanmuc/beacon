@@ -1,6 +1,12 @@
 package com.fongmi.android.tv.server.process;
 
+import android.content.Context;
+import android.media.AudioManager;
 import android.text.TextUtils;
+
+import androidx.media3.common.MediaItem;
+import androidx.media3.common.MediaMetadata;
+import androidx.media3.common.Player;
 
 import com.fongmi.android.tv.App;
 import com.fongmi.android.tv.Constant;
@@ -28,6 +34,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import org.json.JSONObject;
+
 import fi.iki.elonen.NanoHTTPD.IHTTPSession;
 import fi.iki.elonen.NanoHTTPD.Response;
 import okhttp3.FormBody;
@@ -47,6 +55,7 @@ public class Action implements Process {
         if (Setting.getPairRequired() && !Setting.getPairToken().equals(params.get("token"))) {
             return Nano.error("PAIR_REQUIRED");
         }
+        if ("state".equals(param)) return Nano.ok(state());
         if (!TextUtils.isEmpty(param)) doJob(param, params);
         return Nano.ok();
     }
@@ -120,12 +129,64 @@ public class Action implements Process {
         switch (type) {
             case "play" -> App.post(() -> service.player().play());
             case "pause" -> App.post(() -> service.player().pause());
+            case "play_pause" -> App.post(() -> {
+                if (service.player().isPlaying()) service.player().pause();
+                else service.player().play();
+            });
             case "stop" -> App.post(service::dispatchStop);
             case "prev" -> App.post(service::dispatchPrev);
             case "next" -> App.post(service::dispatchNext);
             case "repeat" -> App.post(service::dispatchRepeat);
             case "replay" -> App.post(service::dispatchReplay);
+            case "forward" -> App.post(() -> service.player().seekTo(Math.max(0, service.player().getPosition() + 10000)));
+            case "backward" -> App.post(() -> service.player().seekTo(Math.max(0, service.player().getPosition() - 10000)));
+            case "seek" -> {
+                long delta = getLong(params, "delta", 0);
+                if (delta != 0) App.post(() -> service.player().seekTo(Math.max(0, service.player().getPosition() + delta)));
+            }
+            case "volume" -> adjustVolume(getLong(params, "delta", 0));
         }
+    }
+
+    private void adjustVolume(long delta) {
+        AudioManager manager = (AudioManager) App.get().getSystemService(Context.AUDIO_SERVICE);
+        if (manager == null || delta == 0) return;
+        int direction = delta > 0 ? AudioManager.ADJUST_RAISE : AudioManager.ADJUST_LOWER;
+        App.post(() -> manager.adjustStreamVolume(AudioManager.STREAM_MUSIC, direction, AudioManager.FLAG_SHOW_UI));
+    }
+
+    private long getLong(Map<String, String> params, String key, long def) {
+        try {
+            return Long.parseLong(params.get(key));
+        } catch (Exception e) {
+            return def;
+        }
+    }
+
+    private String state() {
+        JSONObject json = new JSONObject();
+        PlaybackService service = Server.get().getService();
+        try {
+            if (service == null) {
+                json.put("playing", false);
+                return json.toString();
+            }
+            Player player = service.player().getPlayer();
+            MediaItem item = player.getCurrentMediaItem();
+            MediaMetadata metadata = item == null ? null : item.mediaMetadata;
+            json.put("playing", player.isPlaying());
+            json.put("position", Math.max(0, player.getCurrentPosition()));
+            json.put("duration", Math.max(0, player.getDuration()));
+            json.put("title", metadata == null ? "" : String.valueOf(metadata.title));
+            json.put("artist", metadata == null ? "" : String.valueOf(metadata.artist));
+            AudioManager manager = (AudioManager) App.get().getSystemService(Context.AUDIO_SERVICE);
+            if (manager != null) {
+                json.put("volume", manager.getStreamVolume(AudioManager.STREAM_MUSIC));
+                json.put("volumeMax", manager.getStreamMaxVolume(AudioManager.STREAM_MUSIC));
+            }
+        } catch (Exception ignored) {
+        }
+        return json.toString();
     }
 
     private void onDanmaku(Map<String, String> params) {

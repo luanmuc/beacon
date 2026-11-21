@@ -189,16 +189,12 @@ public class CastDialog extends BaseBottomSheetDialog implements DeviceAdapter.O
     @Override
     public boolean onLongClick(Device item) {
         if (!item.isApp()) return false;
-        String[] items = {"配对电视（输入电视上的 6 位码）", "遥控：播放", "遥控：暂停", "遥控：上一集", "遥控：下一集", "遥控：停止"};
+        String[] items = {"配对电视（输入电视上的 6 位码）", "遥控面板"};
         new androidx.appcompat.app.AlertDialog.Builder(requireContext())
                 .setTitle(item.getName())
                 .setItems(items, (d, which) -> {
                     if (which == 0) pairDialog(item);
-                    else if (which == 1) control(item, "play");
-                    else if (which == 2) control(item, "pause");
-                    else if (which == 3) control(item, "prev");
-                    else if (which == 4) control(item, "next");
-                    else control(item, "stop");
+                    else showRemote(item);
                 })
                 .show();
         return true;
@@ -252,13 +248,120 @@ public class CastDialog extends BaseBottomSheetDialog implements DeviceAdapter.O
         });
     }
 
-    private void control(Device item, String type) {
+    private void showRemote(Device item) {
+        if (TextUtils.isEmpty(token(item))) {
+            Notify.show("请先长按电视，选择“配对电视”");
+            return;
+        }
+        android.widget.LinearLayout root = new android.widget.LinearLayout(requireContext());
+        root.setOrientation(android.widget.LinearLayout.VERTICAL);
+        int pad = (int) (18 * requireContext().getResources().getDisplayMetrics().density);
+        root.setPadding(pad, pad, pad, 0);
+        android.widget.TextView state = new android.widget.TextView(requireContext());
+        state.setText("正在读取电视状态…");
+        state.setTextSize(14);
+        root.addView(state);
+        android.widget.LinearLayout row1 = row();
+        row1.addView(button("快退 10s", v -> control(item, "seek", -10000, () -> refreshState(item, state)));
+        row1.addView(button("播放/暂停", v -> control(item, "play_pause", 0, () -> refreshState(item, state)));
+        row1.addView(button("快进 10s", v -> control(item, "seek", 10000, () -> refreshState(item, state)));
+        root.addView(row1);
+        android.widget.LinearLayout row2 = row();
+        row2.addView(button("上一集", v -> control(item, "prev", 0, () -> refreshState(item, state)));
+        row2.addView(button("停止", v -> control(item, "stop", 0, () -> refreshState(item, state)));
+        row2.addView(button("下一集", v -> control(item, "next", 0, () -> refreshState(item, state)));
+        root.addView(row2);
+        android.widget.LinearLayout row3 = row();
+        row3.addView(button("音量 -", v -> control(item, "volume", -1, () -> refreshState(item, state)));
+        row3.addView(button("刷新状态", v -> refreshState(item, state)));
+        row3.addView(button("音量 +", v -> control(item, "volume", 1, () -> refreshState(item, state)));
+        root.addView(row3);
+        androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle(item.getName() + " 遥控")
+                .setView(root)
+                .setNegativeButton("关闭", null)
+                .create();
+        dialog.show();
+        refreshState(item, state);
+    }
+
+    private android.widget.LinearLayout row() {
+        android.widget.LinearLayout row = new android.widget.LinearLayout(requireContext());
+        row.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+        row.setLayoutParams(new android.widget.LinearLayout.LayoutParams(android.widget.LinearLayout.LayoutParams.MATCH_PARENT, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT));
+        return row;
+    }
+
+    private android.widget.Button button(String text, android.view.View.OnClickListener listener) {
+        android.widget.Button button = new android.widget.Button(requireContext());
+        button.setText(text);
+        button.setTextSize(13);
+        button.setAllCaps(false);
+        button.setOnClickListener(listener);
+        android.widget.LinearLayout.LayoutParams params = new android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1);
+        button.setLayoutParams(params);
+        return button;
+    }
+
+    private void refreshState(Device item, android.widget.TextView view) {
+        String token = token(item);
+        if (TextUtils.isEmpty(token)) {
+            view.setText("未配对：请长按电视，选择“配对电视”");
+            return;
+        }
+        String url = item.getIp().concat("/action?do=state&token=" + token);
+        client.newCall(new okhttp3.Request.Builder().url(url).build()).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                App.post(() -> view.setText("读取失败：" + e.getMessage()));
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                try (Response res = response) {
+                    String text = res.body().string();
+                    if (!res.isSuccessful()) {
+                        App.post(() -> view.setText(text.contains("PAIR_REQUIRED") ? "电视要求重新配对" : "电视拒绝了请求"));
+                        return;
+                    }
+                    try {
+                        org.json.JSONObject json = new org.json.JSONObject(text);
+                        String title = json.optString("title", "");
+                        boolean playing = json.optBoolean("playing", false);
+                        long position = json.optLong("position", 0);
+                        long duration = json.optLong("duration", 0);
+                        int volume = json.optInt("volume", 0);
+                        int volumeMax = json.optInt("volumeMax", 0);
+                        String line = title.isEmpty() ? "电视当前没有播放内容" : title;
+                        String info = (playing ? "播放中" : "已暂停") + "  " + time(position) + " / " + time(duration);
+                        String vol = volumeMax > 0 ? "\n音量 " + volume + "/" + volumeMax : "";
+                        App.post(() -> view.setText(line + "\n" + info + vol));
+                    } catch (Exception e) {
+                        App.post(() -> view.setText("状态解析失败"));
+                    }
+                }
+            }
+        });
+    }
+
+    private String time(long ms) {
+        if (ms <= 0) return "--:--";
+        long total = ms / 1000;
+        long h = total / 3600;
+        long m = (total % 3600) / 60;
+        long s = total % 60;
+        return h > 0 ? String.format(java.util.Locale.US, "%d:%02d:%02d", h, m, s) : String.format(java.util.Locale.US, "%02d:%02d", m, s);
+    }
+
+    private void control(Device item, String type, long delta, Runnable after) {
         String token = token(item);
         if (TextUtils.isEmpty(token)) {
             Notify.show("请先长按电视，选择“配对电视”");
             return;
         }
-        String url = item.getIp().concat("/action?do=control&type=" + type + "&token=" + token);
+        String url = item.getIp().concat("/action?do=control&type=" + type);
+        if (delta != 0) url += "&delta=" + delta;
+        url += "&token=" + token;
         client.newCall(new okhttp3.Request.Builder().url(url).build()).enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
@@ -269,6 +372,7 @@ public class CastDialog extends BaseBottomSheetDialog implements DeviceAdapter.O
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 try (Response res = response) {
                     if (!res.isSuccessful()) App.post(() -> Notify.show("电视拒绝了控制，请重新配对"));
+                    else if (after != null) App.post(after);
                 }
             }
         });

@@ -151,25 +151,25 @@ jobs:
             abi: Arm64_v8a
             slug: leanback-arm64_v8a
             label: 电视版
-            file: TV
+            file: dianshi-hezi
             cpu: arm64-v8a
           - mode: Leanback
             abi: Armeabi_v7a
             slug: leanback-armeabi_v7a
             label: 电视版
-            file: TV
+            file: dianshi-hezi
             cpu: armv7
           - mode: Mobile
             abi: Arm64_v8a
             slug: mobile-arm64_v8a
             label: 手机版
-            file: Mobile
+            file: shouji-pingban
             cpu: arm64-v8a
           - mode: Mobile
             abi: Armeabi_v7a
             slug: mobile-armeabi_v7a
             label: 手机版
-            file: Mobile
+            file: shouji-pingban
             cpu: armv7
     steps:
       - uses: actions/checkout@v4
@@ -271,7 +271,7 @@ jobs:
       - name: Generate CHANGELOG
         run: |
           git log -12 --pretty=format:"- %s (%h)" > CHANGELOG.tmp
-          { echo "# 变更记录"; echo; echo "## 安装包"; echo "- 手机版：文件名带 Mobile，手机/平板安装；arm64-v8a 适合大多数新设备，armv7 适合老设备"; echo "- 电视版：文件名带 TV，电视/盒子安装；arm64-v8a 适合大多数新设备，armv7 适合老设备"; echo "- GitHub 资产名只能用英文，中文区分写在标题和本说明里"; echo; cat CHANGELOG.tmp; } > CHANGELOG.md
+          { echo "# 变更记录"; echo; echo "## 安装包"; echo "- 电视/盒子：文件名带 dianshi-hezi，电视和盒子安装；arm64-v8a 适合大多数新设备，armv7 适合老设备"; echo "- 手机/平板：文件名带 shouji-pingban，手机和平板安装；arm64-v8a 适合大多数新设备，armv7 适合老设备"; echo "- 电视/盒子共用 leanback 界面，手机/平板共用 mobile 界面；四个包是 2 种界面 × 2 种 CPU，不是四个设备各一个包"; echo "- 资产名用拼音是因为 GitHub 对中文文件名不友好，中文说明放在标题和正文"; echo; cat CHANGELOG.tmp; } > CHANGELOG.md
           rm -f CHANGELOG.tmp
 
       - name: Create release

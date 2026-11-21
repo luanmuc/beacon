@@ -39,7 +39,7 @@ public class VodBrowse {
     private static final int SEARCH_LIMIT = 50;
     private static final int SEARCH_TIMEOUT = 5;
     private static final int VOD_LIMIT = 48;
-    private static final int EP_LIMIT = 600;
+    private static final int EP_LIMIT = 1200;
     private static final int EP_COUNT_LIMIT = 300;
     private static final Map<String, Vod> vodCache = new ConcurrentHashMap<>();
     private static final Map<String, String> epNavMap = new ConcurrentHashMap<>();

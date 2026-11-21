@@ -110,7 +110,7 @@ public class ExoUtil {
         if (PlayerSetting.isPreferAAC()) builder.setPreferredAudioMimeType(MimeTypes.AUDIO_AAC);
         builder.setPreferredTextLanguage(Locale.getDefault().getISO3Language());
         builder.setTunnelingEnabled(PlayerSetting.isTunnel());
-        builder.setForceHighestSupportedBitrate(true);
+        builder.setForceHighestSupportedBitrate(!com.fongmi.android.tv.utils.Util.isLowRamDevice());
         trackSelector.setParameters(builder.build());
         return trackSelector;
     }

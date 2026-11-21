@@ -66,8 +66,8 @@ public class TvAdbManager extends AbsAdbConnectionManager {
         return instance;
     }
 
-    private final PrivateKey privateKey;
-    private final Certificate certificate;
+    private PrivateKey privateKey;
+    private Certificate certificate;
 
     private TvAdbManager(@NonNull Context context) throws Exception {
         setApi(Build.VERSION.SDK_INT);

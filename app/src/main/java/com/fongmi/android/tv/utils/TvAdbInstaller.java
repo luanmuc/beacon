@@ -53,11 +53,16 @@ public class TvAdbInstaller {
                 }
                 if (!connected) connected = manager.connect(host, 5555);
                 if (!connected) throw new IOException("连接失败，请确认电视已开启 ADB 调试并允许本机调试");
-                status(listener, "已连接电视，正在推送安装包…");
-                push(manager, apk);
-                status(listener, "正在安装…");
-                String result = shell(manager, "pm install -r -t " + REMOTE_PATH);
-                shell(manager, "rm -f " + REMOTE_PATH);
+                status(listener, "已连接电视，正在安装…");
+                String result;
+                try {
+                    result = streamInstall(manager, apk, listener);
+                } catch (Throwable streamError) {
+                    status(listener, "流式安装不可用，改用推送方式…");
+                    push(manager, apk);
+                    result = shell(manager, "pm install -r -t " + REMOTE_PATH);
+                    shell(manager, "rm -f " + REMOTE_PATH);
+                }
                 boolean ok = result != null && result.toLowerCase().contains("success");
                 done(listener, ok, ok ? "安装完成" : ("安装返回：" + trim(result)));
             } catch (Throwable e) {
@@ -112,6 +117,29 @@ public class TvAdbInstaller {
         conn.setInstanceFollowRedirects(true);
         conn.setRequestProperty("User-Agent", "Beacon-TV-Installer");
         return conn;
+    }
+
+    /**
+     * 与 dadb 的成熟实现一致：把 APK 直接流给包管理器，不在电视上留临时文件。
+     * 服务名 exec:cmd package install -S <size>，写完数据后读取 Success/Failure。
+     */
+    private static String streamInstall(AbsAdbConnectionManager manager, File apk, Listener listener) throws Exception {
+        AdbStream stream = manager.openStream("exec:cmd package install -S " + apk.length() + " -r -t");
+        try (OutputStream out = stream.openOutputStream(); InputStream in = stream.openInputStream(); FileInputStream file = new FileInputStream(apk)) {
+            byte[] buf = new byte[65536];
+            long read = 0;
+            int n;
+            while ((n = file.read(buf)) > 0) {
+                out.write(buf, 0, n);
+                read += n;
+                if (read % (1024 * 1024) < 65536) status(listener, "写入电视 " + (read * 100 / Math.max(1, apk.length())) + "%");
+            }
+            out.flush();
+            status(listener, "写入完成，等待电视安装结果…");
+            return readAll(in);
+        } finally {
+            stream.close();
+        }
     }
 
     private static void push(AbsAdbConnectionManager manager, File apk) throws Exception {

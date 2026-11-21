@@ -105,6 +105,10 @@ androidComponents {
     }
 }
 
+configurations.configureEach {
+    exclude group: 'org.bouncycastle', module: 'bcprov-jdk15to18'
+}
+
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.aar"])
     implementation("io.github.anilbeesetti:nextlib-media3ext:1.11.1-0.18.0") {
@@ -113,7 +117,9 @@ dependencies {
     implementation project(':catvod')
     implementation project(':chaquo')
     implementation project(':quickjs')
-    implementation 'com.github.MuntashirAkon:libadb-android:3.1.1'
+    implementation('com.github.MuntashirAkon:libadb-android:3.1.1') {
+        exclude group: 'org.bouncycastle', module: 'bcprov-jdk15to18'
+    }
     implementation 'com.github.MuntashirAkon:sun-security-android:1.1'
     implementation 'org.conscrypt:conscrypt-android:2.5.3' 
     implementation libs.appcompat

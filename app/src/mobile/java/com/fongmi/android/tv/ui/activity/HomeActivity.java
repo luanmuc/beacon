@@ -4,6 +4,7 @@ import android.app.PendingIntent;
 import android.app.SearchManager;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.MenuItem;
@@ -78,6 +79,7 @@ public class HomeActivity extends BaseActivity implements NavigationBarView.OnIt
         orientation = getResources().getConfiguration().orientation;
         initFragment(savedInstanceState);
         initConfig();
+        if (Build.VERSION.SDK_INT >= 33) PermissionUtil.requestNotification(this, granted -> {});
     }
 
     @Override

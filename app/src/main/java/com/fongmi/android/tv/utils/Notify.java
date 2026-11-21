@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Notification;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.widget.Toast;
@@ -43,7 +44,7 @@ public class Notify {
     }
 
     public static void show(Notification notification) {
-        if (ContextCompat.checkSelfPermission(App.get(), Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return;
+        if (Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(App.get(), Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return;
         NotificationManagerCompat.from(App.get()).notify(ID, notification);
     }
 

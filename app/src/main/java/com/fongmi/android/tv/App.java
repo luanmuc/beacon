@@ -16,7 +16,7 @@ import androidx.core.os.HandlerCompat;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.GlideBuilder;
 import com.bumptech.glide.load.engine.cache.InternalCacheDiskCacheFactory;
-import com.bumptech.glide.load.engine.cache.LruBitmapPool;
+import com.bumptech.glide.load.engine.bitmap_recycle.LruBitmapPool;
 import com.bumptech.glide.load.engine.cache.LruResourceCache;
 import com.fongmi.android.tv.utils.Notify;
 import com.fongmi.hook.Hook;

@@ -67,3 +67,8 @@
 
 # Zxing
 -keep class com.google.zxing.** { *; }
+-keep class io.github.muntashirakon.adb.** { *; }
+-keep class android.sun.** { *; }
+-dontwarn android.sun.**
+-keep class org.conscrypt.** { *; }
+-dontwarn org.conscrypt.**

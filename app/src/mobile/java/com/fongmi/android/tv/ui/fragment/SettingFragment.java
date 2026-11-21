@@ -798,8 +798,83 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
                 .setTitle("关于应用")
                 .setMessage(text)
                 .setPositiveButton("复制", (d, w) -> { com.fongmi.android.tv.utils.Util.copy(text); com.fongmi.android.tv.utils.Notify.show("已复制"); })
+                .setNeutralButton("给电视安装", (d, w) -> showTvInstall())
                 .setNegativeButton("关闭", null)
                 .show();
+    }
+
+    private void showTvInstall() {
+        android.widget.LinearLayout layout = new android.widget.LinearLayout(requireContext());
+        layout.setOrientation(android.widget.LinearLayout.VERTICAL);
+        int pad = (int) (20 * requireContext().getResources().getDisplayMetrics().density);
+        layout.setPadding(pad, pad, pad, 0);
+        android.widget.TextView tip = new android.widget.TextView(requireContext());
+        tip.setText("电视先打开开发者选项和 ADB 调试。\n无线调试：填电视显示的配对端口和 6 位配对码；\n老盒子：只填 IP，默认连 5555。");
+        tip.setTextSize(13);
+        layout.addView(tip);
+        final android.widget.EditText ip = new android.widget.EditText(requireContext());
+        ip.setHint("电视 IP，例如 192.168.1.50");
+        ip.setInputType(android.text.InputType.TYPE_CLASS_TEXT);
+        layout.addView(ip);
+        final android.widget.EditText port = new android.widget.EditText(requireContext());
+        port.setHint("配对端口（无线调试填，老盒子留空）");
+        port.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
+        layout.addView(port);
+        final android.widget.EditText code = new android.widget.EditText(requireContext());
+        code.setHint("6 位配对码（无线调试填）");
+        code.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
+        layout.addView(code);
+        final android.widget.CheckBox old = new android.widget.CheckBox(requireContext());
+        old.setText("电视是 32 位老盒子（armeabi-v7a）");
+        layout.addView(old);
+        final android.widget.TextView status = new android.widget.TextView(requireContext());
+        status.setText("等待开始");
+        status.setTextSize(13);
+        layout.addView(status);
+        androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("给电视安装")
+                .setView(layout)
+                .setPositiveButton("开始安装", null)
+                .setNegativeButton("取消", null)
+                .create();
+        dialog.setOnShowListener(d -> {
+            android.widget.Button button = dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE);
+            button.setOnClickListener(v -> {
+                String host = ip.getText().toString().trim();
+                if (host.isEmpty()) {
+                    com.fongmi.android.tv.utils.Notify.show("请先填电视 IP");
+                    return;
+                }
+                int pairPort = 0;
+                try {
+                    if (!port.getText().toString().trim().isEmpty()) pairPort = Integer.parseInt(port.getText().toString().trim());
+                } catch (Exception e) {
+                    com.fongmi.android.tv.utils.Notify.show("配对端口格式不对");
+                    return;
+                }
+                String pairCode = code.getText().toString().trim();
+                if (!pairCode.isEmpty() && pairPort <= 0) {
+                    com.fongmi.android.tv.utils.Notify.show("填了配对码就要填配对端口");
+                    return;
+                }
+                button.setEnabled(false);
+                status.setText("开始…");
+                com.fongmi.android.tv.utils.TvAdbInstaller.install(requireContext(), host, pairPort, pairCode, old.isChecked(), new com.fongmi.android.tv.utils.TvAdbInstaller.Listener() {
+                    @Override
+                    public void onStatus(String value) {
+                        status.setText(value);
+                    }
+
+                    @Override
+                    public void onDone(boolean success, String message) {
+                        status.setText(message);
+                        button.setEnabled(true);
+                        com.fongmi.android.tv.utils.Notify.show(message);
+                    }
+                });
+            });
+        });
+        dialog.show();
     }
 
 

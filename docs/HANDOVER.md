@@ -18,7 +18,7 @@
 | 仓库 | 作用 | 与其它仓库的关系 |
 |---|---|---|
 | `luanmuc/beacon` | App 壳。双端 UI、播放、收藏/历史、设置、诊断 | 编译时 checkout `luanmuc/media` 产出 aar；运行时读取 `beacon-feeds` 的 `release` 分支 |
-| `luanmuc/beacon-feeds` | 源仓库。抓取公开 TVBox 配置与 iptv-org 清单，跑探测脚本，生成 `tvbox.json` / `live/all.m3u` / `manifest.json` / `live-report.json`，并维护 `release` 分支 | 被 App 默认订阅直接读取；所有产物提交在本仓 |
+| `luanmuc/beacon-feeds` | 唯一源仓库。维护影视接口池、直播频道池和两个独立 QuickJS 聚合源脚本，跑探测脚本，生成 `tvbox.json` / `vod-sites.json` / `live/channels.json` / `live/all.m3u` / `manifest.json` / `live-report.json`，并维护 `release` 分支 | 被 App 默认订阅直接读取；所有产物和源脚本提交在本仓 |
 | `luanmuc/media` | media3 fork（分支 `release-1.11.0-fongmi`），4 处补丁 | 被 `beacon` 的 CI 以 `luanmuc/media@release-1.11.0-fongmi` checkout 并编 aar |
 
 数据流：
@@ -28,18 +28,19 @@
         │  抓取 + 探测
         ▼
 beacon-feeds（脚本 + GitHub Actions，每 6 小时 / 手动）
+        │  生成 vod-sites.json、live/channels.json，并维护 beacon-vod.js / beacon-live.js
         │  commit 到 main，再把 release 分支移到同一提交
         ▼
-beacon-feeds@release（tvbox.json / live/all.m3u / manifest.json / live-report.json）
+beacon-feeds@release（tvbox.json / vod-sites.json / live/channels.json / live/all.m3u / manifest.json / live-report.json）
         │
         ▼
-beacon App（Config.java 里两个 raw.githubusercontent.com 默认订阅）
+beacon App（Config.java 默认订阅 tvbox.json + live/all.m3u；运行时由两个 QuickJS 聚合源分别取影视与直播）
         ▲
         │  CI checkout + 编 aar
 luanmuc/media（media3 fork）
 ```
 
-旧的 `beacon-seed` 已取消，`beacon-sketch` 已删除；不要再恢复。
+旧的 `beacon-seed` 已删除，`beacon-sketch` 已删除；不要再恢复。
 
 ## 3. 代码里写死的关联点
 
@@ -79,22 +80,27 @@ luanmuc/media（media3 fork）
 
 `beacon-feeds`：
 
-- `scripts/`：抓取、探测、生成 manifest；
-- `.github/workflows/probe-live.yml`：cron `0 */6 * * *`，探测直播源，发布 `live/all.m3u` + `live-report.json` + `manifest.json`，提交到 `main` 后把 `release` 分支移到同一提交；
-- `.github/workflows/probe-vod.yml`：探测影视站点，发布 `tvbox.json` + manifest，同样移动 `release`；
+- `source/beacon-vod.js`：影视聚合 QuickJS 源，读取 `vod-sites.json`，按站点 ID 前缀合并首页/分类/搜索/详情，直链走 `parse=0`，网页播放页走 `parse=1`；
+- `source/beacon-live.js`：直播聚合 QuickJS 源，读取 `live/channels.json`，失败回退 `live/all.m3u`，同名频道合并最多 3 条线路，输出标准 M3U；
+- `scripts/`：抓取、探测、生成 `vod-sites.json` / `live/channels.json` / manifest；
+- `.github/workflows/probe-live.yml`：cron `0 */6 * * *`，探测直播源，发布 `live/all.m3u` + `live/channels.json` + `live-report.json` + `manifest.json`，提交到 `main` 后把 `release` 分支移到同一提交；
+- `.github/workflows/probe-vod.yml`：探测影视站点，发布 `vod-sites.json` + `tvbox.json` + manifest，同样移动 `release`；
+- 两个 workflow 只在 `main` 上跑，生成的提交带 `[skip ci]`，避免 release 分支回环触发；
 - 不再需要 `TV_SEED_TOKEN`，也不再向第二个仓库写产物。
 
 `beacon-feeds@release` 结构：
 
-- `tvbox.json`：当前 5 个 type=1 影视站点；
-- `live/all.m3u`：38 个频道 / 38 条线路；
+- `tvbox.json`：单影视入口 `beacon-vod`（type=3）+ 单直播入口 `聚合直播`；
+- `vod-sites.json`：5 个影视接口，`source/beacon-vod.js` 读取；
+- `live/channels.json`：63 个可用频道 / 63 条线路（Release 当前基线），`source/beacon-live.js` 读取；
+- `live/all.m3u`：63 个频道 / 63 条线路的兜底 M3U；
 - `manifest.json`：`version`（UTC 日期）、`updated_at`、`vod_sites`、`live_channels`、`live_lines`、`fastest`；
 - `live-report.json`：探测明细；
 - `release` 分支：App 默认读这个分支，探测异常时不会立刻影响用户。
 
 ## 6. 版本与发布
 
-- 每次 push 到 `april-base` 触发一次 CI，`run_number` 就是版本后缀，例如 `v1.0.132`；
+- 每次 push 到 `april-base` 触发一次 CI，`run_number` 就是版本后缀，例如 `v1.0.172`；
 - 发布页 `https://github.com/luanmuc/beacon/releases`；
 - 当前策略是“大包提交”：一个提交塞多个互不冲突功能 → 一次构建 → 失败集中修，不再一个功能一个版本；
 - 不把 APK 放进仓库，也不在对话里发 APK 文件，只发仓库链接 + 版本号。
@@ -117,7 +123,7 @@ luanmuc/media（media3 fork）
 ## 8. 已知边界
 
 - 5.8.8 全量合并、`nov-ui` 混合拆分均已判定做不通，不要再走；
-- 电视源最终形态是“单个 QuickJS 源 + App 内源健康管理”，不是常驻服务器；
+- 电视源最终形态是“两个独立 QuickJS 聚合源（影视 / 直播）+ App 内源健康管理”，不是常驻服务器；
 - 四月版基座只有 Exo 系播放内核，公开渠道取不到 `mpvplayer`/`iso`/`libass` 源码，内核切换短期不做；
 - 豆瓣榜单、相似推荐明确不做；
 - 影视源为公开配置聚合，站点合法性与长期可用性未评估；

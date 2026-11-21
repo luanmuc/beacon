@@ -1,11 +1,15 @@
 package com.fongmi.android.tv.utils;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.media.MediaCodecInfo;
+import android.media.MediaCodecList;
 import android.os.Build;
 import android.os.IBinder;
+import android.util.DisplayMetrics;
 import android.provider.Settings;
 import android.text.Html;
 import android.text.TextUtils;
@@ -159,6 +163,51 @@ public class Util {
     public static String substring(String text, int num) {
         if (text != null && text.length() > num) return text.substring(0, text.length() - num);
         return text;
+    }
+
+
+    public static String getDeviceReport() {
+        StringBuilder sb = new StringBuilder();
+        ActivityManager am = (ActivityManager) App.get().getSystemService(Context.ACTIVITY_SERVICE);
+        DisplayMetrics dm = App.get().getResources().getDisplayMetrics();
+        sb.append("厂商：").append(Build.MANUFACTURER).append('\n');
+        sb.append("型号：").append(Build.MODEL).append('\n');
+        sb.append("设备/主板：").append(Build.DEVICE).append(" / ").append(Build.BOARD).append('\n');
+        sb.append("系统：Android ").append(Build.VERSION.RELEASE).append("（SDK ").append(Build.VERSION.SDK_INT).append("）\n");
+        sb.append("ABI：").append(TextUtils.join(", ", Build.SUPPORTED_ABIS)).append('\n');
+        if (Build.VERSION.SDK_INT >= 31) sb.append("SoC：").append(Build.SOC_MANUFACTURER).append(' ').append(Build.SOC_MODEL).append(" / ").append(Build.HARDWARE).append('\n');
+        else sb.append("SoC/硬件：").append(Build.HARDWARE).append('\n');
+        if (am != null) sb.append("内存档：memoryClass=").append(am.getMemoryClass()).append("MB，largeMemoryClass=").append(am.getLargeMemoryClass()).append("MB，lowRam=").append(am.isLowRamDevice()).append('\n');
+        sb.append("屏幕：").append(dm.widthPixels).append('x').append(dm.heightPixels).append("，density=").append(dm.densityDpi).append('\n');
+        sb.append("解码器：\n").append(getVideoCodecReport());
+        return sb.toString();
+    }
+
+    public static String getVideoCodecReport() {
+        StringBuilder sb = new StringBuilder();
+        String[] mimes = {"video/avc", "video/hevc", "video/av01", "video/x-vnd.on2.vp9"};
+        String[] names = {"H.264", "H.265", "AV1", "VP9"};
+        try {
+            MediaCodecList list = new MediaCodecList(MediaCodecList.REGULAR_CODECS);
+            for (int i = 0; i < mimes.length; i++) {
+                String codec = "";
+                boolean hardware = false;
+                for (MediaCodecInfo info : list.getCodecInfos()) {
+                    if (info.isEncoder()) continue;
+                    for (String type : info.getSupportedTypes()) {
+                        if (!type.equalsIgnoreCase(mimes[i])) continue;
+                        codec = info.getName();
+                        if (Build.VERSION.SDK_INT >= 29) hardware = info.isHardwareAccelerated();
+                        break;
+                    }
+                    if (!codec.isEmpty()) break;
+                }
+                sb.append(names[i]).append("：").append(codec.isEmpty() ? "无解码器" : codec + (hardware ? "（硬解）" : "（软解/未知）")).append('\n');
+            }
+        } catch (Throwable e) {
+            sb.append("读取失败：").append(e.getMessage()).append('\n');
+        }
+        return sb.toString();
     }
 
     public static boolean isLeanback() {

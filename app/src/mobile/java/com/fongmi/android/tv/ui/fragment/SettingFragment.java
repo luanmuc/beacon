@@ -604,14 +604,20 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
                 + "\n影视站点：" + sites + " 个\n直播源：" + lives + " 个"
                 + "\n收藏：" + com.fongmi.android.tv.bean.Keep.getVod().size() + " 部影视 / " + com.fongmi.android.tv.bean.Keep.getLive().size() + " 个频道"
                 + "\n仓库：github.com/luanmuc/beacon"
-                + "\n\n豆包定制 · 基于 GPL-3.0 开源项目二次开发";
-        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                .setTitle("构建信息")
+                + "\n\n【设备兼容性】\n" + com.fongmi.android.tv.utils.Util.getDeviceReport()
+                + "\n豆包定制 · 基于 GPL-3.0 开源项目二次开发\n长按消息可复制全部信息";
+        androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("构建与设备信息")
                 .setMessage(info)
-                .setPositiveButton("打开项目主页", (d, w) -> openRepo())
-                .setNeutralButton("检查更新", (d, w) -> com.fongmi.android.tv.utils.UpdateChecker.check(requireActivity()))
+                .setPositiveButton("复制兼容信息", (d, w) -> { com.fongmi.android.tv.utils.Util.copy(info); com.fongmi.android.tv.utils.Notify.show("已复制设备信息"); })
+                .setNeutralButton("打开项目主页", (d, w) -> openRepo())
                 .setNegativeButton("关闭", null)
-                .show();
+                .create();
+        dialog.setOnShowListener(d -> {
+            android.widget.TextView message = dialog.findViewById(android.R.id.message);
+            if (message != null) message.setOnLongClickListener(v -> { com.fongmi.android.tv.utils.Util.copy(info); com.fongmi.android.tv.utils.Notify.show("已复制设备信息"); return true; });
+        });
+        dialog.show();
     }
 
 

@@ -627,7 +627,7 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
     public boolean onLongClick(Channel item) {
         if (mGroup.isHidden()) return false;
         boolean exist = Keep.exist(item.getName());
-        String[] items = {exist ? "取消收藏" : "收藏频道", "频道信息"};
+        String[] items = {exist ? "取消收藏" : "收藏频道", "频道信息", "自动选最快线路"};
         new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle(item.getName())
                 .setItems(items, (d, which) -> {
@@ -635,12 +635,44 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
                         if (exist) delKeep(item);
                         else addKeep(item);
                         Notify.show(exist ? "已取消收藏" : "已收藏");
+                    } else if (which == 2) {
+                        autoFastLine(item);
                     } else {
                         showChannelInfo(item);
                     }
                 })
                 .show();
         return true;
+    }
+
+
+    private void autoFastLine(Channel item) {
+        try {
+            final java.util.List<String> urls = item.getUrls();
+            if (urls == null || urls.size() < 2) { Notify.show("当前频道只有一条线路"); return; }
+            Notify.show("正在测速 " + urls.size() + " 条线路…");
+            com.fongmi.android.tv.utils.Task.execute(() -> {
+                final long[] lat = new long[urls.size()];
+                java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newFixedThreadPool(Math.min(4, urls.size()));
+                for (int i = 0; i < urls.size(); i++) {
+                    final int idx = i;
+                    pool.execute(() -> lat[idx] = ping(urls.get(idx).split("\\$")[0]));
+                }
+                pool.shutdown();
+                try { pool.awaitTermination(8, java.util.concurrent.TimeUnit.SECONDS); } catch (Exception ignored) {}
+                int best = -1;
+                for (int i = 0; i < lat.length; i++) if (lat[i] >= 0 && (best < 0 || lat[i] < lat[best])) best = i;
+                final int bestIdx = best;
+                com.fongmi.android.tv.App.post(() -> {
+                    if (bestIdx < 0) { Notify.show("所有线路测速失败，建议手动选择"); return; }
+                    item.setIndex(bestIdx);
+                    if (mChannel != null && mChannel.getName() != null && mChannel.getName().equals(item.getName())) { setInfo(); fetch(); }
+                    Notify.show("已选最快线路 " + (bestIdx + 1) + "（" + lat[bestIdx] + "ms）");
+                });
+            });
+        } catch (Exception e) {
+            Notify.show("自动选线失败：" + e.getMessage());
+        }
     }
 
     private void showChannelInfo(Channel item) {

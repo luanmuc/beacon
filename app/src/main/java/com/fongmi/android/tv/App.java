@@ -99,9 +99,9 @@ public class App extends Application implements Application.ActivityLifecycleCal
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         boolean lowRam = com.fongmi.android.tv.utils.Util.isLowRamDevice();
         int memoryClass = manager == null ? 128 : manager.getMemoryClass();
-        int memoryCache = Math.max(8, memoryClass / 8) * 1024 * 1024;
-        int bitmapPool = Math.max(4, memoryClass / 16) * 1024 * 1024;
-        int diskCache = (lowRam ? 128 : 256) * 1024 * 1024;
+        int memoryCache = Math.max(8, memoryClass / (lowRam ? 10 : 8)) * 1024 * 1024;
+        int bitmapPool = Math.max(4, memoryClass / (lowRam ? 24 : 16)) * 1024 * 1024;
+        int diskCache = (lowRam ? 64 : 128) * 1024 * 1024;
         GlideBuilder builder = new GlideBuilder()
                 .setMemoryCache(new LruResourceCache(memoryCache))
                 .setBitmapPool(new LruBitmapPool(bitmapPool))

@@ -18,6 +18,7 @@ import com.fongmi.android.tv.bean.Vod;
 import com.fongmi.android.tv.db.AppDatabase;
 import com.fongmi.android.tv.setting.Setting;
 import com.fongmi.android.tv.utils.Task;
+import com.fongmi.android.tv.utils.Util;
 import com.github.catvod.utils.Trans;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -37,15 +38,24 @@ public class VodBrowse {
     static final String VOD_PLAY = "VP:";
     static final String VOD_SEARCH = "VS:";
 
-    private static final int SEARCH_LIMIT = 50;
+    private static final boolean LOW_RAM = isLowRam();
+    private static final int SEARCH_LIMIT = LOW_RAM ? 30 : 50;
     private static final int SEARCH_TIMEOUT = 5;
-    private static final int VOD_LIMIT = 48;
-    private static final int EP_LIMIT = 1200;
-    private static final int EP_COUNT_LIMIT = 300;
+    private static final int VOD_LIMIT = LOW_RAM ? 24 : 48;
+    private static final int EP_LIMIT = LOW_RAM ? 600 : 1200;
+    private static final int EP_COUNT_LIMIT = LOW_RAM ? 180 : 300;
     private static final Map<String, Vod> vodCache = new ConcurrentHashMap<>();
     private static final Map<String, String> epNavMap = new ConcurrentHashMap<>();
     private static final Map<String, EpEntry> epEntries = new ConcurrentHashMap<>();
     private static final Map<String, Integer> epCountMap = new ConcurrentHashMap<>();
+
+    private static boolean isLowRam() {
+        try {
+            return Util.isLowRamDevice();
+        } catch (Throwable e) {
+            return false;
+        }
+    }
 
     private static volatile History browseHistory;
     private static volatile ImmutableList<MediaItem> searchCache = ImmutableList.of();

@@ -93,8 +93,7 @@ jobs:
             :lib-ui:assembleRelease \
             :lib-ui-danmaku:assembleRelease \
             :lib-muxer:assembleRelease \
-            :lib-transformer:assembleRelease \
-            :lib-mpvplayer:assembleRelease
+            :lib-transformer:assembleRelease
 
       - name: Collect aars
         if: steps.media_cache.outputs.cache-hit != 'true'
@@ -194,6 +193,12 @@ jobs:
         with:
           name: media-aars
           path: app/libs
+
+      - name: Exclude unused mpv player
+        run: |
+          # App 只接了 ExoPlayer，源码没有任何 MpvPlayer 引用；这个 aar 只带 libmpv/player 原生库，移除不影响现有功能
+          rm -f app/libs/lib-mpvplayer-release.aar
+          ls -lh app/libs | head -30
 
       - name: Fetch signing key
         uses: actions/download-artifact@v4

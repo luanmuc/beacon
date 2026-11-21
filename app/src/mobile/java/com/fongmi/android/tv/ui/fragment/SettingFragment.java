@@ -738,6 +738,8 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
                 String msg = "源版本：" + o.optString("version", "未知")
                         + "\n更新时间：" + o.optString("updated_at", "未知").replace("T", " ").replace("Z", "")
                         + "\n影视站点：" + o.optInt("vod_sites") + " 个"
+                        + "\n站点健康：可用 " + o.optInt("vod_ok") + " / 跳过 " + o.optInt("vod_skip") + " / 失效 " + o.optInt("vod_dead")
+                        + (o.optInt("vod_avg_ms") > 0 ? "\n平均延迟：" + o.optInt("vod_avg_ms") + "ms" : "")
                         + "\n直播频道：" + o.optInt("live_channels") + " 个 / 线路 " + o.optInt("live_lines") + " 条";
                 com.fongmi.android.tv.App.post(() -> new androidx.appcompat.app.AlertDialog.Builder(requireContext())
                         .setTitle("源清单")

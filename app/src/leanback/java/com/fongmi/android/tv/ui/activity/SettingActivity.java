@@ -647,6 +647,38 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
     }
 
 
+
+    private void showSiteDetailList() {
+        try {
+            final java.util.List<com.fongmi.android.tv.bean.Site> sites = com.fongmi.android.tv.api.config.VodConfig.get().getSites();
+            if (sites == null || sites.isEmpty()) { com.fongmi.android.tv.utils.Notify.show("当前没有可用站点"); return; }
+            String[] names = new String[sites.size()];
+            for (int i = 0; i < sites.size(); i++) names[i] = (i + 1) + ". " + sites.get(i).getName();
+            new androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("站点详情")
+                    .setItems(names, (d, which) -> showSiteDetail(sites.get(which)))
+                    .setNegativeButton("关闭", null)
+                    .show();
+        } catch (Exception e) {
+            com.fongmi.android.tv.utils.Notify.show("读取站点失败");
+        }
+    }
+
+    private void showSiteDetail(com.fongmi.android.tv.bean.Site site) {
+        String text = "名称：" + site.getName()
+                + "\n标识：" + site.getKey()
+                + "\n接口：" + site.getApi()
+                + "\n搜索：" + (site.isSearchable() ? "支持" : "不支持")
+                + "\n类型：" + site.getType();
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(site.getName())
+                .setMessage(text)
+                .setPositiveButton("复制接口", (d, w) -> { com.fongmi.android.tv.utils.Util.copy(site.getApi()); com.fongmi.android.tv.utils.Notify.show("已复制接口地址"); })
+                .setNegativeButton("关闭", null)
+                .show();
+    }
+
+
     private void showPlayerMenu() {
         String[] items = {"手势与按键说明", "应用推荐播放配置"};
         new androidx.appcompat.app.AlertDialog.Builder(this)

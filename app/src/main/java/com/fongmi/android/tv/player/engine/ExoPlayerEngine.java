@@ -7,9 +7,11 @@ import androidx.media3.common.MediaTitle;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
 import androidx.media3.common.Tracks;
+import androidx.media3.exoplayer.ExoPlayer;
 
 import com.fongmi.android.tv.R;
 import com.fongmi.android.tv.bean.Track;
+import com.fongmi.android.tv.player.exo.AdaptiveQuality;
 import com.fongmi.android.tv.player.exo.ErrorMsgProvider;
 import com.fongmi.android.tv.player.exo.ExoUtil;
 import com.fongmi.android.tv.player.exo.TrackUtil;
@@ -17,17 +19,24 @@ import com.fongmi.android.tv.utils.ResUtil;
 
 import java.util.List;
 
+import io.github.anilbeesetti.nextlib.media3ext.ffdecoder.DecoderManager;
+
 public class ExoPlayerEngine implements PlayerEngine {
 
     private final ErrorMsgProvider provider;
+    private DecoderManager decoderManager;
+    private AdaptiveQuality adaptiveQuality;
     private PlaySpec spec;
     private Player player;
     private int decode;
 
     public ExoPlayerEngine(int decode, Player.Listener listener) {
-        this.player = ExoUtil.buildPlayer(decode, listener);
-        this.provider = new ErrorMsgProvider();
         this.decode = decode;
+        this.decoderManager = ExoUtil.createDecoderManager(decode);
+        this.player = ExoUtil.buildPlayer(decode, listener, decoderManager);
+        this.adaptiveQuality = new AdaptiveQuality((ExoPlayer) player);
+        this.adaptiveQuality.attach();
+        this.provider = new ErrorMsgProvider();
     }
 
     @Override
@@ -37,13 +46,21 @@ public class ExoPlayerEngine implements PlayerEngine {
 
     @Override
     public void release() {
+        adaptiveQuality.detach();
+        decoderManager.detach();
         player.release();
     }
 
     @Override
     public Player rebuild(Player.Listener listener) {
+        adaptiveQuality.detach();
+        decoderManager.detach();
         player.release();
-        return player = ExoUtil.buildPlayer(decode, listener);
+        decoderManager = ExoUtil.createDecoderManager(decode);
+        player = ExoUtil.buildPlayer(decode, listener, decoderManager);
+        adaptiveQuality = new AdaptiveQuality((ExoPlayer) player);
+        adaptiveQuality.attach();
+        return player;
     }
 
     @Override

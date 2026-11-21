@@ -53,6 +53,7 @@ import com.fongmi.android.tv.model.SiteViewModel;
 import com.fongmi.android.tv.player.PlaybackFailure;
 import com.fongmi.android.tv.player.PlayerHelper;
 import com.fongmi.android.tv.player.PlayerManager;
+import com.fongmi.android.tv.player.engine.PlayerEngine;
 import com.fongmi.android.tv.service.PlaybackService;
 import com.fongmi.android.tv.setting.DanmakuSetting;
 import com.fongmi.android.tv.setting.PlayerSetting;
@@ -311,10 +312,10 @@ public class VideoActivity extends PlaybackActivity implements CustomKeyDownVod.
         mBinding.control.action.decode.setOnClickListener(view -> onDecode());
         mBinding.control.action.decode.setOnLongClickListener(view -> {
             try {
-                int target = player().isHard() ? 1 : 0;
+                int target = player().isHard() ? PlayerEngine.SOFT : PlayerEngine.HARD;
                 player().setDecode(target);
                 mBinding.control.action.decode.setText(player().getDecodeText());
-                com.fongmi.android.tv.utils.Notify.show(target == 0 ? "已切换：硬解" : "已切换：软解");
+                com.fongmi.android.tv.utils.Notify.show(target == PlayerEngine.SOFT ? "已切换：软解" : "已切换：硬解");
             } catch (Exception e) {
                 com.fongmi.android.tv.utils.Notify.show("切换失败");
             }

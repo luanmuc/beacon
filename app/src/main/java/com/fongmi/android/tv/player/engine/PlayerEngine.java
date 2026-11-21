@@ -15,6 +15,7 @@ public interface PlayerEngine {
 
     int SOFT = 0;
     int HARD = 1;
+    int SYSTEM = 2;
 
     Player getPlayer();
 

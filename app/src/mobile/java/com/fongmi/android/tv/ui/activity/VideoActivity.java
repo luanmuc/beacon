@@ -351,10 +351,10 @@ public class VideoActivity extends PlaybackActivity implements Clock.Callback, C
         mBinding.control.action.decode.setOnClickListener(view -> onDecode());
         mBinding.control.action.decode.setOnLongClickListener(view -> {
             try {
-                int target = player().isHard() ? 1 : 0;
+                int target = player().isHard() ? PlayerEngine.SOFT : PlayerEngine.HARD;
                 player().setDecode(target);
                 mBinding.control.action.decode.setText(player().getDecodeText());
-                com.fongmi.android.tv.utils.Notify.show(target == 0 ? "已切换：硬解" : "已切换：软解");
+                com.fongmi.android.tv.utils.Notify.show(target == PlayerEngine.SOFT ? "已切换：软解" : "已切换：硬解");
             } catch (Exception e) {
                 com.fongmi.android.tv.utils.Notify.show("切换失败");
             }

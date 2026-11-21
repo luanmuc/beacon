@@ -1,6 +1,7 @@
 package com.fongmi.android.tv.player;
 
 import android.net.Uri;
+import android.os.SystemClock;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
@@ -25,6 +26,7 @@ import com.fongmi.android.tv.impl.ParseCallback;
 import com.fongmi.android.tv.player.engine.ExoPlayerEngine;
 import com.fongmi.android.tv.player.engine.PlaySpec;
 import com.fongmi.android.tv.player.engine.PlayerEngine;
+import com.fongmi.android.tv.player.exo.PlaybackLoadControl;
 import com.fongmi.android.tv.setting.DanmakuSetting;
 import com.fongmi.android.tv.setting.PlayerSetting;
 import com.fongmi.android.tv.utils.Notify;
@@ -50,7 +52,8 @@ public class PlayerManager implements ParseCallback {
     private Player player;
 
     private boolean initTrack;
-    private boolean decodeRetried;
+    private int decodeAttempts;
+    private long playStartedAt;
 
     public PlayerManager(Callback callback) {
         this.runnable = () -> callback.onError(ResUtil.getString(R.string.error_play_timeout));
@@ -294,7 +297,8 @@ public class PlayerManager implements ParseCallback {
 
     public void reset() {
         App.removeCallbacks(runnable);
-        decodeRetried = false;
+        decodeAttempts = 0;
+        playStartedAt = 0;
     }
 
     public void clear() {
@@ -310,15 +314,24 @@ public class PlayerManager implements ParseCallback {
     }
 
     public void setDecode(int decode) {
+        if (engine.getDecode() == decode) return;
+        boolean live = engine.isLive();
+        long position = engine.getPlayer().getCurrentPosition();
         engine.setDecode(decode);
+        decodeAttempts = 0;
+        rebuildPlayer();
+        setMediaItem();
+        if (!live && position > 0) engine.getPlayer().seekTo(position);
     }
 
     public void toggleDecode() {
+        boolean live = engine.isLive();
+        long position = engine.getPlayer().getCurrentPosition();
         engine.setDecode(engine.isHard() ? PlayerEngine.SOFT : PlayerEngine.HARD);
         rebuildPlayer();
-        // A manual soft selection must not be followed by another automatic fallback.
-        decodeRetried = !engine.isHard();
+        decodeAttempts = 0;
         setMediaItem();
+        if (!live && position > 0) engine.getPlayer().seekTo(position);
     }
 
     private void rebuildPlayer() {
@@ -358,10 +371,18 @@ public class PlayerManager implements ParseCallback {
     private void setMediaItem(long timeout) {
         if (spec == null || spec.getUrl() == null) return;
         setDanmakus(spec.getDanmakus());
+        playStartedAt = SystemClock.elapsedRealtime();
+        PlaybackLoadControl.setPreloadingEnabled(false);
         engine.start(spec.checkUa());
         App.post(runnable, timeout);
         callback.onPrepare();
         initTrack = false;
+    }
+
+    private int nextDecode(int current) {
+        if (current == PlayerEngine.HARD) return PlayerEngine.SYSTEM;
+        if (current == PlayerEngine.SYSTEM) return PlayerEngine.SOFT;
+        return -1;
     }
 
     private void setDanmakus(List<Danmaku> items) {
@@ -411,6 +432,7 @@ public class PlayerManager implements ParseCallback {
         @Override
         public void onPlaybackStateChanged(int state) {
             if (state != Player.STATE_IDLE) App.removeCallbacks(runnable);
+            if (state == Player.STATE_READY) PlaybackLoadControl.setPreloadingEnabled(true);
         }
 
         @Override
@@ -438,12 +460,18 @@ public class PlayerManager implements ParseCallback {
                 setDanmakus(spec.getDanmakus());
                 return;
             }
-            if (action == PlayerEngine.ErrorAction.DECODE && engine.isHard() && !decodeRetried) {
-                decodeRetried = true;
-                engine.setDecode(PlayerEngine.SOFT);
-                rebuildPlayer();
-                setMediaItem();
-                return;
+            if (action == PlayerEngine.ErrorAction.DECODE) {
+                int next = nextDecode(engine.getDecode());
+                if (next != -1 && decodeAttempts < 2) {
+                    long position = engine.getPlayer().getCurrentPosition();
+                    boolean keepPosition = !engine.isLive() && playStartedAt > 0 && SystemClock.elapsedRealtime() - playStartedAt >= 5000;
+                    decodeAttempts++;
+                    engine.setDecode(next);
+                    rebuildPlayer();
+                    setMediaItem();
+                    if (keepPosition && position > 0) engine.getPlayer().seekTo(position);
+                    return;
+                }
             }
             callback.onFailure(PlaybackFailure.from(e));
         }

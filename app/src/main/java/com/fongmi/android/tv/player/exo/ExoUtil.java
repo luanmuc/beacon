@@ -1,5 +1,6 @@
 package com.fongmi.android.tv.player.exo;
 
+import android.app.ActivityManager;
 import android.content.Context;
 import android.graphics.Color;
 import android.net.Uri;
@@ -14,7 +15,6 @@ import androidx.media3.common.MimeTypes;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
 import androidx.media3.exoplayer.DefaultLoadControl;
-import androidx.media3.exoplayer.DefaultRenderersFactory;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.exoplayer.LoadControl;
 import androidx.media3.exoplayer.RenderersFactory;
@@ -44,6 +44,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import io.github.anilbeesetti.nextlib.media3ext.ffdecoder.DecoderManager;
+import io.github.anilbeesetti.nextlib.media3ext.ffdecoder.DecoderMode;
 import io.github.anilbeesetti.nextlib.media3ext.ffdecoder.NextRenderersFactory;
 
 public class ExoUtil {
@@ -57,14 +59,19 @@ public class ExoUtil {
         if (PlayerSetting.getSubtitleTextSize() != 0) view.getSubtitleView().setFractionalTextSize(PlayerSetting.getSubtitleTextSize());
     }
 
-    public static ExoPlayer buildPlayer(int decode, Player.Listener listener) {
-        ExoPlayer player = new ExoPlayer.Builder(App.get()).setLoadControl(buildLoadControl()).setTrackSelector(buildTrackSelector()).setRenderersFactory(buildRenderersFactory(getRenderMode(decode))).setMediaSourceFactory(buildMediaSourceFactory()).build();
+    public static ExoPlayer buildPlayer(int decode, Player.Listener listener, DecoderManager manager) {
+        ExoPlayer player = new ExoPlayer.Builder(App.get()).setLoadControl(buildLoadControl()).setTrackSelector(buildTrackSelector()).setRenderersFactory(buildRenderersFactory(manager)).setMediaSourceFactory(buildMediaSourceFactory()).build();
         if (BuildConfig.DEBUG) player.addAnalyticsListener(new EventLogger());
+        manager.attach(player);
         player.setAudioAttributes(AudioAttributes.DEFAULT, true);
         player.setHandleAudioBecomingNoisy(true);
         player.setPlayWhenReady(true);
         player.addListener(listener);
         return player;
+    }
+
+    public static DecoderManager createDecoderManager(int decode) {
+        return new DecoderManager(getDecoderMode(decode), decode == PlayerEngine.SOFT ? DecoderMode.FFMPEG : DecoderMode.AUTO);
     }
 
     public static MediaItem getMediaItem(PlaySpec spec, int decode) {
@@ -94,8 +101,12 @@ public class ExoUtil {
         return extras.keySet().stream().filter(key -> extras.getString(key) != null).collect(Collectors.toMap(key -> key, extras::getString));
     }
 
-    private static int getRenderMode(int decode) {
-        return decode == PlayerEngine.HARD ? DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON : DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER;
+    private static DecoderMode getDecoderMode(int decode) {
+        return switch (decode) {
+            case PlayerEngine.SOFT -> DecoderMode.FFMPEG;
+            case PlayerEngine.SYSTEM -> DecoderMode.SOFTWARE;
+            default -> DecoderMode.HARDWARE;
+        };
     }
 
     private static CaptionStyleCompat getCaptionStyle() {
@@ -107,11 +118,15 @@ public class ExoUtil {
         int min = DefaultLoadControl.DEFAULT_MIN_BUFFER_MS * buffer;
         int max = DefaultLoadControl.DEFAULT_MAX_BUFFER_MS * buffer;
         DefaultLoadControl.Builder builder = new DefaultLoadControl.Builder().setBufferDurationsMs(min, max, DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_MS, DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS);
-        if (com.fongmi.android.tv.utils.Util.isLowRamDevice()) {
+        if (Util.isLowRamDevice()) {
             builder.setBufferDurationsMs(Math.min(min, 15000), Math.min(max, 30000), DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_MS, DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS);
             builder.setTargetBufferBytes(64 * 1024 * 1024);
+        } else {
+            ActivityManager manager = (ActivityManager) App.get().getSystemService(Context.ACTIVITY_SERVICE);
+            int targetMb = Math.min(Math.max(manager.getMemoryClass() / 18, 64), 196);
+            builder.setTargetBufferBytes(targetMb * 1024 * 1024);
         }
-        return builder.build();
+        return new PlaybackLoadControl(builder.build());
     }
 
     private static TrackSelector buildTrackSelector() {
@@ -128,8 +143,8 @@ public class ExoUtil {
         return trackSelector;
     }
 
-    private static RenderersFactory buildRenderersFactory(int renderMode) {
-        return new NextRenderersFactory(App.get()).setEnableDecoderFallback(true).setExtensionRendererMode(renderMode);
+    private static RenderersFactory buildRenderersFactory(DecoderManager manager) {
+        return new NextRenderersFactory(App.get()).setDecoderManager(manager);
     }
 
     private static MediaSource.Factory buildMediaSourceFactory() {

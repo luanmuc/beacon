@@ -144,6 +144,7 @@
     <string name="player_background">Background play</string>
     <string name="player_audio_decode">Audio software decode</string>
     <string name="player_video_decode">Video software decode</string>
+    <string name="player_force_4k">Allow 4K on low-memory devices</string>
     <string name="player_aac_track">Prefer aac track</string>
     <string name="player_danmaku_load">Danmaku load</string>
     <string name="player_adblock">Remove ads</string>
@@ -181,9 +182,6 @@
     <string name="error_empty">Nothing here 👀</string>
 
     <!-- Update -->
-    <string name="update_version">New version <xliff:g name="name">%s</xliff:g></string>
-    <string name="update_check">Checking for updates…</string>
-    <string name="update_confirm">Update</string>
 
     <!-- Crash -->
     <string name="crash_info">An unexpected error occurred.\nSorry for the inconvenience.</string>

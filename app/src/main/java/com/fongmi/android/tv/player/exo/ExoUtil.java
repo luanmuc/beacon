@@ -3,6 +3,7 @@ package com.fongmi.android.tv.player.exo;
 import android.content.Context;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.accessibility.CaptioningManager;
 
@@ -34,6 +35,7 @@ import com.fongmi.android.tv.player.engine.PlayerEngine;
 import com.fongmi.android.tv.setting.PlayerSetting;
 import com.fongmi.android.tv.setting.Setting;
 import com.fongmi.android.tv.utils.UrlUtil;
+import com.fongmi.android.tv.utils.Util;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -115,10 +117,13 @@ public class ExoUtil {
     private static TrackSelector buildTrackSelector() {
         DefaultTrackSelector trackSelector = new DefaultTrackSelector(App.get());
         DefaultTrackSelector.Parameters.Builder builder = trackSelector.buildUponParameters();
+        boolean lowRam = Util.isLowRamDevice();
+        boolean cap4K = lowRam || Build.SUPPORTED_64_BIT_ABIS.length == 0;
+        if (cap4K && !PlayerSetting.isForce4K()) builder.setMaxVideoSize(1920, 1080);
         if (PlayerSetting.isPreferAAC()) builder.setPreferredAudioMimeType(MimeTypes.AUDIO_AAC);
         builder.setPreferredTextLanguage(Locale.getDefault().getISO3Language());
         builder.setTunnelingEnabled(PlayerSetting.isTunnel());
-        builder.setForceHighestSupportedBitrate(!com.fongmi.android.tv.utils.Util.isLowRamDevice());
+        builder.setForceHighestSupportedBitrate(!lowRam);
         trackSelector.setParameters(builder.build());
         return trackSelector;
     }

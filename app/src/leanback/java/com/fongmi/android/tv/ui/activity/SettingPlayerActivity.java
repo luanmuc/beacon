@@ -59,6 +59,7 @@ public class SettingPlayerActivity extends BaseActivity implements UaCallback, B
         mBinding.backgroundText.setText(getSwitch(PlayerSetting.isBackgroundOn()));
         mBinding.audioDecodeText.setText(getSwitch(PlayerSetting.isAudioPrefer()));
         mBinding.videoDecodeText.setText(getSwitch(PlayerSetting.isVideoPrefer()));
+        mBinding.force4kText.setText(getSwitch(PlayerSetting.isForce4K()));
         mBinding.danmakuLoadText.setText(getSwitch(DanmakuSetting.isLoad()));
         mBinding.scaleText.setText((scale = ResUtil.getStringArray(R.array.select_scale))[PlayerSetting.getScale()]);
         mBinding.renderText.setText((render = ResUtil.getStringArray(R.array.select_render))[PlayerSetting.getRender()]);
@@ -80,6 +81,7 @@ public class SettingPlayerActivity extends BaseActivity implements UaCallback, B
         mBinding.background.setOnClickListener(this::onBackground);
         mBinding.audioDecode.setOnClickListener(this::setAudioDecode);
         mBinding.videoDecode.setOnClickListener(this::setVideoDecode);
+        mBinding.force4k.setOnClickListener(this::setForce4K);
         mBinding.danmakuLoad.setOnClickListener(this::setDanmakuLoad);
     }
 
@@ -165,6 +167,11 @@ public class SettingPlayerActivity extends BaseActivity implements UaCallback, B
     private void setVideoDecode(View view) {
         PlayerSetting.putVideoPrefer(!PlayerSetting.isVideoPrefer());
         mBinding.videoDecodeText.setText(getSwitch(PlayerSetting.isVideoPrefer()));
+    }
+
+    private void setForce4K(View view) {
+        PlayerSetting.putForce4K(!PlayerSetting.isForce4K());
+        mBinding.force4kText.setText(getSwitch(PlayerSetting.isForce4K()));
     }
 
     private void setDanmakuLoad(View view) {

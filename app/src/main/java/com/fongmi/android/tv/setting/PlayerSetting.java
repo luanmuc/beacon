@@ -104,6 +104,14 @@ public class PlayerSetting {
         Prefers.put("video_prefer", videoPrefer);
     }
 
+    public static boolean isForce4K() {
+        return Prefers.getBoolean("force_4k");
+    }
+
+    public static void putForce4K(boolean force4K) {
+        Prefers.put("force_4k", force4K);
+    }
+
     public static boolean isPreferAAC() {
         return Prefers.getBoolean("prefer_aac");
     }

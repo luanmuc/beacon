@@ -143,6 +143,7 @@
     <string name="player_background">后台播放</string>
     <string name="player_audio_decode">音频软解</string>
     <string name="player_video_decode">视频软解</string>
+    <string name="player_force_4k">低内存允许 4K</string>
     <string name="player_aac_track">AAC优先</string>
     <string name="player_danmaku_load">弹幕加载</string>
     <string name="player_adblock">智能去广</string>
@@ -180,9 +181,6 @@
     <string name="error_empty">这里什么都没有 👀</string>
 
     <!-- Update -->
-    <string name="update_version">发现新版本 <xliff:g name="name">%s</xliff:g></string>
-    <string name="update_check">正在检测更新…</string>
-    <string name="update_confirm">更新</string>
 
     <!-- Crash -->
     <string name="crash_info">发生意外错误\n抱歉给您带来不便</string>

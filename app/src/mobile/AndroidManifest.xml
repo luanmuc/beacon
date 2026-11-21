@@ -100,9 +100,16 @@
             android:screenOrientation="fullUser" />
 
         <activity
+            android:name=".ui.activity.LiveShortcutActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <activity
             android:name=".ui.activity.LiveActivity"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|uiMode|orientation"
-            android:exported="true"
+            android:exported="false"
             android:launchMode="singleTop"
             android:parentActivityName=".ui.activity.HomeActivity"
             android:screenOrientation="sensorLandscape"

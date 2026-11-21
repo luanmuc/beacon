@@ -97,7 +97,7 @@ public class App extends Application implements Application.ActivityLifecycleCal
 
     private void initGlide() {
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        boolean lowRam = manager != null && manager.isLowRamDevice();
+        boolean lowRam = com.fongmi.android.tv.utils.Util.isLowRamDevice();
         int memoryClass = manager == null ? 128 : manager.getMemoryClass();
         int memoryCache = Math.max(8, memoryClass / 8) * 1024 * 1024;
         int bitmapPool = Math.max(4, memoryClass / 16) * 1024 * 1024;

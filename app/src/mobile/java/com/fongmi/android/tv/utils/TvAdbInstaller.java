@@ -112,6 +112,8 @@ public class TvAdbInstaller {
         } finally {
             conn.disconnect();
         }
+        android.content.pm.PackageInfo info = context.getPackageManager().getPackageArchiveInfo(file.getAbsolutePath(), 0);
+        if (info == null || !context.getPackageName().equals(info.packageName)) throw new IOException("下载的 APK 不是本应用，已拒绝安装");
         return file;
     }
 

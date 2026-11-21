@@ -93,14 +93,9 @@
         <activity
             android:name=".ui.activity.CastActivity"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
-            android:exported="true"
+            android:exported="false"
             android:launchMode="singleTop"
-            android:screenOrientation="sensorLandscape">
-            <intent-filter>
-                <action android:name="${applicationId}.cast" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
+            android:screenOrientation="sensorLandscape" />
 
         <activity
             android:name=".ui.activity.VodActivity"

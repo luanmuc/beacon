@@ -22,8 +22,22 @@ public class UpdateChecker {
     private static final String API = "https://api.github.com/repos/luanmuc/beacon/releases/latest";
     private static final String RELEASE_PAGE = "https://github.com/luanmuc/beacon/releases/latest";
     private static final Pattern VERSION = Pattern.compile("v(\\d+)\\.(\\d+)\\.(\\d+)");
+    private static final long CHECK_COOLDOWN = 60 * 1000L;
+    private static volatile long lastCheck;
+    private static volatile boolean checking;
 
     public static void check(Activity activity) {
+        long now = System.currentTimeMillis();
+        if (checking) {
+            Notify.show("正在检查更新…");
+            return;
+        }
+        if (now - lastCheck < CHECK_COOLDOWN) {
+            Notify.show("刚刚已检查过，请稍后再试");
+            return;
+        }
+        checking = true;
+        lastCheck = now;
         Task.execute(() -> {
             try {
                 JSONObject object = new JSONObject(OkHttp.string(API));
@@ -39,6 +53,8 @@ public class UpdateChecker {
                 }
             } catch (Exception e) {
                 App.post(() -> Notify.show("检查更新失败：" + e.getMessage()));
+            } finally {
+                checking = false;
             }
         });
     }
@@ -54,6 +70,7 @@ public class UpdateChecker {
 
     private static void open(Activity activity, String url) {
         try {
+            if (activity.isFinishing() || activity.isDestroyed()) return;
             activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
         } catch (Exception e) {
             Notify.show("打开失败");

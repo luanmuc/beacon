@@ -205,7 +205,28 @@ public class TypeFragment extends BaseFragment implements CustomScroller.Callbac
     @Override
     public boolean onLongClick(Vod item) {
         if (item.isAction() || item.isFolder()) return false;
-        SearchActivity.start(requireActivity(), item.getName());
+        String[] items = {"搜索同名资源", "电视播放"};
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle(item.getName())
+                .setItems(items, (d, which) -> {
+                    if (which == 0) SearchActivity.start(requireActivity(), item.getName());
+                    else castToTv(item);
+                })
+                .show();
         return true;
+    }
+
+    private void castToTv(Vod item) {
+        try {
+            com.fongmi.android.tv.bean.History history = new com.fongmi.android.tv.bean.History();
+            history.setKey(getKey() + com.fongmi.android.tv.db.AppDatabase.SYMBOL + item.getId());
+            history.setVodName(item.getName());
+            history.setVodPic(item.getPic());
+            history.setCid(VodConfig.getCid());
+            history.setCreateTime(System.currentTimeMillis());
+            com.fongmi.android.tv.ui.dialog.CastDialog.create().history(history).fm(true).show(requireActivity());
+        } catch (Exception e) {
+            Notify.show("投屏失败：" + e.getMessage());
+        }
     }
 }

@@ -262,19 +262,19 @@ public class CastDialog extends BaseBottomSheetDialog implements DeviceAdapter.O
         state.setTextSize(14);
         root.addView(state);
         android.widget.LinearLayout row1 = row();
-        row1.addView(button("快退 10s", v -> control(item, "seek", -10000, () -> refreshState(item, state)));
-        row1.addView(button("播放/暂停", v -> control(item, "play_pause", 0, () -> refreshState(item, state)));
-        row1.addView(button("快进 10s", v -> control(item, "seek", 10000, () -> refreshState(item, state)));
+        row1.addView(button("快退 10s", v -> control(item, "seek", -10000, () -> refreshState(item, state))));
+        row1.addView(button("播放/暂停", v -> control(item, "play_pause", 0, () -> refreshState(item, state))));
+        row1.addView(button("快进 10s", v -> control(item, "seek", 10000, () -> refreshState(item, state))));
         root.addView(row1);
         android.widget.LinearLayout row2 = row();
-        row2.addView(button("上一集", v -> control(item, "prev", 0, () -> refreshState(item, state)));
-        row2.addView(button("停止", v -> control(item, "stop", 0, () -> refreshState(item, state)));
-        row2.addView(button("下一集", v -> control(item, "next", 0, () -> refreshState(item, state)));
+        row2.addView(button("上一集", v -> control(item, "prev", 0, () -> refreshState(item, state))));
+        row2.addView(button("停止", v -> control(item, "stop", 0, () -> refreshState(item, state))));
+        row2.addView(button("下一集", v -> control(item, "next", 0, () -> refreshState(item, state))));
         root.addView(row2);
         android.widget.LinearLayout row3 = row();
-        row3.addView(button("音量 -", v -> control(item, "volume", -1, () -> refreshState(item, state)));
+        row3.addView(button("音量 -", v -> control(item, "volume", -1, () -> refreshState(item, state))));
         row3.addView(button("刷新状态", v -> refreshState(item, state)));
-        row3.addView(button("音量 +", v -> control(item, "volume", 1, () -> refreshState(item, state)));
+        row3.addView(button("音量 +", v -> control(item, "volume", 1, () -> refreshState(item, state))));
         root.addView(row3);
         androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(requireContext())
                 .setTitle(item.getName() + " 遥控")

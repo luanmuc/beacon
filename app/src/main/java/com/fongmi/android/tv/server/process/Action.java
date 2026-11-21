@@ -177,8 +177,8 @@ public class Action implements Process {
             json.put("playing", player.isPlaying());
             json.put("position", Math.max(0, player.getCurrentPosition()));
             json.put("duration", Math.max(0, player.getDuration()));
-            json.put("title", metadata == null ? "" : String.valueOf(metadata.title));
-            json.put("artist", metadata == null ? "" : String.valueOf(metadata.artist));
+            json.put("title", metadata == null || metadata.title == null ? "" : String.valueOf(metadata.title));
+            json.put("artist", metadata == null || metadata.artist == null ? "" : String.valueOf(metadata.artist));
             AudioManager manager = (AudioManager) App.get().getSystemService(Context.AUDIO_SERVICE);
             if (manager != null) {
                 json.put("volume", manager.getStreamVolume(AudioManager.STREAM_MUSIC));

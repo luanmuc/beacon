@@ -50,7 +50,7 @@ public class PlayerManager implements ParseCallback {
     private Player player;
 
     private boolean initTrack;
-    private int retry;
+    private boolean decodeRetried;
 
     public PlayerManager(Callback callback) {
         this.runnable = () -> callback.onError(ResUtil.getString(R.string.error_play_timeout));
@@ -294,7 +294,7 @@ public class PlayerManager implements ParseCallback {
 
     public void reset() {
         App.removeCallbacks(runnable);
-        retry = 0;
+        decodeRetried = false;
     }
 
     public void clear() {
@@ -316,6 +316,8 @@ public class PlayerManager implements ParseCallback {
     public void toggleDecode() {
         engine.setDecode(engine.isHard() ? PlayerEngine.SOFT : PlayerEngine.HARD);
         rebuildPlayer();
+        // A manual soft selection must not be followed by another automatic fallback.
+        decodeRetried = !engine.isHard();
         setMediaItem();
     }
 
@@ -332,12 +334,14 @@ public class PlayerManager implements ParseCallback {
     }
 
     public void start(PlaySpec spec, long timeout) {
+        reset();
         this.spec = spec;
         setMediaItem(timeout);
     }
 
     public void parse(String key, Result result, boolean useParse, MediaMetadata metadata) {
         stopParse();
+        reset();
         spec = PlaySpec.fromParse(result, key, metadata);
         parseJob = ParseJob.create(this).start(result, useParse);
     }
@@ -395,6 +399,10 @@ public class PlayerManager implements ParseCallback {
 
         void onError(String msg);
 
+        default void onFailure(PlaybackFailure failure) {
+            onError(failure.getMessage());
+        }
+
         void onPlayerRebuild(Player newPlayer);
     }
 
@@ -430,18 +438,14 @@ public class PlayerManager implements ParseCallback {
                 setDanmakus(spec.getDanmakus());
                 return;
             }
-            if (++retry > 2) {
-                callback.onError(engine.getErrorMessage(e));
+            if (action == PlayerEngine.ErrorAction.DECODE && engine.isHard() && !decodeRetried) {
+                decodeRetried = true;
+                engine.setDecode(PlayerEngine.SOFT);
+                rebuildPlayer();
+                setMediaItem();
                 return;
             }
-            switch (action) {
-                case DECODE:
-                    toggleDecode();
-                    break;
-                case FATAL:
-                    callback.onError(engine.getErrorMessage(e));
-                    break;
-            }
+            callback.onFailure(PlaybackFailure.from(e));
         }
     };
 }

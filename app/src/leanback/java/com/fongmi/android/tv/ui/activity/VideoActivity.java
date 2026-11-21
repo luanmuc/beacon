@@ -50,9 +50,9 @@ import com.fongmi.android.tv.db.AppDatabase;
 import com.fongmi.android.tv.event.RefreshEvent;
 import com.fongmi.android.tv.impl.CustomTarget;
 import com.fongmi.android.tv.model.SiteViewModel;
+import com.fongmi.android.tv.player.PlaybackFailure;
 import com.fongmi.android.tv.player.PlayerHelper;
 import com.fongmi.android.tv.player.PlayerManager;
-import com.fongmi.android.tv.player.engine.PlayerEngine;
 import com.fongmi.android.tv.service.PlaybackService;
 import com.fongmi.android.tv.setting.DanmakuSetting;
 import com.fongmi.android.tv.setting.PlayerSetting;
@@ -505,7 +505,6 @@ public class VideoActivity extends PlaybackActivity implements CustomKeyDownVod.
     }
 
     private void setPlayer(Result result) {
-        softRetried = false;
         siteRetried = false;
         mQualityAdapter.addAll(result);
         setUseParse(result.shouldUseParse());
@@ -1107,33 +1106,11 @@ public class VideoActivity extends PlaybackActivity implements CustomKeyDownVod.
         setTitleVisible();
     }
 
-    private boolean softRetried;
     private boolean siteRetried;
 
-    private boolean isDecodeIssue(String text) {
-        String lower = text == null ? "" : text.toLowerCase();
-        return lower.contains("decode") || lower.contains("decoder") || lower.contains("unsupported") || lower.contains("format");
-    }
-
-    private boolean isHttp4xx(String text) {
-        String lower = text == null ? "" : text.toLowerCase();
-        return lower.contains("403") || lower.contains("404") || lower.contains("410") || lower.contains("not found");
-    }
-
     @Override
-    protected void onError(String msg) {
-        if (!softRetried && player().isHard() && isDecodeIssue(msg)) {
-            softRetried = true;
-            try {
-                player().setDecode(PlayerEngine.SOFT);
-                mBinding.control.action.decode.setText(player().getDecodeText());
-                com.fongmi.android.tv.utils.Notify.show("解码失败，已自动切换软解重试");
-                com.fongmi.android.tv.App.post(this::onRefresh, 600);
-                return;
-            } catch (Exception ignored) {
-            }
-        }
-        if (!siteRetried && com.fongmi.android.tv.api.config.VodConfig.get().getSites().size() > 1 && isHttp4xx(msg)) {
+    protected void onFailure(PlaybackFailure failure) {
+        if (!siteRetried && failure.isHttp4xx() && com.fongmi.android.tv.api.config.VodConfig.get().getSites().size() > 1) {
             siteRetried = true;
             try {
                 com.fongmi.android.tv.utils.Notify.show("源地址失效，自动切换站点重试");
@@ -1142,6 +1119,11 @@ public class VideoActivity extends PlaybackActivity implements CustomKeyDownVod.
             } catch (Exception ignored) {
             }
         }
+        super.onFailure(failure);
+    }
+
+    @Override
+    protected void onError(String msg) {
         Track.delete(player().getKey());
         mClock.setCallback(null);
         player().resetTrack();

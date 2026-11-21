@@ -657,14 +657,7 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
             if (urls == null || urls.size() < 2) { Notify.show("当前频道只有一条线路"); return; }
             Notify.show("正在测速 " + urls.size() + " 条线路…");
             com.fongmi.android.tv.utils.Task.execute(() -> {
-                final long[] lat = new long[urls.size()];
-                java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newFixedThreadPool(Math.min(4, urls.size()));
-                for (int i = 0; i < urls.size(); i++) {
-                    final int idx = i;
-                    pool.execute(() -> lat[idx] = ping(urls.get(idx).split("\\$")[0]));
-                }
-                pool.shutdown();
-                try { pool.awaitTermination(8, java.util.concurrent.TimeUnit.SECONDS); } catch (Exception ignored) {}
+                final long[] lat = com.fongmi.android.tv.utils.LineProbe.probe(urls, 8000);
                 int best = -1;
                 for (int i = 0; i < lat.length; i++) if (lat[i] >= 0 && (best < 0 || lat[i] < lat[best])) best = i;
                 final int bestIdx = best;
@@ -1429,14 +1422,7 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
                 names[i] = (i == mChannel.getIndex() ? "✓ " : "") + title;
             }
             com.fongmi.android.tv.utils.Task.execute(() -> {
-                final long[] lat = new long[urls.size()];
-                java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newFixedThreadPool(Math.min(4, Math.max(1, urls.size())));
-                for (int i = 0; i < urls.size(); i++) {
-                    final int idx = i;
-                    pool.execute(() -> lat[idx] = ping(urls.get(idx).split("\\$")[0]));
-                }
-                pool.shutdown();
-                try { pool.awaitTermination(8, java.util.concurrent.TimeUnit.SECONDS); } catch (Exception ignored) {}
+                final long[] lat = com.fongmi.android.tv.utils.LineProbe.probe(urls, 8000);
                 for (int i = 0; i < names.length; i++) names[i] = names[i] + " · " + (lat[i] < 0 ? "测速超时" : lat[i] + "ms");
                 com.fongmi.android.tv.App.post(() -> new androidx.appcompat.app.AlertDialog.Builder(this)
                         .setTitle("选择线路（含延迟）")
@@ -1451,24 +1437,6 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
             });
         } catch (Exception e) {
             com.fongmi.android.tv.utils.Notify.show("线路列表不可用");
-        }
-    }
-
-    private long ping(String url) {
-        java.net.HttpURLConnection c = null;
-        try {
-            long start = System.currentTimeMillis();
-            c = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
-            c.setConnectTimeout(1500);
-            c.setReadTimeout(1500);
-            c.setRequestMethod("GET");
-            c.setRequestProperty("Range", "bytes=0-0");
-            c.getResponseCode();
-            return System.currentTimeMillis() - start;
-        } catch (Exception e) {
-            return -1;
-        } finally {
-            if (c != null) c.disconnect();
         }
     }
 

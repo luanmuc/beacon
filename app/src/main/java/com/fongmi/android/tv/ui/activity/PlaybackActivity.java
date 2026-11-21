@@ -20,6 +20,7 @@ import androidx.media3.ui.PlayerView;
 
 import com.fongmi.android.tv.R;
 import com.fongmi.android.tv.bean.Result;
+import com.fongmi.android.tv.player.PlaybackFailure;
 import com.fongmi.android.tv.player.PlayerManager;
 import com.fongmi.android.tv.player.engine.PlaySpec;
 import com.fongmi.android.tv.player.exo.ExoUtil;
@@ -132,6 +133,10 @@ public abstract class PlaybackActivity extends BaseActivity implements MediaCont
     }
 
     protected void onError(String msg) {
+    }
+
+    protected void onFailure(PlaybackFailure failure) {
+        onError(failure.getMessage());
     }
 
     protected void onPlayingChanged(boolean isPlaying) {
@@ -279,6 +284,11 @@ public abstract class PlaybackActivity extends BaseActivity implements MediaCont
         @Override
         public void onError(String msg) {
             if (isOwner()) PlaybackActivity.this.onError(msg);
+        }
+
+        @Override
+        public void onFailure(PlaybackFailure failure) {
+            if (isOwner()) PlaybackActivity.this.onFailure(failure);
         }
 
         @Override

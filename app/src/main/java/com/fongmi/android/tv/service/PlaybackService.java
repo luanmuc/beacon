@@ -25,6 +25,7 @@ import com.fongmi.android.tv.bean.Result;
 import com.fongmi.android.tv.browse.BrowseTree;
 import com.fongmi.android.tv.event.ActionEvent;
 import com.fongmi.android.tv.event.ConfigEvent;
+import com.fongmi.android.tv.player.PlaybackFailure;
 import com.fongmi.android.tv.player.PlayerManager;
 import com.fongmi.android.tv.player.engine.PlaySpec;
 import com.fongmi.android.tv.server.Server;
@@ -448,6 +449,11 @@ public class PlaybackService extends MediaLibraryService implements MediaLibrary
     }
 
     @Override
+    public void onFailure(PlaybackFailure failure) {
+        playerCallbacks.forEach(callback -> callback.onFailure(failure));
+    }
+
+    @Override
     public void onPlayerRebuild(Player newPlayer) {
         exoPlayer.removeListener(listener);
         exoPlayer = newPlayer;
@@ -522,6 +528,10 @@ public class PlaybackService extends MediaLibraryService implements MediaLibrary
         }
 
         default void onError(String msg) {
+        }
+
+        default void onFailure(PlaybackFailure failure) {
+            onError(failure.getMessage());
         }
 
         default void onPlayerRebuild(Player player) {

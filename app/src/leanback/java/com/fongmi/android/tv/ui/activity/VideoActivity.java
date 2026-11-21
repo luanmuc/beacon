@@ -52,6 +52,7 @@ import com.fongmi.android.tv.impl.CustomTarget;
 import com.fongmi.android.tv.model.SiteViewModel;
 import com.fongmi.android.tv.player.PlayerHelper;
 import com.fongmi.android.tv.player.PlayerManager;
+import com.fongmi.android.tv.player.engine.PlayerEngine;
 import com.fongmi.android.tv.service.PlaybackService;
 import com.fongmi.android.tv.setting.DanmakuSetting;
 import com.fongmi.android.tv.setting.PlayerSetting;
@@ -1119,7 +1120,7 @@ public class VideoActivity extends PlaybackActivity implements CustomKeyDownVod.
         if (!softRetried && player().isHard() && isDecodeIssue(msg)) {
             softRetried = true;
             try {
-                player().setDecode(1);
+                player().setDecode(PlayerEngine.SOFT);
                 mBinding.control.action.decode.setText(player().getDecodeText());
                 com.fongmi.android.tv.utils.Notify.show("解码失败，已自动切换软解重试");
                 com.fongmi.android.tv.App.post(this::onRefresh, 600);

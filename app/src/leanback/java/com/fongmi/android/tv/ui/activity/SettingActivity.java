@@ -577,7 +577,8 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
                 + "\n影视站点：" + sites + " 个\n直播源：" + lives + " 个"
                 + "\n收藏：" + com.fongmi.android.tv.bean.Keep.getVod().size() + " 部影视 / " + com.fongmi.android.tv.bean.Keep.getLive().size() + " 个频道"
                 + "\n仓库：github.com/luanmuc/beacon"
-                + "\n\n豆包定制 · 基于 GPL-3.0 开源项目二次开发";
+                + "\n\n设备信息：\n" + com.fongmi.android.tv.utils.Util.getDeviceReport()
+                + "\n豆包定制 · 基于 GPL-3.0 开源项目二次开发";
         new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle("构建信息")
                 .setMessage(info)

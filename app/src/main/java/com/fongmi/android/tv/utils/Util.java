@@ -168,7 +168,8 @@ public class Util {
 
     public static boolean isLowRamDevice() {
         ActivityManager am = (ActivityManager) App.get().getSystemService(Context.ACTIVITY_SERVICE);
-        return am != null && am.isLowRamDevice();
+        if (am == null) return false;
+        return am.isLowRamDevice() || am.getMemoryClass() <= 256;
     }
 
     public static String getDeviceReport() {

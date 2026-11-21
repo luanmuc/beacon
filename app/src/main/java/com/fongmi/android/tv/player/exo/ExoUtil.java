@@ -101,7 +101,15 @@ public class ExoUtil {
     }
 
     private static LoadControl buildLoadControl() {
-        return new DefaultLoadControl.Builder().setBufferDurationsMs(DefaultLoadControl.DEFAULT_MIN_BUFFER_MS * PlayerSetting.getBuffer(), DefaultLoadControl.DEFAULT_MAX_BUFFER_MS * PlayerSetting.getBuffer(), DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_MS, DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS).build();
+        int buffer = PlayerSetting.getBuffer();
+        int min = DefaultLoadControl.DEFAULT_MIN_BUFFER_MS * buffer;
+        int max = DefaultLoadControl.DEFAULT_MAX_BUFFER_MS * buffer;
+        DefaultLoadControl.Builder builder = new DefaultLoadControl.Builder().setBufferDurationsMs(min, max, DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_MS, DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS);
+        if (com.fongmi.android.tv.utils.Util.isLowRamDevice()) {
+            builder.setBufferDurationsMs(Math.min(min, 15000), Math.min(max, 30000), DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_MS, DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS);
+            builder.setTargetBufferBytes(64 * 1024 * 1024);
+        }
+        return builder.build();
     }
 
     private static TrackSelector buildTrackSelector() {

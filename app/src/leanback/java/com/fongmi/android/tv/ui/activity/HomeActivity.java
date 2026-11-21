@@ -580,7 +580,7 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
     private void checkSeedUpdate() {
         com.fongmi.android.tv.utils.Task.execute(() -> {
             try {
-                String text = com.github.catvod.net.OkHttp.string("https://raw.githubusercontent.com/luanmuc/beacon-seed/stable/manifest.json");
+                String text = com.github.catvod.net.OkHttp.string("https://raw.githubusercontent.com/luanmuc/beacon-feeds/release/manifest.json");
                 org.json.JSONObject o = new org.json.JSONObject(text);
                 String ver = o.optString("version", "");
                 String old = com.fongmi.android.tv.setting.Setting.getSeedVer();

@@ -87,16 +87,30 @@ public class Config {
         AppDatabase.get().getConfigDao().delete(url, type);
     }
 
-    public static final String SEED_VOD = "https://raw.githubusercontent.com/luanmuc/beacon-seed/stable/tvbox.json";
-    public static final String SEED_LIVE = "https://raw.githubusercontent.com/luanmuc/beacon-seed/stable/live.m3u";
+    public static final String SEED_VOD = "https://raw.githubusercontent.com/luanmuc/beacon-feeds/release/tvbox.json";
+    public static final String SEED_LIVE = "https://raw.githubusercontent.com/luanmuc/beacon-feeds/release/live/all.m3u";
+    private static final String LEGACY_SEED = "https://raw.githubusercontent.com/luanmuc/beacon-seed/";
+
+    private static Config migrateSeed(Config item, String url, String name, int type) {
+        if (item == null || TextUtils.isEmpty(item.getUrl()) || !item.getUrl().startsWith(LEGACY_SEED)) return item;
+        Config existing = AppDatabase.get().getConfigDao().find(url, type);
+        if (existing != null && existing.getId() != item.getId()) {
+            AppDatabase.get().getConfigDao().delete(item.getUrl(), type);
+            return existing;
+        }
+        item.setUrl(url);
+        item.setName(name);
+        AppDatabase.get().getConfigDao().insertOrUpdate(item);
+        return item;
+    }
 
     public static Config vod() {
-        Config item = AppDatabase.get().getConfigDao().findOne(0);
+        Config item = migrateSeed(AppDatabase.get().getConfigDao().findOne(0), SEED_VOD, "默认影视", 0);
         return item == null ? create(0, SEED_VOD, "默认影视") : item;
     }
 
     public static Config live() {
-        Config item = AppDatabase.get().getConfigDao().findOne(1);
+        Config item = migrateSeed(AppDatabase.get().getConfigDao().findOne(1), SEED_LIVE, "默认直播", 1);
         return item == null ? create(1, SEED_LIVE, "默认直播") : item;
     }
 

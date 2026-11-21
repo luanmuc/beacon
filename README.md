@@ -4,7 +4,7 @@ Android TV / 手机双端的聚合播放器，电视台直播与影视点播合�
 
 - 基座：GPL-3.0 开源电视播放器（上游版权与许可证保留在 LICENSE），在其上做二开
 - 播放内核：自有 media3 fork（`luanmuc/media@release-1.11.0-fongmi` + 补丁）
-- 源与订阅：`beacon-feeds` 定时探测维护，`beacon-seed` 提供固定订阅地址
+- 源与订阅：`beacon-feeds` 既是源脚本仓，也是固定订阅地址（`release` 分支）
 - 构建：GitHub Actions 两阶段（先编 21 个 media3 模块，再编双端 release），每日定时出包并自动发布 Release
 
 ## 特性
@@ -13,8 +13,8 @@ Android TV / 手机双端的聚合播放器，电视台直播与影视点播合�
 |---|---|
 | 双端一套代码 | `leanback`（TV）/ `mobile`（手机），一次构建出两套 APK |
 | 直播 + 影视合并 | 首页底部导航“影视 / 直播”切换，直播入口常驻 |
-| 默认订阅 | 首次启动自动写入 `beacon-seed` 的订阅地址，装完即用 |
-| 源自动维护 | 探测工作流每 6 小时跑一次，产物自动同步到公开种子仓库 |
+| 默认订阅 | 首次启动自动写入 `beacon-feeds` 的 `release` 订阅地址，装完即用 |
+| 源自动维护 | 探测工作流每 6 小时跑一次，产物提交到本仓并移动 `release` 分支 |
 | 内容面板 | 播放页展示剧名、来源、集数、播放地址、请求头，带上一集/选集/下一集/复制 |
 | 解码面板 | 显示当前解码方式，可切硬解 / 软解 |
 | 字幕调节 | 字号、位置可调（随播放保存） |
@@ -90,14 +90,12 @@ Android TV / 手机双端的聚合播放器，电视台直播与影视点播合�
 ## 仓库
 
 - 主程序：`luanmuc/beacon`（本仓库）
-- 源探测：https://github.com/luanmuc/beacon-feeds
-- 订阅种子：https://github.com/luanmuc/beacon-seed
-- 骨架试验：https://github.com/luanmuc/beacon-sketch
+- 源仓库：https://github.com/luanmuc/beacon-feeds
 
 ## 固定订阅地址
 
-- 影视：`https://raw.githubusercontent.com/luanmuc/beacon-seed/main/tvbox.json`
-- 直播：`https://raw.githubusercontent.com/luanmuc/beacon-seed/main/live.m3u`
+- 影视：`https://raw.githubusercontent.com/luanmuc/beacon-feeds/release/tvbox.json`
+- 直播：`https://raw.githubusercontent.com/luanmuc/beacon-feeds/release/live/all.m3u`
 
 ## 本地构建
 

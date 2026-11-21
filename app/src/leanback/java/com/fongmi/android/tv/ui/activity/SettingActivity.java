@@ -357,7 +357,7 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
     private void showHealth() {
         com.fongmi.android.tv.utils.Task.execute(() -> {
             try {
-                String url = "https://raw.githubusercontent.com/luanmuc/beacon-seed/main/live-report.json";
+                String url = "https://raw.githubusercontent.com/luanmuc/beacon-feeds/release/live-report.json";
                 String text = com.github.catvod.net.OkHttp.string(url);
                 org.json.JSONObject object = new org.json.JSONObject(text);
                 int channels = object.optInt("channels");
@@ -416,7 +416,7 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
         com.fongmi.android.tv.utils.Task.execute(() -> {
             if (!force && System.currentTimeMillis() - com.fongmi.android.tv.setting.Setting.getHealthTs() < 30L * 60L * 1000L) return;
             try {
-                String text = com.github.catvod.net.OkHttp.string("https://raw.githubusercontent.com/luanmuc/beacon-seed/main/live-report.json");
+                String text = com.github.catvod.net.OkHttp.string("https://raw.githubusercontent.com/luanmuc/beacon-feeds/release/live-report.json");
                 org.json.JSONObject object = new org.json.JSONObject(text);
                 int channels = object.optInt("channels");
                 int lines = object.optInt("lines");
@@ -607,7 +607,7 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
                 final java.util.Map<String, String> states = new java.util.HashMap<>();
                 int ok = 0, skip = 0, dead = 0, avg = 0;
                 try {
-                    String text = com.github.catvod.net.OkHttp.string("https://raw.githubusercontent.com/luanmuc/beacon-seed/stable/manifest.json");
+                    String text = com.github.catvod.net.OkHttp.string("https://raw.githubusercontent.com/luanmuc/beacon-feeds/release/manifest.json");
                     org.json.JSONObject o = new org.json.JSONObject(text);
                     ok = o.optInt("vod_ok");
                     skip = o.optInt("vod_skip");
@@ -788,9 +788,7 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
                 + "本项目仅供学习与技术交流，内容版权归各源站所有。\n\n"
                 + "维护仓库：\n"
                 + "壳：github.com/luanmuc/beacon\n"
-                + "源工厂：github.com/luanmuc/beacon-feeds\n"
-                + "源发布：github.com/luanmuc/beacon-seed\n"
-                + "试验壳：github.com/luanmuc/beacon-sketch\n"
+                + "源：github.com/luanmuc/beacon-feeds\n"
                 + "播放内核：github.com/luanmuc/media";
         new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle("关于应用")
@@ -814,7 +812,7 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
     private void checkManifest() {
         com.fongmi.android.tv.utils.Task.execute(() -> {
             try {
-                String text = com.github.catvod.net.OkHttp.string("https://raw.githubusercontent.com/luanmuc/beacon-seed/stable/manifest.json");
+                String text = com.github.catvod.net.OkHttp.string("https://raw.githubusercontent.com/luanmuc/beacon-feeds/release/manifest.json");
                 org.json.JSONObject o = new org.json.JSONObject(text);
                 String msg = "源版本：" + o.optString("version", "未知")
                         + "\n更新时间：" + o.optString("updated_at", "未知").replace("T", " ").replace("Z", "")

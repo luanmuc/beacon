@@ -18,7 +18,7 @@
         android:singleLine="true"
         android:textColor="@color/text"
         android:textSize="18sp"
-        tools:text="https://raw.githubusercontent.com/luanmuc/beacon-seed/stable/live.m3u" />
+        tools:text="https://raw.githubusercontent.com/luanmuc/beacon-feeds/release/live/all.m3u" />
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/pass"

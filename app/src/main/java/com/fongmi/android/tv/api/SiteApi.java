@@ -8,6 +8,7 @@ import androidx.collection.ArrayMap;
 import com.fongmi.android.tv.App;
 import com.fongmi.android.tv.R;
 import com.fongmi.android.tv.api.config.VodConfig;
+import com.fongmi.android.tv.api.loader.BaseLoader;
 import com.fongmi.android.tv.bean.Class;
 import com.fongmi.android.tv.bean.Result;
 import com.fongmi.android.tv.bean.Site;
@@ -216,6 +217,13 @@ public class SiteApi {
         if (site.getType() == 3) return Result.fromJson(site.recent().spider().action(action));
         if (site.getType() == 4) return Result.fromJson(OkHttp.string(action));
         return Result.empty();
+    }
+
+    /**
+     * 直接返回爬虫 action 的原始 JSON，供源健康页解析；不经过 Result 的影视字段裁剪。
+     */
+    public static String actionRaw(@NonNull String key, @NonNull String action) throws Exception {
+        return BaseLoader.get().getSpider(key).action(action);
     }
 
     @NonNull

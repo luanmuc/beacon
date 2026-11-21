@@ -371,6 +371,95 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
     }
 
 
+    private String vodSourceKey() {
+        try {
+            if (com.fongmi.android.tv.api.config.VodConfig.get().getSites() != null && !com.fongmi.android.tv.api.config.VodConfig.get().getSites().isEmpty()) {
+                return com.fongmi.android.tv.api.config.VodConfig.get().getSites().get(0).getKey();
+            }
+        } catch (Exception ignored) {
+        }
+        return "beacon-vod";
+    }
+
+    private String liveSourceKey() {
+        try {
+            if (com.fongmi.android.tv.api.config.LiveConfig.get().getLives() != null && !com.fongmi.android.tv.api.config.LiveConfig.get().getLives().isEmpty()) {
+                return com.fongmi.android.tv.api.config.LiveConfig.get().getLives().get(0).getName();
+            }
+        } catch (Exception ignored) {
+        }
+        return "聚合直播";
+    }
+
+    private void showSourceHealth() {
+        com.fongmi.android.tv.utils.Task.execute(() -> {
+            String vod = "";
+            String live = "";
+            try {
+                vod = com.fongmi.android.tv.api.SiteApi.actionRaw(vodSourceKey(), "health");
+            } catch (Exception ignored) {
+            }
+            try {
+                live = com.fongmi.android.tv.api.SiteApi.actionRaw(liveSourceKey(), "health");
+            } catch (Exception ignored) {
+            }
+            String message = sourceHealthText(vod, live);
+            com.fongmi.android.tv.App.post(() -> new androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("聚合源健康")
+                    .setMessage(message)
+                    .setPositiveButton("探测影视", (d, w) -> probeSource(vodSourceKey(), "影视"))
+                    .setNeutralButton("探测直播", (d, w) -> probeSource(liveSourceKey(), "直播"))
+                    .setNegativeButton("关闭", null)
+                    .show());
+        });
+    }
+
+    private String sourceHealthText(String vod, String live) {
+        StringBuilder sb = new StringBuilder();
+        try {
+            org.json.JSONObject v = new org.json.JSONObject(vod);
+            org.json.JSONObject s = v.optJSONObject("summary");
+            if (s != null) sb.append("影视：").append(s.optInt("total")).append(" 个接口，")
+                    .append(s.optInt("ok")).append(" 正常，").append(s.optInt("dead")).append(" 异常");
+            else sb.append("影视：未返回健康数据");
+        } catch (Exception e) {
+            sb.append("影视：读取失败");
+        }
+        sb.append("\n");
+        try {
+            org.json.JSONObject l = new org.json.JSONObject(live);
+            org.json.JSONObject s = l.optJSONObject("summary");
+            if (s != null) {
+                sb.append("直播：").append(s.optInt("channels")).append(" 频道，")
+                        .append(s.optInt("lines")).append(" 线路，").append(s.optInt("dead")).append(" 失效线路");
+            } else sb.append("直播：未返回健康数据");
+        } catch (Exception e) {
+            sb.append("直播：读取失败");
+        }
+        return sb.toString();
+    }
+
+    private void probeSource(String key, String label) {
+        com.fongmi.android.tv.utils.Notify.show("正在探测" + label + "源…");
+        com.fongmi.android.tv.utils.Task.execute(() -> {
+            try {
+                String raw = com.fongmi.android.tv.api.SiteApi.actionRaw(key, "probe");
+                com.fongmi.android.tv.App.post(() -> {
+                    String text = raw == null || raw.isEmpty() ? "无返回" : raw.length() > 400 ? raw.substring(0, 400) + "…" : raw;
+                    new androidx.appcompat.app.AlertDialog.Builder(this)
+                            .setTitle(label + "源探测")
+                            .setMessage(text)
+                            .setPositiveButton("关闭", null)
+                            .show();
+                });
+            } catch (Exception e) {
+                com.fongmi.android.tv.App.post(() -> com.fongmi.android.tv.utils.Notify.show(label + "源探测失败：" + e.getMessage()));
+            }
+        });
+    }
+
+
+
     private void checkSubscribers() {
         String url = com.fongmi.android.tv.api.config.VodConfig.getDesc();
         if (url == null || url.isEmpty()) {
@@ -480,7 +569,7 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
 
 
     private void showProbeMenu() {
-        String[] items = {"刷新存活统计", "查看存活统计", "查看直播源列表", "检查源清单", "打开 Actions 探测页", "恢复默认直播订阅"};
+        String[] items = {"刷新存活统计", "查看存活统计", "查看直播源列表", "检查源清单", "打开 Actions 探测页", "恢复默认直播订阅", "聚合源健康"};
         new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle("直播源维护")
                 .setItems(items, (d, which) -> {
@@ -489,7 +578,8 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
                     else if (which == 2) showLiveList();
                     else if (which == 3) checkManifest();
                     else if (which == 4) openActions();
-                    else restoreDefaultLive();
+                    else if (which == 5) restoreDefaultLive();
+                    else if (which == 6) showSourceHealth();
                 })
                 .show();
     }

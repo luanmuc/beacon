@@ -150,15 +150,23 @@ jobs:
           - mode: Leanback
             abi: Arm64_v8a
             slug: leanback-arm64_v8a
+            label: 电视版
+            cpu: arm64-v8a
           - mode: Leanback
             abi: Armeabi_v7a
             slug: leanback-armeabi_v7a
+            label: 电视版
+            cpu: armv7
           - mode: Mobile
             abi: Arm64_v8a
             slug: mobile-arm64_v8a
+            label: 手机版
+            cpu: arm64-v8a
           - mode: Mobile
             abi: Armeabi_v7a
             slug: mobile-armeabi_v7a
+            label: 手机版
+            cpu: armv7
     steps:
       - uses: actions/checkout@v4
 
@@ -229,7 +237,7 @@ jobs:
           set -e
           for f in out/*.apk; do
             base=$(basename "$f" .apk)
-            mv "$f" "out/beacon-${{ github.run_number }}-${base}.apk"
+            mv "$f" "out/beacon-${{ github.run_number }}-${{ matrix.label }}-${{ matrix.cpu }}.apk"
           done
           ls -lh out
 
@@ -259,13 +267,13 @@ jobs:
       - name: Generate CHANGELOG
         run: |
           git log -12 --pretty=format:"- %s (%h)" > CHANGELOG.tmp
-          { echo "# 变更记录"; echo; cat CHANGELOG.tmp; } > CHANGELOG.md
+          { echo "# 变更记录"; echo; echo "## 安装包"; echo "- 手机版：手机/平板安装，arm64-v8a 适合大多数新设备，armv7 适合老设备"; echo "- 电视版：电视/盒子安装，arm64-v8a 适合大多数新设备，armv7 适合老设备"; echo; cat CHANGELOG.tmp; } > CHANGELOG.md
           rm -f CHANGELOG.tmp
 
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.${{ github.run_number }}
-          name: v1.0.${{ github.run_number }}
+          name: v1.0.${{ github.run_number }} 手机版/电视版
           body_path: CHANGELOG.md
           files: out/*.apk

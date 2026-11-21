@@ -61,6 +61,7 @@ android {
 
     packaging {
         jniLibs {
+            useLegacyPackaging = true
             pickFirsts += ["**/libavcodec.so", "**/libavformat.so", "**/libavutil.so", "**/libswresample.so", "**/libswscale.so", "**/libavfilter.so", "**/libavdevice.so"]
         }
     }
@@ -117,11 +118,11 @@ dependencies {
     implementation project(':catvod')
     implementation project(':chaquo')
     implementation project(':quickjs')
-    implementation('com.github.MuntashirAkon:libadb-android:3.1.1') {
+    mobileImplementation('com.github.MuntashirAkon:libadb-android:3.1.1') {
         exclude group: 'org.bouncycastle', module: 'bcprov-jdk15to18'
     }
-    implementation 'com.github.MuntashirAkon:sun-security-android:1.1'
-    implementation 'org.conscrypt:conscrypt-android:2.5.3' 
+    mobileImplementation 'com.github.MuntashirAkon:sun-security-android:1.1'
+    mobileImplementation 'org.conscrypt:conscrypt-android:2.5.3' 
     implementation libs.appcompat
     implementation libs.lifecycle.service
     implementation libs.media

@@ -72,7 +72,8 @@ public class TvAdbInstaller {
     }
 
     private static File download(Context context, boolean armv7, Listener listener) throws Exception {
-        String suffix = armv7 ? "leanback-armeabi_v7a.apk" : "leanback-arm64_v8a.apk";
+        String suffix = armv7 ? "电视版-armv7.apk" : "电视版-arm64-v8a.apk";
+        String oldSuffix = armv7 ? "leanback-armeabi_v7a.apk" : "leanback-arm64_v8a.apk";
         HttpURLConnection api = open("https://api.github.com/repos/luanmuc/beacon/releases/latest");
         String json;
         try (InputStream in = api.getInputStream()) {
@@ -85,7 +86,7 @@ public class TvAdbInstaller {
         org.json.JSONArray assets = release.optJSONArray("assets");
         if (assets != null) for (int i = 0; i < assets.length(); i++) {
             org.json.JSONObject asset = assets.optJSONObject(i);
-            if (asset != null && asset.optString("name", "").endsWith(suffix)) {
+            if (asset != null && (asset.optString("name", "").endsWith(suffix) || asset.optString("name", "").endsWith(oldSuffix))) {
                 url = asset.optString("browser_download_url");
                 break;
             }

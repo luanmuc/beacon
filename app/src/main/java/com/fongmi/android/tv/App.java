@@ -88,6 +88,18 @@ public class App extends Application implements Application.ActivityLifecycleCal
         installCrashHandler();
     }
 
+    @Override
+    public void onTrimMemory(int level) {
+        super.onTrimMemory(level);
+        if (level >= android.content.ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) com.fongmi.android.tv.browse.VodBrowse.clearMemory();
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        com.fongmi.android.tv.browse.VodBrowse.clearMemory();
+    }
+
     private void installCrashHandler() {
         final Thread.UncaughtExceptionHandler origin = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {

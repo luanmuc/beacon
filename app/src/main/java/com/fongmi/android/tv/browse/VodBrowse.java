@@ -45,6 +45,10 @@ class VodBrowse {
     private static volatile History browseHistory;
     private static volatile ImmutableList<MediaItem> searchCache = ImmutableList.of();
 
+    public static void clearMemory() {
+        clear();
+    }
+
     static void clear() {
         vodCache.clear();
         epNavMap.clear();

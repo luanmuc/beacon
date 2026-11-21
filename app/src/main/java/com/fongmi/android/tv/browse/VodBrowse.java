@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
-class VodBrowse {
+public class VodBrowse {
 
     static final String VOD_EP = "VE:";
     static final String VOD_PLAY = "VP:";

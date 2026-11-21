@@ -2,6 +2,12 @@ name: build-apk
 
 on:
   workflow_dispatch:
+    inputs:
+      publish_release:
+        description: "发布到 GitHub Release（仅正式版勾选）"
+        required: false
+        default: false
+        type: boolean
   schedule:
     - cron: "20 19 * * *"
   push:
@@ -258,12 +264,13 @@ jobs:
         with:
           name: apk-${{ matrix.slug }}
           path: out/*.apk
-          retention-days: 1
+          retention-days: 7
           if-no-files-found: error
 
   release:
     name: publish release
     needs: app
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish_release == true }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

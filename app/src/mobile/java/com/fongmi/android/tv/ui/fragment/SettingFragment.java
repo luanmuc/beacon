@@ -530,7 +530,7 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
 
 
     private void showVodMenu() {
-        String[] items = {"复制订阅地址", "查看站点列表", "恢复默认影视订阅"};
+        String[] items = {"复制订阅地址", "查看站点列表（含健康分）", "查看站点详情", "恢复默认影视订阅"};
         new androidx.appcompat.app.AlertDialog.Builder(requireContext())
                 .setTitle("影视订阅")
                 .setItems(items, (d, which) -> {
@@ -539,6 +539,8 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
                         com.fongmi.android.tv.utils.Notify.show("已复制影视订阅地址");
                     } else if (which == 1) {
                         showSiteList();
+                    } else if (which == 2) {
+                        showSiteDetailList();
                     } else {
                         restoreDefaultVod();
                     }
@@ -615,19 +617,57 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
 
     private void showSiteList() {
         try {
-            java.util.List<com.fongmi.android.tv.bean.Site> sites = com.fongmi.android.tv.api.config.VodConfig.get().getSites();
+            final java.util.List<com.fongmi.android.tv.bean.Site> sites = com.fongmi.android.tv.api.config.VodConfig.get().getSites();
             if (sites == null || sites.isEmpty()) {
                 com.fongmi.android.tv.utils.Notify.show("当前没有可用站点");
                 return;
             }
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < sites.size(); i++) sb.append(i + 1).append(". ").append(sites.get(i).getName()).append("\n");
-            new androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                    .setTitle("站点列表（" + sites.size() + "）")
-                    .setMessage(sb.toString().trim())
-                    .setPositiveButton("复制", (d, w) -> { com.fongmi.android.tv.utils.Util.copy(sb.toString().trim()); com.fongmi.android.tv.utils.Notify.show("已复制站点列表"); })
-                    .setNegativeButton("关闭", null)
-                    .show();
+            com.fongmi.android.tv.utils.Task.execute(() -> {
+                final java.util.Map<String, Integer> scores = new java.util.HashMap<>();
+                final java.util.Map<String, String> states = new java.util.HashMap<>();
+                int ok = 0, skip = 0, dead = 0, avg = 0;
+                try {
+                    String text = com.github.catvod.net.OkHttp.string("https://raw.githubusercontent.com/luanmuc/beacon-seed/stable/manifest.json");
+                    org.json.JSONObject o = new org.json.JSONObject(text);
+                    ok = o.optInt("vod_ok");
+                    skip = o.optInt("vod_skip");
+                    dead = o.optInt("vod_dead");
+                    avg = o.optInt("vod_avg_ms");
+                    org.json.JSONArray health = o.optJSONArray("vod_health");
+                    if (health != null) for (int i = 0; i < health.length(); i++) {
+                        org.json.JSONObject h = health.optJSONObject(i);
+                        if (h == null) continue;
+                        String name = h.optString("name");
+                        scores.put(name, h.optInt("score"));
+                        states.put(name, h.optString("state"));
+                    }
+                } catch (Exception ignored) {
+                }
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < sites.size(); i++) {
+                    String name = sites.get(i).getName();
+                    sb.append(i + 1).append(". ").append(name);
+                    Integer sc = scores.get(name);
+                    if (sc != null) {
+                        String st = states.get(name);
+                        sb.append(" · ").append(sc).append("分");
+                        if ("dead".equals(st)) sb.append("（失效）");
+                        else if ("skip".equals(st)) sb.append("（未探测）");
+                    }
+                    sb.append("\n");
+                }
+                String msg = sb.toString().trim();
+                String title = "站点列表（" + sites.size() + "）";
+                if (ok + skip + dead > 0) title += " · 可用 " + ok + " / 跳过 " + skip + " / 失效 " + dead;
+                if (avg > 0) title += " · 平均 " + avg + "ms";
+                final String title2 = title;
+                com.fongmi.android.tv.App.post(() -> new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                        .setTitle(title2)
+                        .setMessage(msg)
+                        .setPositiveButton("复制", (d, w) -> { com.fongmi.android.tv.utils.Util.copy(msg); com.fongmi.android.tv.utils.Notify.show("已复制站点列表"); })
+                        .setNegativeButton("关闭", null)
+                        .show());
+            });
         } catch (Exception e) {
             com.fongmi.android.tv.utils.Notify.show("读取站点失败");
         }

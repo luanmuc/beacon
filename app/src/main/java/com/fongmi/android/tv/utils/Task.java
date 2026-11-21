@@ -19,14 +19,14 @@ public class Task {
 
     private static final ListeningExecutorService executor = pool(5, 256);
     private static final ListeningExecutorService largeExecutor = pool(12, 512);
-    private static final ScheduledExecutorService scheduler = scheduler();
+    private static final ScheduledExecutorService scheduler = newScheduler();
 
     private static ListeningExecutorService pool(int threads, int queueSize) {
         ThreadPoolExecutor pool = new ThreadPoolExecutor(threads, threads, 0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(queueSize), new ThreadPoolExecutor.CallerRunsPolicy());
         return MoreExecutors.listeningDecorator(pool);
     }
 
-    private static ScheduledThreadPoolExecutor scheduler() {
+    private static ScheduledThreadPoolExecutor newScheduler() {
         ScheduledThreadPoolExecutor scheduler = new ScheduledThreadPoolExecutor(1);
         scheduler.setRemoveOnCancelPolicy(true);
         scheduler.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);

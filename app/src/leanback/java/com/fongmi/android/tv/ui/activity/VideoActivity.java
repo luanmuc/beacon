@@ -114,6 +114,7 @@ public class VideoActivity extends PlaybackActivity implements CustomKeyDownVod.
     private SiteViewModel mViewModel;
     private List<String> mBroken;
     private History mHistory;
+    private String qualityName = "";
     private boolean fullscreen;
     private boolean initAuto;
     private boolean autoMode;
@@ -508,9 +509,11 @@ public class VideoActivity extends PlaybackActivity implements CustomKeyDownVod.
     private void setPlayer(Result result) {
         siteRetried = false;
         mQualityAdapter.addAll(result);
+        if (!TextUtils.isEmpty(qualityName)) mQualityAdapter.select(qualityName);
         setUseParse(result.shouldUseParse());
         setQualityVisible(result.getUrl().isMulti());
         result.getUrl().set(mQualityAdapter.getPosition());
+        if (TextUtils.isEmpty(qualityName) && result.getUrl().isMulti()) qualityName = result.getUrl().n(result.getUrl().getPosition());
         if (result.hasArtwork()) setArtwork(result.getArtwork());
         if (result.hasDesc()) mBinding.content.setTag(result.getDesc());
         if (result.hasPosition()) mHistory.setPosition(result.getPosition());
@@ -561,6 +564,8 @@ public class VideoActivity extends PlaybackActivity implements CustomKeyDownVod.
 
     @Override
     public void onItemClick(Result result) {
+        String name = result.getUrl().n(result.getUrl().getPosition());
+        if (!TextUtils.isEmpty(name)) qualityName = name;
         startPlayer(getHistoryKey(), result, isUseParse(), getSite().getTimeout(), buildMetadata());
     }
 
@@ -1293,6 +1298,7 @@ public class VideoActivity extends PlaybackActivity implements CustomKeyDownVod.
     @Override
     public void onItemClick(Vod item) {
         setAutoMode(false);
+        if (mHistory != null && !TextUtils.equals(item.getName(), mHistory.getVodName())) qualityName = "";
         getDetail(item);
     }
 

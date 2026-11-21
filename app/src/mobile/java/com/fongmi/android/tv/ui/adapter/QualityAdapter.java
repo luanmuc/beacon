@@ -27,6 +27,15 @@ public class QualityAdapter extends RecyclerView.Adapter<QualityAdapter.ViewHold
 
     public void addAll(Result result) {
         this.result = result;
+        this.position = result.getUrl().getPosition();
+        notifyDataSetChanged();
+    }
+
+    public void select(String name) {
+        int index = result.getUrl().indexOf(name);
+        if (index < 0) return;
+        this.position = index;
+        result.getUrl().set(index);
         notifyDataSetChanged();
     }
 

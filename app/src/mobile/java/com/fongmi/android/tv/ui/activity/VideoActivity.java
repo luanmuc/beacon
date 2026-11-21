@@ -129,6 +129,7 @@ public class VideoActivity extends PlaybackActivity implements Clock.Callback, C
     private CustomKeyDown mKeyDown;
     private List<String> mBroken;
     private History mHistory;
+    private String qualityName = "";
     private boolean fullscreen;
     private boolean initAuto;
     private boolean autoMode;
@@ -570,10 +571,12 @@ public class VideoActivity extends PlaybackActivity implements Clock.Callback, C
     private void setPlayer(Result result) {
         siteRetried = false;
         mQualityAdapter.addAll(result);
+        if (!TextUtils.isEmpty(qualityName)) mQualityAdapter.select(qualityName);
         setUseParse(result.shouldUseParse());
         mBinding.swipeLayout.setRefreshing(false);
         setQualityVisible(result.getUrl().isMulti());
         result.getUrl().set(mQualityAdapter.getPosition());
+        if (TextUtils.isEmpty(qualityName) && result.getUrl().isMulti()) qualityName = result.getUrl().n(result.getUrl().getPosition());
         if (result.hasArtwork()) setArtwork(result.getArtwork());
         if (result.hasPosition()) mHistory.setPosition(result.getPosition());
         if (result.hasDesc()) setText(mBinding.content, 0, result.getDesc());
@@ -603,12 +606,15 @@ public class VideoActivity extends PlaybackActivity implements Clock.Callback, C
 
     @Override
     public void onItemClick(Result result) {
+        String name = result.getUrl().n(result.getUrl().getPosition());
+        if (!TextUtils.isEmpty(name)) qualityName = name;
         startPlayer(getHistoryKey(), result, isUseParse(), getSite().getTimeout(), buildMetadata());
     }
 
     @Override
     public void onItemClick(Vod item) {
         setAutoMode(false);
+        if (mHistory != null && !TextUtils.equals(item.getName(), mHistory.getVodName())) qualityName = "";
         getDetail(item);
     }
 

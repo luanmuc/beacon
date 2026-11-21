@@ -69,8 +69,13 @@ public class Url {
         return this;
     }
 
+    public int indexOf(String name) {
+        for (int i = 0; i < getValues().size(); i++) if (TextUtils.equals(n(i), name)) return i;
+        return -1;
+    }
+
     public Url set(int position) {
-        this.position = Math.min(position, getValues().size() - 1);
+        this.position = Math.min(Math.max(position, 0), getValues().size() - 1);
         return this;
     }
 

@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.IntStream;
 
 public class VodBrowse {
@@ -96,14 +97,21 @@ public class VodBrowse {
 
     private static List<MediaItem> collectResults(@NonNull List<ListenableFuture<List<MediaItem>>> futures) {
         List<MediaItem> items = new ArrayList<>();
-        for (ListenableFuture<List<MediaItem>> future : futures) {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(SEARCH_TIMEOUT);
+        int index = 0;
+        for (; index < futures.size(); index++) {
+            long remaining = deadline - System.nanoTime();
+            if (remaining <= 0) break;
             try {
-                List<MediaItem> result = future.get(SEARCH_TIMEOUT, TimeUnit.SECONDS);
+                List<MediaItem> result = futures.get(index).get(remaining, TimeUnit.NANOSECONDS);
                 if (result != null) items.addAll(result);
                 if (items.size() >= SEARCH_LIMIT) break;
+            } catch (TimeoutException e) {
+                break;
             } catch (Exception ignored) {
             }
         }
+        for (; index < futures.size(); index++) futures.get(index).cancel(true);
         return items;
     }
 

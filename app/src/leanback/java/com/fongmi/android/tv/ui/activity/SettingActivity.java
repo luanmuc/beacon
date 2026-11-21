@@ -577,7 +577,7 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
                 + "\n影视站点：" + sites + " 个\n直播源：" + lives + " 个"
                 + "\n收藏：" + com.fongmi.android.tv.bean.Keep.getVod().size() + " 部影视 / " + com.fongmi.android.tv.bean.Keep.getLive().size() + " 个频道"
                 + "\n仓库：github.com/luanmuc/beacon"
-                + "\n\n基于 FongMi/TV 四月版二次开发（GPL-3.0）";
+                + "\n\n豆包定制 · 基于 GPL-3.0 开源项目二次开发";
         new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle("构建信息")
                 .setMessage(info)
@@ -747,7 +747,7 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
     private void showAbout() {
         String text = "版本：" + BuildConfig.VERSION_NAME + "（#" + BuildConfig.VERSION_CODE + "）\n"
                 + "渠道：" + BuildConfig.FLAVOR_mode + "-" + BuildConfig.FLAVOR_abi + "\n\n"
-                + "基于 FongMi/TV 四月版二次开发，遵循 GPL-3.0。\n"
+                + "豆包定制，基于 GPL-3.0 开源电视播放器基座二次开发，遵循 GPL-3.0。\n"
                 + "影视源来自公开 TVBox 配置聚合，直播源来自公开 iptv-org 清单，均已探测筛选。\n"
                 + "本项目仅供学习与技术交流，内容版权归各源站所有。\n\n"
                 + "维护仓库：\n"

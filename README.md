@@ -2,7 +2,7 @@
 
 Android TV / 手机双端的聚合播放器，电视台直播与影视点播合并，一个入口切换。
 
-- 基座：`FongMi/TV` 4 月版（`16d347a9`），在其上做二开
+- 基座：GPL-3.0 开源电视播放器（上游版权与许可证保留在 LICENSE），在其上做二开
 - 播放内核：自有 media3 fork（`luanmuc/media@release-1.11.0-fongmi` + 补丁）
 - 源与订阅：`beacon-feeds` 定时探测维护，`beacon-seed` 提供固定订阅地址
 - 构建：GitHub Actions 两阶段（先编 21 个 media3 模块，再编双端 release），每日定时出包并自动发布 Release
@@ -115,4 +115,4 @@ release 构建依赖 `local.properties` 中的 `storeFile / keyAlias / storePass
 
 ## 许可
 
-上游为 GPL-3.0，本仓库作为二开同样遵循 GPL-3.0。仅个人自用，不对外分发。
+基座为 GPL-3.0，本仓库作为二开同样遵循 GPL-3.0。仅个人自用，不对外分发。

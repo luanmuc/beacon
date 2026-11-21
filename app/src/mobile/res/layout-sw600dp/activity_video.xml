@@ -119,7 +119,7 @@
             android:singleLine="true"
             android:textColor="@color/white"
             android:textSize="14sp"
-            tools:text="导演：FongMi" />
+            tools:text="导演：豆包定制" />
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/actor"
@@ -134,7 +134,7 @@
             android:maxLines="1"
             android:textColor="@color/white"
             android:textSize="14sp"
-            tools:text="演员：FongMi" />
+            tools:text="演员：豆包定制" />
 
         <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
             android:id="@+id/swipeLayout"

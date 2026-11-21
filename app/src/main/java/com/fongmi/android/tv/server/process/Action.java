@@ -17,6 +17,7 @@ import com.fongmi.android.tv.impl.Callback;
 import com.fongmi.android.tv.server.Nano;
 import com.fongmi.android.tv.server.Server;
 import com.fongmi.android.tv.server.impl.Process;
+import com.fongmi.android.tv.setting.Setting;
 import com.fongmi.android.tv.service.PlaybackService;
 import com.fongmi.android.tv.utils.FileUtil;
 import com.fongmi.android.tv.utils.Notify;
@@ -42,8 +43,17 @@ public class Action implements Process {
     public Response doResponse(IHTTPSession session, String url, Map<String, String> files) {
         Map<String, String> params = session.getParms();
         String param = params.get("do");
+        if ("pair".equals(param)) return Nano.ok(pair(params));
+        if (Setting.getPairRequired() && !Setting.getPairToken().equals(params.get("token"))) {
+            return Nano.error("PAIR_REQUIRED");
+        }
         if (!TextUtils.isEmpty(param)) doJob(param, params);
         return Nano.ok();
+    }
+
+    private String pair(Map<String, String> params) {
+        if (!Setting.verifyPairCode(params.get("code"))) return "PAIR_FAILED";
+        return Setting.getPairToken();
     }
 
     private void doJob(String param, Map<String, String> params) {

@@ -153,7 +153,7 @@ public class SyncDialog extends BaseBottomSheetDialog implements DeviceAdapter.O
 
     @Override
     public void onItemClick(Device item) {
-        OkHttp.newCall(client, String.format(Locale.getDefault(), "%s/action?do=sync&mode=%s&type=%s", item.getIp(), binding.mode.getTag().toString(), type), body.build()).enqueue(getCallback());
+        OkHttp.newCall(client, String.format(Locale.getDefault(), "%s/action?do=sync&mode=%s&type=%s%s", item.getIp(), binding.mode.getTag().toString(), type, token(item)), body.build()).enqueue(getCallback());
     }
 
     @Override
@@ -162,8 +162,14 @@ public class SyncDialog extends BaseBottomSheetDialog implements DeviceAdapter.O
         if (mode.equals("0")) return false;
         if (mode.equals("2")) deleteLocal();
         String force = mode.equals("1") ? "&force=true" : "";
-        OkHttp.newCall(client, String.format(Locale.getDefault(), "%s/action?do=sync&mode=%s&type=%s%s", item.getIp(), mode, type, force), body.build()).enqueue(getCallback());
+        OkHttp.newCall(client, String.format(Locale.getDefault(), "%s/action?do=sync&mode=%s&type=%s%s%s", item.getIp(), mode, type, force, token(item)), body.build()).enqueue(getCallback());
         return true;
+    }
+
+    private String token(Device item) {
+        String key = android.text.TextUtils.isEmpty(item.getUuid()) ? item.getIp() : item.getUuid();
+        String token = com.github.catvod.utils.Prefers.getString("cast_token_" + key);
+        return android.text.TextUtils.isEmpty(token) ? "" : "&token=" + token;
     }
 
     private void deleteLocal() {

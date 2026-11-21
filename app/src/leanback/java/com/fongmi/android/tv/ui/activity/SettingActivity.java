@@ -680,17 +680,35 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
 
 
     private void showPlayerMenu() {
-        String[] items = {"手势与按键说明", "应用推荐播放配置", "局域网访问：" + (com.fongmi.android.tv.setting.Setting.getLan() ? "已开启" : "已关闭")};
+        String[] items = {"手势与按键说明", "应用推荐播放配置", "局域网访问：" + (com.fongmi.android.tv.setting.Setting.getLan() ? "已开启" : "已关闭"), "配对手机遥控"};
         new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle("播放器设置")
                 .setItems(items, (d, which) -> {
                     if (which == 0) showGestureHelp();
                     else if (which == 2) toggleLan();
+                    else if (which == 3) showPairing();
                     else applyRecommended();
                 })
                 .show();
     }
 
+
+    private void showPairing() {
+        boolean required = com.fongmi.android.tv.setting.Setting.getPairRequired();
+        String code = com.fongmi.android.tv.setting.Setting.newPairCode();
+        String text = "配对码：" + code + "\n5 分钟内有效，过期可刷新。\n\n手机端：投屏设备列表长按电视 → 配对电视 → 输入此码。\n配对一次后长期记住，不用每次连。\n\n当前状态：" + (required ? "只允许已配对设备" : "允许未配对设备（更方便）");
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("配对手机遥控")
+                .setMessage(text)
+                .setPositiveButton("刷新配对码", (d, w) -> showPairing())
+                .setNeutralButton(required ? "允许未配对" : "只允许已配对", (d, w) -> {
+                    com.fongmi.android.tv.setting.Setting.putPairRequired(!required);
+                    com.fongmi.android.tv.utils.Notify.show(!required ? "已开启：手机需配对后才能投屏/遥控" : "已关闭：允许未配对设备投屏");
+                    showPairing();
+                })
+                .setNegativeButton("关闭", null)
+                .show();
+    }
 
     private void toggleLan() {
         boolean lan = !com.fongmi.android.tv.setting.Setting.getLan();

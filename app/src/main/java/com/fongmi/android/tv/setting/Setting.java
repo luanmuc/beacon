@@ -148,4 +148,39 @@ public class Setting {
         com.github.catvod.utils.Prefers.put("lan_access", lan);
     }
 
+    public static boolean getPairRequired() {
+        return com.github.catvod.utils.Prefers.getBoolean("pair_required", false);
+    }
+
+    public static void putPairRequired(boolean required) {
+        com.github.catvod.utils.Prefers.put("pair_required", required);
+    }
+
+    public static String getPairToken() {
+        String token = com.github.catvod.utils.Prefers.getString("pair_token");
+        if (token == null || token.isEmpty()) {
+            token = java.util.UUID.randomUUID().toString().replace("-", "");
+            com.github.catvod.utils.Prefers.put("pair_token", token);
+        }
+        return token;
+    }
+
+    public static String newPairCode() {
+        String code = String.format(java.util.Locale.US, "%06d", new java.util.Random().nextInt(1000000));
+        com.github.catvod.utils.Prefers.put("pair_code", code);
+        com.github.catvod.utils.Prefers.put("pair_code_ts", System.currentTimeMillis());
+        return code;
+    }
+
+    public static String getPairCode() {
+        return com.github.catvod.utils.Prefers.getString("pair_code");
+    }
+
+    public static boolean verifyPairCode(String code) {
+        if (code == null || code.isEmpty()) return false;
+        String saved = getPairCode();
+        long ts = com.github.catvod.utils.Prefers.getLong("pair_code_ts", 0L);
+        return saved != null && saved.equals(code) && System.currentTimeMillis() - ts < 5 * 60 * 1000L;
+    }
+
 }

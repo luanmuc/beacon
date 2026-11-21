@@ -2,6 +2,7 @@ package com.fongmi.android.tv.ui.dialog;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,6 +32,7 @@ import com.fongmi.android.tv.utils.Notify;
 import com.fongmi.android.tv.utils.ScanTask;
 import com.github.catvod.net.OkHttp;
 import com.github.catvod.utils.Path;
+import com.github.catvod.utils.Prefers;
 import com.github.catvod.utils.Util;
 
 import java.io.IOException;
@@ -165,20 +167,111 @@ public class CastDialog extends BaseBottomSheetDialog implements DeviceAdapter.O
     @Override
     public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
         try (Response res = response) {
-            if (res.body().string().equals("OK")) App.post(this::onCasted);
+            String text = res.body().string();
+            if (text.equals("OK")) App.post(this::onCasted);
+            else if (text.contains("PAIR_REQUIRED")) App.post(() -> Notify.show("电视要求配对：长按设备，选择“配对电视”"));
             else App.post(() -> Notify.show(R.string.device_offline));
         }
     }
 
     @Override
     public void onItemClick(Device item) {
-        if (item.isDLNA()) new DLNACast(video, this::onCasted).cast(item);
-        else OkHttp.newCall(client, item.getIp().concat("/action?do=cast"), body.build()).enqueue(this);
+        if (item.isDLNA()) {
+            new DLNACast(video, this::onCasted).cast(item);
+            return;
+        }
+        String url = item.getIp().concat("/action?do=cast");
+        String token = token(item);
+        if (!TextUtils.isEmpty(token)) url += "&token=" + token;
+        OkHttp.newCall(client, url, body.build()).enqueue(this);
     }
 
     @Override
     public boolean onLongClick(Device item) {
-        return false;
+        if (!item.isApp()) return false;
+        String[] items = {"配对电视（输入电视上的 6 位码）", "遥控：播放", "遥控：暂停", "遥控：上一集", "遥控：下一集", "遥控：停止"};
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle(item.getName())
+                .setItems(items, (d, which) -> {
+                    if (which == 0) pairDialog(item);
+                    else if (which == 1) control(item, "play");
+                    else if (which == 2) control(item, "pause");
+                    else if (which == 3) control(item, "prev");
+                    else if (which == 4) control(item, "next");
+                    else control(item, "stop");
+                })
+                .show();
+        return true;
+    }
+
+    private String token(Device item) {
+        String key = TextUtils.isEmpty(item.getUuid()) ? item.getIp() : item.getUuid();
+        return Prefers.getString("cast_token_" + key);
+    }
+
+    private void pairDialog(Device item) {
+        android.widget.EditText input = new android.widget.EditText(requireContext());
+        input.setHint("电视上显示的 6 位配对码");
+        input.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("配对 " + item.getName())
+                .setMessage("电视端：设置 → 播放器设置长按 → 配对手机遥控，获取 6 位码。")
+                .setView(input)
+                .setPositiveButton("配对", (d, w) -> requestPair(item, input.getText().toString().trim()))
+                .setNegativeButton("取消", null)
+                .show();
+    }
+
+    private void requestPair(Device item, String code) {
+        if (code.length() != 6) {
+            Notify.show("请输入 6 位配对码");
+            return;
+        }
+        String url = item.getIp().concat("/action?do=pair&code=" + code);
+        client.newCall(new okhttp3.Request.Builder().url(url).build()).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                App.post(() -> Notify.show("配对失败：" + e.getMessage()));
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                try (Response res = response) {
+                    String text = res.body().string().trim();
+                    if (text.equals("PAIR_FAILED")) {
+                        App.post(() -> Notify.show("配对码错误或已过期，请在电视上刷新"));
+                    } else if (!text.isEmpty() && !text.contains("PAIR_REQUIRED")) {
+                        String key = TextUtils.isEmpty(item.getUuid()) ? item.getIp() : item.getUuid();
+                        Prefers.put("cast_token_" + key, text);
+                        App.post(() -> Notify.show("配对成功，已记住电视，不用再配对"));
+                    } else {
+                        App.post(() -> Notify.show("配对失败：" + text));
+                    }
+                }
+            }
+        });
+    }
+
+    private void control(Device item, String type) {
+        String token = token(item);
+        if (TextUtils.isEmpty(token)) {
+            Notify.show("请先长按电视，选择“配对电视”");
+            return;
+        }
+        String url = item.getIp().concat("/action?do=control&type=" + type + "&token=" + token);
+        client.newCall(new okhttp3.Request.Builder().url(url).build()).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                App.post(() -> Notify.show("控制失败：" + e.getMessage()));
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                try (Response res = response) {
+                    if (!res.isSuccessful()) App.post(() -> Notify.show("电视拒绝了控制，请重新配对"));
+                }
+            }
+        });
     }
 
     @Override

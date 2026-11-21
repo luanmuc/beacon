@@ -442,13 +442,15 @@ public class SettingFragment extends BaseFragment implements ConfigCallback, Sit
             if (!force && System.currentTimeMillis() - com.fongmi.android.tv.setting.Setting.getHealthTs() < 30L * 60L * 1000L) return;
             try {
                 String text = com.github.catvod.net.OkHttp.string("https://raw.githubusercontent.com/luanmuc/beacon-seed/main/live-report.json");
-                com.fongmi.android.tv.setting.Setting.putHealthTs(System.currentTimeMillis());
                 org.json.JSONObject object = new org.json.JSONObject(text);
                 int channels = object.optInt("channels");
                 int lines = object.optInt("lines");
+                com.fongmi.android.tv.setting.Setting.putHealthTs(System.currentTimeMillis());
                 com.fongmi.android.tv.App.post(() -> {
                     try {
-                        CharSequence base = mBinding.liveUrl.getText();
+                        String raw = String.valueOf(mBinding.liveUrl.getText());
+                        int cut = raw.indexOf(" · 存活 ");
+                        String base = cut > 0 ? raw.substring(0, cut) : raw;
                         String at = object.optString("generated_at", "");
                         mBinding.liveUrl.setText(base + " · 存活 " + channels + " 频道/" + lines + " 线路" + (at.isEmpty() ? "" : " · " + at.replace("T", " ").replace("Z", "")));
                         com.fongmi.android.tv.utils.Notify.show("存活统计已更新：" + channels + " 频道/" + lines + " 线路");

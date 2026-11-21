@@ -28,10 +28,10 @@ public class UpdateChecker {
             try {
                 JSONObject object = new JSONObject(OkHttp.string(API));
                 String tag = object.optString("tag_name", "");
-                String body = object.optString("body", "");
                 String url = object.optString("html_url", RELEASE_PAGE);
                 int remote = parseCode(tag);
-                if (remote > BuildConfig.VERSION_CODE) {
+                int local = parseCode("v" + BuildConfig.VERSION_NAME);
+                if (remote > local) {
                     App.post(() -> Notify.show("发现新版本 " + tag + "，正在打开发布页"));
                     App.post(() -> open(activity, url));
                 } else {

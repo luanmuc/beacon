@@ -40,6 +40,22 @@ public class PlayerSetting {
         Prefers.put("buffer", buffer);
     }
 
+    public static boolean isPreload() {
+        return Prefers.getBoolean("preload", true);
+    }
+
+    public static void putPreload(boolean preload) {
+        Prefers.put("preload", preload);
+    }
+
+    public static boolean isAdaptiveQuality() {
+        return Prefers.getBoolean("adaptive_quality", true);
+    }
+
+    public static void putAdaptiveQuality(boolean adaptiveQuality) {
+        Prefers.put("adaptive_quality", adaptiveQuality);
+    }
+
     public static int getBackground() {
         return Prefers.getInt("background", 2);
     }

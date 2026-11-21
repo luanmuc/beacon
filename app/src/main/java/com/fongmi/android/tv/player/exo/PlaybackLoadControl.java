@@ -10,6 +10,8 @@ import androidx.media3.exoplayer.source.TrackGroupArray;
 import androidx.media3.exoplayer.trackselection.ExoTrackSelection;
 import androidx.media3.exoplayer.upstream.Allocator;
 
+import com.fongmi.android.tv.setting.PlayerSetting;
+
 /**
  * Wraps the normal LoadControl and lets the player stop preloading an old source
  * while a new source is being prepared. Cached/network errors are not involved.
@@ -67,13 +69,14 @@ public final class PlaybackLoadControl implements LoadControl {
     public boolean shouldContinueLoading(Parameters parameters) {
         // Never starve the initial buffer; only stop growing an old source once
         // it already has enough data to survive a source switch.
-        if (!preloadingEnabled && parameters.bufferedDurationUs >= 10_000_000L) return false;
+        boolean preload = preloadingEnabled && PlayerSetting.isPreload();
+        if (!preload && parameters.bufferedDurationUs >= 10_000_000L) return false;
         return delegate.shouldContinueLoading(parameters);
     }
 
     @Override
     public boolean shouldContinuePreloading(PlayerId playerId, Timeline timeline, MediaSource.MediaPeriodId mediaPeriodId, long bufferedDurationUs) {
-        return preloadingEnabled && delegate.shouldContinuePreloading(playerId, timeline, mediaPeriodId, bufferedDurationUs);
+        return preloadingEnabled && PlayerSetting.isPreload() && delegate.shouldContinuePreloading(playerId, timeline, mediaPeriodId, bufferedDurationUs);
     }
 
     @Override

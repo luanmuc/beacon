@@ -50,6 +50,8 @@ import com.google.android.material.navigation.NavigationBarView;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.util.Collections;
+
 public class HomeActivity extends BaseActivity implements NavigationBarView.OnItemSelectedListener {
 
     private FragmentStateManager mManager;
@@ -77,6 +79,7 @@ public class HomeActivity extends BaseActivity implements NavigationBarView.OnIt
     protected void initView(Bundle savedInstanceState) {
         orientation = getResources().getConfiguration().orientation;
         initFragment(savedInstanceState);
+        migrateShortcut();
         initConfig();
         if (Build.VERSION.SDK_INT >= 33) PermissionUtil.requestNotification(this, granted -> {});
     }
@@ -163,8 +166,19 @@ public class HomeActivity extends BaseActivity implements NavigationBarView.OnIt
         return false;
     }
 
+    private ShortcutInfoCompat buildShortcut() {
+        return new ShortcutInfoCompat.Builder(this, getString(R.string.nav_live)).setIcon(IconCompat.createWithResource(this, R.mipmap.ic_launcher)).setIntent(new Intent(Intent.ACTION_VIEW, null, this, LiveShortcutActivity.class)).setShortLabel(getString(R.string.nav_live)).build();
+    }
+
+    private void migrateShortcut() {
+        try {
+            ShortcutManagerCompat.updateShortcuts(this, Collections.singletonList(buildShortcut()));
+        } catch (Exception ignored) {
+        }
+    }
+
     private boolean addShortcut(View view) {
-        ShortcutInfoCompat info = new ShortcutInfoCompat.Builder(this, getString(R.string.nav_live)).setIcon(IconCompat.createWithResource(this, R.mipmap.ic_launcher)).setIntent(new Intent(Intent.ACTION_VIEW, null, this, LiveShortcutActivity.class)).setShortLabel(getString(R.string.nav_live)).build();
+        ShortcutInfoCompat info = buildShortcut();
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, new Intent(this, ShortcutReceiver.class).setAction(ShortcutReceiver.ACTION), PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         ShortcutManagerCompat.requestPinShortcut(this, info, pendingIntent.getIntentSender());
         return true;

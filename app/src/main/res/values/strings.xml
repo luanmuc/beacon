@@ -150,6 +150,8 @@
     <string name="player_adblock">Remove ads</string>
     <string name="player_tunnel">Tunnel mode</string>
     <string name="player_buffer">Buffer time</string>
+    <string name="player_preload">Preload</string>
+    <string name="player_adaptive">Adaptive downgrade</string>
     <string name="player_speed">Press speed</string>
     <string name="player_ua">User-Agent</string>
 

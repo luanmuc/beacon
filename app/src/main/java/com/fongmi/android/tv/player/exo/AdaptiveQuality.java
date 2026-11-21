@@ -55,7 +55,12 @@ public final class AdaptiveQuality implements AnalyticsListener {
 
     @Override
     public void onDroppedVideoFrames(EventTime eventTime, int droppedFrames, long elapsedMs) {
-        if (droppedFrames <= 0 || !firstFrameRendered || downgraded) return;
+        if (droppedFrames <= 0 || !firstFrameRendered) return;
+        if (!PlayerSetting.isAdaptiveQuality()) {
+            restore();
+            return;
+        }
+        if (downgraded) return;
         if (player.isCurrentMediaItemLive() || PlayerSetting.isForce4K()) return;
 
         if (windowStartMs == 0) windowStartMs = eventTime.realtimeMs;
@@ -78,6 +83,16 @@ public final class AdaptiveQuality implements AnalyticsListener {
         selector.setParameters(selector.buildUponParameters().setMaxVideoSize(4096, cap));
         downgraded = true;
         pressureWindows = 0;
+    }
+
+    private void restore() {
+        if (dowgraded) {
+            selector.setParameters(original);
+            downgraded = false;
+        }
+        pressureWindows = 0;
+        windowStartMs = 0;
+        droppedInWindow = 0;
     }
 
     private void reset() {

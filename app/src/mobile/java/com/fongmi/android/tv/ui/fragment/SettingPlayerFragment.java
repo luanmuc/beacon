@@ -58,6 +58,8 @@ public class SettingPlayerFragment extends BaseFragment implements UaCallback, B
         mBinding.adblockText.setText(getSwitch(Setting.isAdblock()));
         mBinding.speedText.setText(format.format(PlayerSetting.getSpeed()));
         mBinding.bufferText.setText(String.valueOf(PlayerSetting.getBuffer()));
+        mBinding.preloadText.setText(getSwitch(PlayerSetting.isPreload()));
+        mBinding.adaptiveText.setText(getSwitch(PlayerSetting.isAdaptiveQuality()));
         mBinding.audioDecodeText.setText(getSwitch(PlayerSetting.isAudioPrefer()));
         mBinding.videoDecodeText.setText(getSwitch(PlayerSetting.isVideoPrefer()));
         mBinding.force4kText.setText(getSwitch(PlayerSetting.isForce4K()));
@@ -76,6 +78,8 @@ public class SettingPlayerFragment extends BaseFragment implements UaCallback, B
         mBinding.scale.setOnClickListener(this::onScale);
         mBinding.speed.setOnClickListener(this::onSpeed);
         mBinding.buffer.setOnClickListener(this::onBuffer);
+        mBinding.preload.setOnClickListener(this::setPreload);
+        mBinding.adaptive.setOnClickListener(this::setAdaptive);
         mBinding.render.setOnClickListener(this::setRender);
         mBinding.tunnel.setOnClickListener(this::setTunnel);
         mBinding.caption.setOnClickListener(this::setCaption);
@@ -129,6 +133,16 @@ public class SettingPlayerFragment extends BaseFragment implements UaCallback, B
     public void setBuffer(int times) {
         mBinding.bufferText.setText(String.valueOf(times));
         PlayerSetting.putBuffer(times);
+    }
+
+    private void setPreload(View view) {
+        PlayerSetting.putPreload(!PlayerSetting.isPreload());
+        mBinding.preloadText.setText(getSwitch(PlayerSetting.isPreload()));
+    }
+
+    private void setAdaptive(View view) {
+        PlayerSetting.putAdaptiveQuality(!PlayerSetting.isAdaptiveQuality());
+        mBinding.adaptiveText.setText(getSwitch(PlayerSetting.isAdaptiveQuality()));
     }
 
     private void setRender(View view) {

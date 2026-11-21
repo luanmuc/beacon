@@ -149,6 +149,8 @@
     <string name="player_adblock">智慧去广</string>
     <string name="player_tunnel">隧道模式</string>
     <string name="player_buffer">缓冲时间</string>
+    <string name="player_preload">預載</string>
+    <string name="player_adaptive">自適應降檔</string>
     <string name="player_speed">长按倍速</string>
     <string name="player_ua">User-Agent</string>
 

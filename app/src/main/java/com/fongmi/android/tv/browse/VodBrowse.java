@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,6 +38,9 @@ public class VodBrowse {
 
     private static final int SEARCH_LIMIT = 50;
     private static final int SEARCH_TIMEOUT = 5;
+    private static final int VOD_LIMIT = 48;
+    private static final int EP_LIMIT = 600;
+    private static final int EP_COUNT_LIMIT = 300;
     private static final Map<String, Vod> vodCache = new ConcurrentHashMap<>();
     private static final Map<String, String> epNavMap = new ConcurrentHashMap<>();
     private static final Map<String, EpEntry> epEntries = new ConcurrentHashMap<>();
@@ -47,6 +51,16 @@ public class VodBrowse {
 
     public static void clearMemory() {
         clear();
+    }
+
+    private static <K, V> void trim(Map<K, V> map, int limit, K keep) {
+        if (map.size() <= limit) return;
+        Iterator<K> iterator = map.keySet().iterator();
+        while (map.size() > limit && iterator.hasNext()) {
+            K key = iterator.next();
+            if (keep != null && keep.equals(key)) continue;
+            map.remove(key);
+        }
     }
 
     static void clear() {
@@ -153,6 +167,7 @@ public class VodBrowse {
         Vod vod = SiteApi.detailContent(siteKey, vodId).getVod();
         if (TextUtils.isEmpty(vod.getId()) || vod.getFlags().isEmpty()) return null;
         vodCache.put(historyKey, vod);
+        trim(vodCache, VOD_LIMIT, historyKey);
         History history = createHistory(historyKey, vod);
         Flag resumeFlag = findFlag(vod, history.getVodFlag());
         if (resumeFlag == null || resumeFlag.getEpisodes().isEmpty()) return null;
@@ -202,7 +217,9 @@ public class VodBrowse {
         epCountMap.keySet().removeIf(key -> key.startsWith(prefix));
         String flagName = flag.getFlag();
         List<Episode> episodes = flag.getEpisodes();
-        epCountMap.put(historyKey + '|' + flagName, episodes.size());
+        String countKey = historyKey + '|' + flagName;
+        epCountMap.put(countKey, episodes.size());
+        trim(epCountMap, EP_COUNT_LIMIT, countKey);
         IntStream.range(0, episodes.size()).forEach(i -> indexEpisode(historyKey, flagName, i, history));
         return findCurrentIndex(flag, history);
     }
@@ -212,6 +229,8 @@ public class VodBrowse {
         String id = VOD_EP + key;
         epEntries.put(id, new EpEntry(historyKey, flagName, index, history.getSiteKey(), history.getVodPic()));
         epNavMap.put(key, id);
+        trim(epEntries, EP_LIMIT, id);
+        trim(epNavMap, EP_LIMIT, key);
     }
 
     private static int findCurrentIndex(@NonNull Flag flag, @NonNull History history) {
@@ -273,6 +292,7 @@ public class VodBrowse {
         vod = fetchDetail(history);
         if (vod == null) return null;
         vodCache.put(historyKey, vod);
+        trim(vodCache, VOD_LIMIT, historyKey);
         return vod;
     }
 

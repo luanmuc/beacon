@@ -1,6 +1,7 @@
 package com.fongmi.android.tv;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.Application;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -12,6 +13,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.os.HandlerCompat;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.GlideBuilder;
+import com.bumptech.glide.load.engine.cache.InternalCacheDiskCacheFactory;
+import com.bumptech.glide.load.engine.cache.LruBitmapPool;
+import com.bumptech.glide.load.engine.cache.LruResourceCache;
 import com.fongmi.android.tv.utils.Notify;
 import com.fongmi.hook.Hook;
 import com.github.catvod.Init;
@@ -83,20 +89,43 @@ public class App extends Application implements Application.ActivityLifecycleCal
     public void onCreate() {
         super.onCreate();
         Notify.createChannel();
+        initGlide();
         registerActivityLifecycleCallbacks(this);
         DynamicColors.applyToActivitiesIfAvailable(this);
         installCrashHandler();
     }
 
+    private void initGlide() {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        boolean lowRam = manager != null && manager.isLowRamDevice();
+        int memoryClass = manager == null ? 128 : manager.getMemoryClass();
+        int memoryCache = Math.max(8, memoryClass / 8) * 1024 * 1024;
+        int bitmapPool = Math.max(4, memoryClass / 16) * 1024 * 1024;
+        int diskCache = (lowRam ? 128 : 256) * 1024 * 1024;
+        GlideBuilder builder = new GlideBuilder()
+                .setMemoryCache(new LruResourceCache(memoryCache))
+                .setBitmapPool(new LruBitmapPool(bitmapPool))
+                .setDiskCache(new InternalCacheDiskCacheFactory(this, diskCache));
+        Glide.init(this, builder);
+    }
+
     @Override
     public void onTrimMemory(int level) {
         super.onTrimMemory(level);
+        try {
+            Glide.get(this).trimMemory(level);
+        } catch (Throwable ignored) {
+        }
         if (level >= android.content.ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) com.fongmi.android.tv.browse.VodBrowse.clearMemory();
     }
 
     @Override
     public void onLowMemory() {
         super.onLowMemory();
+        try {
+            Glide.get(this).clearMemory();
+        } catch (Throwable ignored) {
+        }
         com.fongmi.android.tv.browse.VodBrowse.clearMemory();
     }
 

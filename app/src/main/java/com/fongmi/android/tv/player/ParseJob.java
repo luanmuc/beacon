@@ -46,7 +46,7 @@ public class ParseJob implements ParseCallback {
 
     private ParseJob(ParseCallback callback) {
         this.executor = Executors.newSingleThreadExecutor();
-        this.infinite = Executors.newCachedThreadPool();
+        this.infinite = Executors.newFixedThreadPool(4);
         this.webViews = new ArrayList<>();
         this.callback = callback;
     }

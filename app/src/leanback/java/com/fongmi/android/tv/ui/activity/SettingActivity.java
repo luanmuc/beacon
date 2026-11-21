@@ -680,15 +680,26 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
 
 
     private void showPlayerMenu() {
-        String[] items = {"手势与按键说明", "应用推荐播放配置"};
+        String[] items = {"手势与按键说明", "应用推荐播放配置", "局域网访问：" + (com.fongmi.android.tv.setting.Setting.getLan() ? "已开启" : "已关闭")};
         new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle("播放器设置")
                 .setItems(items, (d, which) -> {
                     if (which == 0) showGestureHelp();
+                    else if (which == 2) toggleLan();
                     else applyRecommended();
                 })
                 .show();
     }
+
+
+    private void toggleLan() {
+        boolean lan = !com.fongmi.android.tv.setting.Setting.getLan();
+        com.fongmi.android.tv.setting.Setting.putLan(lan);
+        com.fongmi.android.tv.server.Server.get().stop();
+        com.fongmi.android.tv.server.Server.get().start();
+        com.fongmi.android.tv.utils.Notify.show(lan ? "已开启局域网访问：手机可扫码推送/投屏（同一 WiFi）" : "已关闭局域网访问：仅本机访问");
+    }
+
 
     private void applyRecommended() {
         try {

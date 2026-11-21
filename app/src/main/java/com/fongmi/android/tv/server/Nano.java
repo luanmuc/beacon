@@ -26,7 +26,11 @@ public class Nano extends NanoHTTPD {
     private List<Process> process;
 
     public Nano(int port) {
-        super(port);
+        this("0.0.0.0", port);
+    }
+
+    public Nano(String host, int port) {
+        super(host, port);
         addProcess();
     }
 

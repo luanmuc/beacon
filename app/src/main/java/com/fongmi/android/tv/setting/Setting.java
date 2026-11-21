@@ -140,4 +140,12 @@ public class Setting {
         com.github.catvod.utils.Prefers.put("seed_ver", ver);
     }
 
+    public static boolean getLan() {
+        return com.github.catvod.utils.Prefers.getBoolean("lan_access", false);
+    }
+
+    public static void putLan(boolean lan) {
+        com.github.catvod.utils.Prefers.put("lan_access", lan);
+    }
+
 }

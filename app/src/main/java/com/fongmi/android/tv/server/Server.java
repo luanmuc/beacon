@@ -39,14 +39,15 @@ public class Server {
     }
 
     public String getAddress(boolean local) {
-        return "http://" + (local ? "127.0.0.1" : Util.getIp()) + ":" + Proxy.getPort();
+        boolean lan = com.fongmi.android.tv.setting.Setting.getLan();
+        return "http://" + (local || !lan ? "127.0.0.1" : Util.getIp()) + ":" + Proxy.getPort();
     }
 
     public synchronized void start() {
         if (nano != null) return;
         for (int i = 9978; i < 9999; i++) {
             try {
-                nano = new Nano(i);
+                nano = new Nano(com.fongmi.android.tv.setting.Setting.getLan() ? "0.0.0.0" : "127.0.0.1", i);
                 nano.start(500);
                 Proxy.set(i);
                 break;
@@ -56,11 +57,9 @@ public class Server {
         }
     }
 
-    public void stop() {
-        Task.execute(() -> {
-            if (nano != null) nano.stop();
-            service = null;
-            nano = null;
-        });
+    public synchronized void stop() {
+        if (nano != null) nano.stop();
+        service = null;
+        nano = null;
     }
 }

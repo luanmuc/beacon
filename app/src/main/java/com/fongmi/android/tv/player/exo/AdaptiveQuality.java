@@ -86,7 +86,7 @@ public final class AdaptiveQuality implements AnalyticsListener {
     }
 
     private void restore() {
-        if (dowgraded) {
+        if (downgraded) {
             selector.setParameters(original);
             downgraded = false;
         }

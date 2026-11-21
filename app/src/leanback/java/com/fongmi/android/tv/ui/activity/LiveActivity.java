@@ -226,6 +226,11 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
         mBinding.control.action.change.setActivated(LiveSetting.isChange());
     }
 
+    @Override
+    protected void onPlayerRebuilt() {
+        setDecode();
+    }
+
     private void setDecode() {
         mBinding.control.action.decode.setText(player().getDecodeText());
     }

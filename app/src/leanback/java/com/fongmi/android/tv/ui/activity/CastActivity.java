@@ -168,6 +168,11 @@ public class CastActivity extends PlaybackActivity implements CustomKeyDownVod.L
         startPlayer(mPlaybackKey, mAction.result(), false, Constant.TIMEOUT_PLAY, buildMetadata());
     }
 
+    @Override
+    protected void onPlayerRebuilt() {
+        setDecode();
+    }
+
     private void setDecode() {
         mBinding.control.action.decode.setText(player().getDecodeText());
     }

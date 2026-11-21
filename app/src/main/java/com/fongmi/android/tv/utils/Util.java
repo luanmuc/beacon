@@ -102,6 +102,17 @@ public class Util {
         }
     }
 
+    public static String redact(String text) {
+        if (TextUtils.isEmpty(text)) return "";
+        try {
+            text = text.replaceAll("(?i)(access_token|token|authorization|password|passwd|pwd|secret|key)=([^&\\s\"']+)", "$1=***");
+            text = text.replaceAll("(?i)(bearer\\s+)[^\\s\"']+", "$1***");
+            text = text.replaceAll("(https?://[^\\s\"']+)\\?[^\\s\"']*", "$1?***");
+        } catch (Throwable ignored) {
+        }
+        return text;
+    }
+
     public static int getNumber(String text) {
         try {
             text = text.replaceAll("\\[.*?\\]|\\(.*?\\)", "");

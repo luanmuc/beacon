@@ -57,7 +57,7 @@ public class CrashActivity extends BaseActivity {
     private void showError() {
         new AlertDialog.Builder(this)
                 .setTitle(R.string.crash_details_title)
-                .setMessage(CustomActivityOnCrash.getAllErrorDetailsFromIntent(this, getIntent()))
+                .setMessage(com.fongmi.android.tv.utils.Util.redact(CustomActivityOnCrash.getAllErrorDetailsFromIntent(this, getIntent())))
                 .setPositiveButton(R.string.crash_details_close, null)
                 .show();
     }

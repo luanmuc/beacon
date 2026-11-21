@@ -426,6 +426,11 @@ public class VideoActivity extends PlaybackActivity implements Clock.Callback, C
         });
     }
 
+    @Override
+    protected void onPlayerRebuilt() {
+        setDecode();
+    }
+
     private void setDecode() {
         mBinding.control.action.decode.setText(player().getDecodeText());
     }

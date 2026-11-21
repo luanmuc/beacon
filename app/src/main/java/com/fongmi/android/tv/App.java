@@ -136,7 +136,7 @@ public class App extends Application implements Application.ActivityLifecycleCal
                 java.io.File file = new java.io.File(getFilesDir(), "last-crash.log");
                 java.io.PrintWriter writer = new java.io.PrintWriter(new java.io.StringWriter());
                 throwable.printStackTrace(writer);
-                String text = "time=" + new java.util.Date() + "\n" + writer.toString();
+                String text = "time=" + new java.util.Date() + "\n" + com.fongmi.android.tv.utils.Util.redact(writer.toString());
                 java.io.FileWriter fw = new java.io.FileWriter(file, false);
                 fw.write(text.length() > 4000 ? text.substring(0, 4000) : text);
                 fw.close();

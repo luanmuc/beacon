@@ -579,13 +579,18 @@ public class SettingActivity extends BaseActivity implements ConfigCallback, Sit
                 + "\n仓库：github.com/luanmuc/beacon"
                 + "\n\n设备信息：\n" + com.fongmi.android.tv.utils.Util.getDeviceReport()
                 + "\n豆包定制 · 基于 GPL-3.0 开源项目二次开发";
-        new androidx.appcompat.app.AlertDialog.Builder(this)
+        androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle("构建信息")
                 .setMessage(info)
                 .setPositiveButton("打开项目主页", (d, w) -> openRepo())
                 .setNeutralButton("检查更新", (d, w) -> com.fongmi.android.tv.utils.UpdateChecker.check(this))
                 .setNegativeButton("关闭", null)
                 .show();
+        android.widget.TextView message = dialog.findViewById(android.R.id.message);
+        if (message != null) message.setOnLongClickListener(v -> {
+            com.fongmi.android.tv.utils.Util.copy(info);
+            return true;
+        });
     }
 
 

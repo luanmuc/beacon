@@ -380,6 +380,11 @@ public class VideoActivity extends PlaybackActivity implements CustomKeyDownVod.
         mBinding.control.action.reset.setText(ResUtil.getStringArray(R.array.select_reset)[Setting.getReset()]);
     }
 
+    @Override
+    protected void onPlayerRebuilt() {
+        setDecode();
+    }
+
     private void setDecode() {
         mBinding.control.action.decode.setText(player().getDecodeText());
     }

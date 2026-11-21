@@ -230,6 +230,11 @@ public class LiveActivity extends PlaybackActivity implements CustomKeyDown.List
         mBinding.video.addOnLayoutChangeListener((view, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> mPiP.update(this, view));
     }
 
+    @Override
+    protected void onPlayerRebuilt() {
+        setDecode();
+    }
+
     private void setDecode() {
         mBinding.control.action.decode.setText(player().getDecodeText());
     }
